@@ -1,0 +1,27 @@
+<header class="bg-white shadow-sm border-b border-gray-200">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-between items-center py-4">
+      <h1 class="text-xl font-semibold text-gray-800">High-Risk Alerts</h1>
+      <a routerLink="/dashboard" class="text-sm font-medium text-gray-600 hover:text-blue-500">&larr; Back to Dashboard</a>
+    </div>
+  </div>
+</header>
+
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="bg-white shadow rounded-lg">
+    <h2 class="text-lg font-semibold p-6 border-b border-gray-200">High-Risk Transactions</h2>
+    <div id="feed">
+      <div *ngFor="let transaction of highRiskTransactions" class="flex justify-between items-center p-4 border-b border-gray-200 last:border-b-0 hover:bg-gray-50">
+        <a [routerLink]="['/transaction', transaction.id]" class="flex-grow flex justify-between items-center">
+          <div>
+            <strong class="font-medium text-gray-800">{{ transaction.id }}</strong>
+            <small class="block text-gray-500 text-sm">{{ transaction.amount | currency }} &bull; {{ transaction.type }} &bull; {{ transaction.time }}</small>
+          </div>
+          <span class="px-3 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">
+            HIGH RISK ({{ transaction.riskPercentage }}%)
+          </span>
+        </a>
+      </div>
+    </div>
+  </div>
+</main>

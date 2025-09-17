@@ -1,0 +1,52 @@
+<header class="bg-white shadow-sm border-b border-gray-200">
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-between items-center py-4">
+      <h1 class="text-xl font-semibold text-gray-800">Account Settings</h1>
+      <a routerLink="/dashboard" class="text-sm font-medium text-gray-600 hover:text-blue-500">&larr; Back to Dashboard</a>
+    </div>
+  </div>
+</header>
+
+<main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="bg-white shadow rounded-lg p-8 mb-6">
+    <h2 class="text-lg font-semibold mb-6 pb-4 border-b border-gray-200">Multi-Factor Authentication (MFA)</h2>
+    <div class="flex justify-between items-center py-4 border-b border-gray-200">
+      <div>
+        <strong class="font-medium">Enable MFA</strong>
+        <p class="text-sm text-gray-500">Increase your account security by requiring a second authentication factor.</p>
+      </div>
+      <label class="relative inline-flex items-center cursor-pointer">
+        <input type="checkbox" [(ngModel)]="mfaEnabled" class="sr-only peer">
+        <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-green-300 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+      </label>
+    </div>
+    <div class="flex justify-between items-center py-4 border-b border-gray-200">
+      <div>
+        <strong class="font-medium">Authenticator App</strong>
+        <p class="text-sm text-gray-500">Google Authenticator</p>
+      </div>
+      <button class="text-sm font-medium text-gray-600 hover:text-blue-500 border border-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50">Remove</button>
+    </div>
+    <div class="flex justify-between items-center py-4">
+      <div>
+        <strong class="font-medium">SMS Number</strong>
+        <p class="text-sm text-gray-500">...1234</p>
+      </div>
+      <button class="text-sm font-medium text-gray-600 hover:text-blue-500 border border-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50">Remove</button>
+    </div>
+    <div class="mt-6">
+      <button class="bg-blue-500 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-600 transition-colors">Add New Method</button>
+    </div>
+  </div>
+
+  <div class="bg-white shadow rounded-lg p-8">
+    <h2 class="text-lg font-semibold mb-6 pb-4 border-b border-gray-200">Account Actions</h2>
+    <div class="flex justify-between items-center py-4">
+      <div>
+        <strong class="font-medium">Delete Account</strong>
+        <p class="text-sm text-gray-500">Permanently delete your account and all associated data.</p>
+      </div>
+      <button class="bg-red-500 text-white px-6 py-2 rounded-lg font-medium hover:bg-red-600 transition-colors">Delete Account</button>
+    </div>
+  </div>
+</main>

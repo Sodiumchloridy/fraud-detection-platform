@@ -2,13 +2,13 @@ import { Component } from '@angular/core';
 import { RouterModule } from '@angular/router';
 
 @Component({
-  selector: 'app-root',
+  selector: 'app-not-found',
   standalone: true,
   imports: [RouterModule],
-  template: `<router-outlet></router-outlet>`,
-  styles: []
+  templateUrl: './not-found.component.html',
+  styleUrls: []
 })
-export class AppComponent {
-  title = 'frontend';
+export class NotFoundComponent {
+
 }
 
