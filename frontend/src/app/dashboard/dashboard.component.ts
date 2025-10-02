@@ -15,7 +15,7 @@ interface Transaction {
   standalone: true,
   imports: [CommonModule, RouterModule],
   templateUrl: './dashboard.component.html',
-  styleUrls: []
+  styleUrls: ['./dashboard.component.css']
 })
 export class DashboardComponent implements OnInit, OnDestroy {
   transactionsToday = 5;
@@ -29,6 +29,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   ];
   private intervalId: any;
   private txnCounter = 6;
+  isAdmin = true;
 
   ngOnInit() {
     this.intervalId = setInterval(() => this.createDummyTransaction(), 4000);

@@ -8,19 +8,27 @@
         </div>
         <div class="flex items-center gap-4">
           <nav class="hidden md:flex gap-4">
-            <a routerLink="/admin" class="text-sm font-medium text-gray-600 hover:text-blue-500">Admin</a>
+            <a routerLink="/admin" class="text-sm font-medium text-gray-600 hover:text-blue-500"
+              [ngStyle]="!isAdmin ? {'display': 'none'} : null">Admin</a>
           </nav>
           <div class="relative inline-block text-left">
-            <button type="button" class="inline-flex justify-center w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none">
+            <button type="button"
+              class="inline-flex justify-center w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none">
               Account
-              <svg class="-mr-1 ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+              <svg class="-mr-1 ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
+                aria-hidden="true">
+                <path fill-rule="evenodd"
+                  d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                  clip-rule="evenodd" />
               </svg>
             </button>
-            <div class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden">
+            <div
+              class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden">
               <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
-                <a routerLink="/settings" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">Settings</a>
-                <a routerLink="/login" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">Logout</a>
+                <a routerLink="/settings" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  role="menuitem">Settings</a>
+                <a routerLink="/login" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  role="menuitem">Logout</a>
               </div>
             </div>
           </div>
@@ -45,17 +53,18 @@
       </div>
     </div>
 
-    <div class="bg-white shadow rounded-lg">
+    <div class="shadow rounded-lg" [style]="{backgroundColor: 'white'}">
       <h2 class="text-lg font-semibold p-6 border-b border-gray-200">Live Transaction Feed</h2>
       <div id="feed">
-        <div *ngFor="let transaction of transactions" class="flex justify-between items-center p-4 border-b border-gray-200 last:border-b-0 hover:bg-gray-50">
+        <div *ngFor="let transaction of transactions"
+          class="flex justify-between items-center p-4 border-b border-gray-200 last:border-b-0 hover:bg-gray-50">
           <a [routerLink]="['/transaction', transaction.id]" class="flex-grow flex justify-between items-center">
             <div>
               <strong class="font-medium text-gray-800">{{ transaction.id }}</strong>
-              <small class="block text-gray-500 text-sm">{{ transaction.amount | currency }} &bull; {{ transaction.type }} &bull; {{ transaction.time }}</small>
+              <small class="block text-gray-500 text-sm">{{ transaction.amount | currency }} &bull; {{ transaction.type
+                }} &bull; {{ transaction.time }}</small>
             </div>
-            <span class="px-3 py-1 text-xs font-medium rounded-full"
-                  [ngClass]="{
+            <span class="px-3 py-1 text-xs font-medium rounded-full" [ngClass]="{
                     'bg-red-100 text-red-800': transaction.risk === 'HIGH',
                     'bg-yellow-100 text-yellow-800': transaction.risk === 'MEDIUM',
                     'bg-green-100 text-green-800': transaction.risk === 'LOW'
@@ -68,7 +77,7 @@
     </div>
   </main>
 
-  <div id="toast-container" class="fixed bottom-5 right-5 space-y-3">
+  <div id="toast-container" class="toast-container">
     <!-- Toasts will be dynamically added here -->
   </div>
 </div>
