@@ -1,10 +1,10 @@
 import { Routes } from '@angular/router';
-import { LoginComponent } from './login/login.component';
-import { DashboardComponent } from './dashboard/dashboard.component';
-import { HighRiskAlertsComponent } from './high-risk-alerts/high-risk-alerts.component';
-import { TransactionDetailsComponent } from './transaction-details/transaction-details.component';
-import { SettingsComponent } from './settings/settings.component';
-import { NotFoundComponent } from './not-found/not-found.component';
+import { LoginComponent } from './features/auth/login/login.component';
+import { DashboardComponent } from './features/dashboard/dashboard/dashboard.component';
+import { HighRiskAlertsComponent } from './features/dashboard/high-risk-alerts/high-risk-alerts.component';
+import { TransactionDetailsComponent } from './features/dashboard/transaction-details/transaction-details.component';
+import { SettingsComponent } from './features/settings/settings/settings.component';
+import { NotFoundComponent } from './pages/not-found/not-found.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },

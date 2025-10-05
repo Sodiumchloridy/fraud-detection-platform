@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { MainLayoutComponent } from '../shared/layouts/main-layout/main-layout.component';
+import { MainLayoutComponent } from '../../../shared/layouts/main-layout/main-layout.component';
 
 interface HighRiskTransaction {
   id: string;
