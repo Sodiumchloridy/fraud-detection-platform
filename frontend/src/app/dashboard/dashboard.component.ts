@@ -29,7 +29,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   ];
   private intervalId: any;
   private txnCounter = 6;
-  isAdmin = true;
 
   ngOnInit() {
     this.intervalId = setInterval(() => this.createDummyTransaction(), 4000);
