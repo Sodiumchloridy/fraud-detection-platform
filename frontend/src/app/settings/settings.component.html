@@ -1,13 +1,9 @@
-<header class="bg-white shadow-sm border-b border-gray-200">
-  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="flex justify-between items-center py-4">
-      <h1 class="text-xl font-semibold text-gray-800">Account Settings</h1>
-      <a routerLink="/dashboard" class="text-sm font-medium text-gray-600 hover:text-blue-500">&larr; Back to Dashboard</a>
-    </div>
+<!-- Feature 4: Using layout component for consistent page structure -->
+<app-main-layout [pageTitle]="'Account Settings'">
+  <div class="mb-4">
+    <a routerLink="/dashboard" class="text-sm font-medium text-blue-600 hover:text-blue-800">&larr; Back to Dashboard</a>
   </div>
-</header>
 
-<main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
   <div class="bg-white shadow rounded-lg p-8 mb-6">
     <h2 class="text-lg font-semibold mb-6 pb-4 border-b border-gray-200">Multi-Factor Authentication (MFA)</h2>
     <div class="flex justify-between items-center py-4 border-b border-gray-200">
@@ -49,4 +45,5 @@
       <button class="bg-red-500 text-white px-6 py-2 rounded-lg font-medium hover:bg-red-600 transition-colors">Delete Account</button>
     </div>
   </div>
-</main>
+</app-main-layout>
+

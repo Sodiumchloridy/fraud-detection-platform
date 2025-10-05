@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
+import { MainLayoutComponent } from '../shared/layouts/main-layout/main-layout.component';
 
 interface RiskFactor {
   description: string;
@@ -20,7 +21,7 @@ interface Transaction {
 @Component({
   selector: 'app-transaction-details',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, MainLayoutComponent],
   templateUrl: './transaction-details.component.html',
   styleUrls: []
 })

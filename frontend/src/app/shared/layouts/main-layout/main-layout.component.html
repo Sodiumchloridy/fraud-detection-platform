@@ -1,0 +1,16 @@
+<!-- Feature 4: Layout component that wraps page content with header -->
+<div class="bg-gray-50 min-h-screen font-sans">
+  <!-- Feature 4: Using child header component -->
+  <!-- Feature 5: Passing data to header via @Input properties -->
+  <!-- Feature 5: Listening to logout event from header via @Output -->
+  <app-header 
+    [pageTitle]="pageTitle" 
+    [userName]="userName"
+    (logout)="handleLogout()">
+  </app-header>
+  
+  <!-- Feature 1: Content projection - page content goes here -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <ng-content></ng-content>
+  </main>
+</div>

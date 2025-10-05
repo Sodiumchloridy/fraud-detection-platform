@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { MainLayoutComponent } from '../shared/layouts/main-layout/main-layout.component';
 
 interface Transaction {
   id: string;
@@ -10,10 +11,13 @@ interface Transaction {
   risk: 'HIGH' | 'MEDIUM' | 'LOW';
 }
 
+/**
+ * Feature 4: Dashboard component in component hierarchy (root -> dashboard -> layout -> header)
+ */
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, MainLayoutComponent],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css']
 })

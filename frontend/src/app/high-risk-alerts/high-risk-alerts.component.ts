@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { MainLayoutComponent } from '../shared/layouts/main-layout/main-layout.component';
 
 interface HighRiskTransaction {
   id: string;
@@ -13,7 +14,7 @@ interface HighRiskTransaction {
 @Component({
   selector: 'app-high-risk-alerts',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, MainLayoutComponent],
   templateUrl: './high-risk-alerts.component.html',
   styleUrls: []
 })
