@@ -4,12 +4,12 @@
     <a routerLink="/dashboard" class="text-sm font-medium text-blue-600 hover:text-blue-800">&larr; Back to Dashboard</a>
   </div>
 
-  <div class="bg-white shadow rounded-lg p-8 mb-6">
+  <div *ngIf="transaction" class="bg-white shadow rounded-lg p-8 mb-6">
     <h2 class="text-lg font-semibold mb-6 pb-4 border-b border-gray-200">Transaction Summary</h2>
     <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
       <div>
         <label class="block text-sm text-gray-500 mb-1">Transaction ID</label>
-        <span class="font-medium">{{ transaction.id }}</span>
+        <span class="font-medium">{{ transaction.transactionId }}</span>
       </div>
       <div>
         <label class="block text-sm text-gray-500 mb-1">Amount</label>
@@ -17,49 +17,52 @@
       </div>
       <div>
         <label class="block text-sm text-gray-500 mb-1">Timestamp</label>
-        <span class="font-medium">{{ transaction.timestamp }}</span>
+        <span class="font-medium">{{ transaction.timestamp | date:'medium' }}</span>
       </div>
       <div>
         <label class="block text-sm text-gray-500 mb-1">Status</label>
         <span class="font-medium">{{ transaction.status }}</span>
       </div>
+      <div>
+        <label class="block text-sm text-gray-500 mb-1">Type</label>
+        <span class="font-medium">{{ transaction.type }}</span>
+      </div>
+      <div>
+        <label class="block text-sm text-gray-500 mb-1">Description</label>
+        <span class="font-medium">{{ transaction.description }}</span>
+      </div>
     </div>
   </div>
 
-  <div class="bg-white shadow rounded-lg p-8 mb-6">
+  <div *ngIf="transaction" class="bg-white shadow rounded-lg p-8 mb-6">
     <h2 class="text-lg font-semibold mb-6">AI Fraud Analysis</h2>
     <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-6">
       <div>
         <label class="block text-sm text-gray-500 mb-1">Fraud Score</label>
         <span class="px-3 py-1 text-xs font-medium rounded-full"
               [ngClass]="{
-                'bg-red-100 text-red-800': transaction.risk === 'HIGH',
-                'bg-yellow-100 text-yellow-800': transaction.risk === 'MEDIUM',
-                'bg-green-100 text-green-800': transaction.risk === 'LOW'
+                'bg-red-100 text-red-800': transaction.riskLevel === 'HIGH' || transaction.riskLevel === 'CRITICAL',
+                'bg-yellow-100 text-yellow-800': transaction.riskLevel === 'MEDIUM',
+                'bg-green-100 text-green-800': transaction.riskLevel === 'LOW'
               }">
-          {{ transaction.risk }} RISK ({{ transaction.fraudScore }}%)
+          {{ transaction.riskLevel }} RISK ({{ transaction.fraudScore }}%)
         </span>
       </div>
     </div>
-    <h3 class="text-base font-semibold mb-4">Risk Factors:</h3>
-    <ul class="list-none p-0">
-      <li *ngFor="let factor of transaction.riskFactors" class="flex items-center mb-3">
-        <svg class="w-5 h-5 mr-3" [ngClass]="factor.type === 'danger' ? 'text-red-500' : 'text-green-500'" fill="currentColor" viewBox="0 0 20 20">
-          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-        </svg>
-        <span>{{ factor.description }}</span>
-      </li>
-    </ul>
   </div>
 
-  <div class="bg-white shadow rounded-lg p-8">
+  <div *ngIf="transaction" class="bg-white shadow rounded-lg p-8">
     <h2 class="text-lg font-semibold mb-4">Analyst Review</h2>
     <p class="text-sm text-gray-500 mb-6">As a fraud analyst, you can mark this transaction's final status. This feedback will be used to improve the AI model.</p>
     <div class="flex gap-4">
       <!-- Feature 3: Event binding for button clicks -->
-      <button (click)="markAs('Legitimate')" class="bg-green-500 text-white px-6 py-2 rounded-lg font-medium hover:bg-green-600 transition-colors">Mark as Legitimate</button>
-      <button (click)="markAs('Fraudulent')" class="bg-red-500 text-white px-6 py-2 rounded-lg font-medium hover:bg-red-600 transition-colors">Mark as Fraudulent</button>
+      <button (click)="markAs('APPROVED')" class="bg-green-500 text-white px-6 py-2 rounded-lg font-medium hover:bg-green-600 transition-colors">Mark as Legitimate</button>
+      <button (click)="markAs('BLOCKED')" class="bg-red-500 text-white px-6 py-2 rounded-lg font-medium hover:bg-red-600 transition-colors">Mark as Fraudulent</button>
     </div>
+  </div>
+
+  <div *ngIf="!transaction" class="bg-white shadow rounded-lg p-8">
+    <p class="text-gray-500">Loading transaction details...</p>
   </div>
 </app-main-layout>
 

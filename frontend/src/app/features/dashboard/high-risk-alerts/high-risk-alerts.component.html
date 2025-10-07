@@ -13,11 +13,11 @@
         <a [routerLink]="['/transaction', transaction.id]" class="flex-grow flex justify-between items-center">
           <div>
             <!-- Feature 1: Interpolation for transaction data -->
-            <strong class="font-medium text-gray-800">{{ transaction.id }}</strong>
-            <small class="block text-gray-500 text-sm">{{ transaction.amount | currency }} &bull; {{ transaction.type }} &bull; {{ transaction.time }}</small>
+            <strong class="font-medium text-gray-800">{{ transaction.transactionId }}</strong>
+            <small class="block text-gray-500 text-sm">{{ transaction.amount | currency }} &bull; {{ transaction.type }} &bull; {{ transaction.timestamp | date:'short' }}</small>
           </div>
           <span class="px-3 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">
-            HIGH RISK ({{ transaction.riskPercentage }}%)
+            {{ transaction.riskLevel }} ({{ transaction.fraudScore }}%)
           </span>
         </a>
       </div>

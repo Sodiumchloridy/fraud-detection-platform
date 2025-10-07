@@ -5,6 +5,10 @@ import lombok.Data;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+/**
+ * FEATURE 3: Domain class for Transaction entity
+ * Maps to database table with JPA annotations
+ */
 @Entity
 @Table(name = "transactions")
 @Data
@@ -23,6 +27,8 @@ public class Transaction {
     private RiskLevel riskLevel;
 
     private String status;
+    
+    private Integer fraudScore; // AI fraud detection score (0-100)
 
     public enum RiskLevel {
         LOW, MEDIUM, HIGH, CRITICAL

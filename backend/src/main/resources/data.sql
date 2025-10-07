@@ -1,27 +1,27 @@
 -- Sample users for fraud detection system
 INSERT INTO users (username, password, email, role, enabled) VALUES
 ('admin', 'admin123', 'admin@fraudguard.com', 'ADMIN', true),
-('analyst', 'analyst123', 'analyst@fraudguard.com', 'ANALYST', true),
-('investigator', 'investigator123', 'investigator@fraudguard.com', 'INVESTIGATOR', true);
+('analyst', 'analyst123', 'analyst@fraudguard.com', 'ANALYST', true);
 
--- Sample transactions with different risk levels
-INSERT INTO transactions (transaction_id, amount, type, description, timestamp, risk_level, status) VALUES
--- Normal transactions (LOW risk)
-('TXN-001', 25.99, 'PURCHASE', 'Coffee Shop', CURRENT_TIMESTAMP, 'LOW', 'APPROVED'),
-('TXN-002', 89.50, 'PURCHASE', 'Book Store', CURRENT_TIMESTAMP, 'LOW', 'APPROVED'),
-('TXN-003', 150.00, 'PURCHASE', 'Grocery Store', CURRENT_TIMESTAMP, 'LOW', 'APPROVED'),
-('TXN-004', 45.00, 'PURCHASE', 'Gas Station', CURRENT_TIMESTAMP, 'LOW', 'APPROVED'),
+-- Sample transactions matching frontend expectations
+-- LOW risk transactions
+INSERT INTO transactions (transaction_id, amount, type, description, timestamp, risk_level, status, fraud_score) VALUES
+('TXN-2024-001', 120.00, 'Card Present', 'Store Purchase', CURRENT_TIMESTAMP, 'LOW', 'APPROVED', 15),
+('TXN-2024-002', 45.50, 'Online Purchase', 'E-commerce', CURRENT_TIMESTAMP, 'LOW', 'APPROVED', 12),
+('TXN-2024-003', 300.00, 'ATM Withdrawal', 'Cash Withdrawal', CURRENT_TIMESTAMP, 'LOW', 'APPROVED', 18);
 
--- Medium risk transactions
-('TXN-005', 500.00, 'ONLINE_PURCHASE', 'Electronics Store', CURRENT_TIMESTAMP, 'MEDIUM', 'PENDING'),
-('TXN-006', 200.00, 'ATM', 'Cash Withdrawal', CURRENT_TIMESTAMP, 'MEDIUM', 'PENDING'),
-('TXN-007', 300.00, 'TRANSFER', 'Bank Transfer', CURRENT_TIMESTAMP, 'MEDIUM', 'PENDING'),
+-- MEDIUM risk transactions
+INSERT INTO transactions (transaction_id, amount, type, description, timestamp, risk_level, status, fraud_score) VALUES
+('TXN-2024-004', 890.50, 'CNP Transaction', 'Card Not Present', CURRENT_TIMESTAMP, 'MEDIUM', 'PENDING', 55),
+('TXN-2024-005', 750.00, 'Mobile Payment', 'Digital Wallet', CURRENT_TIMESTAMP, 'MEDIUM', 'PENDING', 48);
 
--- High risk transactions
-('TXN-008', 1500.00, 'INTERNATIONAL_TRANSFER', 'Overseas Transfer', CURRENT_TIMESTAMP, 'HIGH', 'FLAGGED'),
-('TXN-009', 2500.00, 'WIRE_TRANSFER', 'Wire Transfer', CURRENT_TIMESTAMP, 'HIGH', 'FLAGGED'),
-('TXN-010', 800.00, 'CRYPTO_PURCHASE', 'Cryptocurrency Exchange', CURRENT_TIMESTAMP, 'HIGH', 'FLAGGED'),
+-- HIGH risk transactions
+INSERT INTO transactions (transaction_id, amount, type, description, timestamp, risk_level, status, fraud_score) VALUES
+('TXN-2024-006', 4567.89, 'Online Purchase', 'Large Transaction', CURRENT_TIMESTAMP, 'HIGH', 'FLAGGED', 95),
+('TXN-2024-007', 1899.00, 'Online Purchase', 'Suspicious Pattern', CURRENT_TIMESTAMP, 'HIGH', 'FLAGGED', 88),
+('TXN-2024-008', 3200.00, 'Wire Transfer', 'International Transfer', CURRENT_TIMESTAMP, 'HIGH', 'FLAGGED', 92);
 
--- Critical risk transactions
-('TXN-011', 10000.00, 'INTERNATIONAL_WIRE', 'Large International Wire', CURRENT_TIMESTAMP, 'CRITICAL', 'BLOCKED'),
-('TXN-012', 5000.00, 'SUSPICIOUS_TRANSFER', 'Unusual Transfer Pattern', CURRENT_TIMESTAMP, 'CRITICAL', 'BLOCKED');
+-- CRITICAL risk transactions
+INSERT INTO transactions (transaction_id, amount, type, description, timestamp, risk_level, status, fraud_score) VALUES
+('TXN-2024-009', 10000.00, 'Wire Transfer', 'High Value Transfer', CURRENT_TIMESTAMP, 'CRITICAL', 'BLOCKED', 98),
+('TXN-2024-010', 8500.00, 'Crypto Purchase', 'Cryptocurrency', CURRENT_TIMESTAMP, 'CRITICAL', 'BLOCKED', 97);

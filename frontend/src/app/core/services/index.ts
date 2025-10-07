@@ -1,5 +1,7 @@
 // Core services barrel file
-// Export all core services from this file for easier imports
+export * from './transaction.service';
+export * from './user.service';
+
 
 // Example future exports:
 // export * from './auth.service';

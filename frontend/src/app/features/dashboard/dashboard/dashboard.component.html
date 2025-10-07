@@ -30,18 +30,18 @@
         <a [routerLink]="['/transaction', transaction.id]" class="flex-grow flex justify-between items-center">
           <div>
             <!-- Feature 1: Interpolation for transaction ID -->
-            <strong class="font-medium text-gray-800">{{ transaction.id }}</strong>
+            <strong class="font-medium text-gray-800">{{ transaction.transactionId }}</strong>
             <!-- Feature 1: Interpolation with pipe for currency formatting -->
             <small class="block text-gray-500 text-sm">{{ transaction.amount | currency }} &bull; {{ transaction.type
-              }} &bull; {{ transaction.time }}</small>
+              }} &bull; {{ transaction.timestamp | date:'short' }}</small>
           </div>
           <!-- Feature 2: NgClass for conditional CSS classes based on risk level -->
           <span class="px-3 py-1 text-xs font-medium rounded-full" [ngClass]="{
-                  'bg-red-100 text-red-800': transaction.risk === 'HIGH',
-                  'bg-yellow-100 text-yellow-800': transaction.risk === 'MEDIUM',
-                  'bg-green-100 text-green-800': transaction.risk === 'LOW'
+                  'bg-red-100 text-red-800': transaction.riskLevel === 'HIGH' || transaction.riskLevel === 'CRITICAL',
+                  'bg-yellow-100 text-yellow-800': transaction.riskLevel === 'MEDIUM',
+                  'bg-green-100 text-green-800': transaction.riskLevel === 'LOW'
                 }">
-            {{ transaction.risk }} RISK
+            {{ transaction.riskLevel }} RISK
           </span>
         </a>
       </div>
