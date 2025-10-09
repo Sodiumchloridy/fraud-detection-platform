@@ -1,3 +1,6 @@
+> [!NOTE]
+> This project is part of academic coursework for UECS3563 Industry Professional Domain Skill Development.
+
 # Fraud Detection System
 <img width="940" height="369" alt="image" src="https://github.com/user-attachments/assets/c526c07d-f588-40d3-b103-16177a54093f" />
 
