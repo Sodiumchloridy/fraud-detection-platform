@@ -1,6 +1,7 @@
 # Fraud Detection System
+<img width="940" height="369" alt="image" src="https://github.com/user-attachments/assets/c526c07d-f588-40d3-b103-16177a54093f" />
 
-A full-stack web application for monitoring and analyzing fraudulent transactions using Angular and Spring Boot.
+A full-stack web application prototype for monitoring and analyzing fraudulent transactions using Angular and Spring Boot.
 
 ## Project Structure
 
