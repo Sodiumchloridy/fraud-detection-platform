@@ -4,7 +4,6 @@ import com.workshop.backend.dto.TransactionDto;
 import com.workshop.backend.exception.InvalidRequestException;
 import com.workshop.backend.exception.ResourceNotFoundException;
 import com.workshop.backend.model.Transaction;
-import com.workshop.backend.model.Transaction.RiskLevel;
 import com.workshop.backend.repository.TransactionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -12,11 +11,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/transactions")
@@ -36,7 +35,7 @@ public class TransactionController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Transaction> getTransactionById(@PathVariable Long id) {
+    public ResponseEntity<Transaction> getTransactionById(@PathVariable UUID id) {
         Transaction transaction = transactionRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Transaction", id));
         return ResponseEntity.ok(transaction);
@@ -48,10 +47,8 @@ public class TransactionController {
      */
     @GetMapping("/high-risk")
     public ResponseEntity<List<Transaction>> getHighRiskTransactions() {
-        // Derived query - finds HIGH and CRITICAL risk transactions
-        List<Transaction> highRisk = transactionRepository.findByRiskLevelIn(
-            List.of(RiskLevel.HIGH, RiskLevel.CRITICAL)
-        );
+        // Find transactions with risk score >= 0.7
+        List<Transaction> highRisk = transactionRepository.findByRiskScoreGreaterThanEqual(0.7);
         return ResponseEntity.ok(highRisk);
     }
 
@@ -63,12 +60,15 @@ public class TransactionController {
     public ResponseEntity<Map<String, Object>> getTransactionStats() {
         Map<String, Object> stats = new HashMap<>();
         
-        // JPQL aggregate queries
+        // Aggregate queries
         long totalCount = transactionRepository.count();
-        long lowCount = transactionRepository.countByRiskLevel(RiskLevel.LOW);
-        long mediumCount = transactionRepository.countByRiskLevel(RiskLevel.MEDIUM);
-        long highCount = transactionRepository.countByRiskLevel(RiskLevel.HIGH);
-        long criticalCount = transactionRepository.countByRiskLevel(RiskLevel.CRITICAL);
+        long lowCount = transactionRepository.countByRiskScoreGreaterThanEqual(0.0) 
+                      - transactionRepository.countByRiskScoreGreaterThanEqual(0.3);
+        long mediumCount = transactionRepository.countByRiskScoreGreaterThanEqual(0.3)
+                         - transactionRepository.countByRiskScoreGreaterThanEqual(0.6);
+        long highCount = transactionRepository.countByRiskScoreGreaterThanEqual(0.6)
+                       - transactionRepository.countByRiskScoreGreaterThanEqual(0.8);
+        long criticalCount = transactionRepository.countByRiskScoreGreaterThanEqual(0.8);
         
         stats.put("total", totalCount);
         stats.put("lowRisk", lowCount);
@@ -88,11 +88,11 @@ public class TransactionController {
     @PostMapping
     public ResponseEntity<Transaction> createTransaction(@RequestBody Transaction transaction) {
         // Input validation
-        if (transaction.getAmount() == null || transaction.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
+        if (transaction.getAmount() == null || transaction.getAmount() <= 0) {
             throw new InvalidRequestException("Transaction amount must be greater than zero");
         }
-        if (transaction.getType() == null || transaction.getType().trim().isEmpty()) {
-            throw new InvalidRequestException("Transaction type is required");
+        if (transaction.getCategory() == null || transaction.getCategory().trim().isEmpty()) {
+            throw new InvalidRequestException("Transaction category is required");
         }
         
         // Set timestamp if not provided
@@ -111,7 +111,7 @@ public class TransactionController {
      */
     @PatchMapping("/{id}/status")
     public ResponseEntity<Transaction> updateTransactionStatus(
-            @PathVariable Long id,
+            @PathVariable UUID id,
             @RequestParam String status) {
         
         // CRUD - Read and Update
@@ -128,7 +128,7 @@ public class TransactionController {
      * DELETE transaction
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Map<String, String>> deleteTransaction(@PathVariable Long id) {
+    public ResponseEntity<Map<String, String>> deleteTransaction(@PathVariable UUID id) {
         // Check existence before delete
         if (!transactionRepository.existsById(id)) {
             throw new ResourceNotFoundException("Transaction", id);
@@ -156,32 +156,30 @@ public class TransactionController {
 
             // Create transaction
             Transaction txn = new Transaction();
-            txn.setTransactionId("TXN_" + System.currentTimeMillis());
-            txn.setAmount(BigDecimal.valueOf(dto.getAmount()));
-            txn.setType(dto.getCategory());
+            txn.setCcNum(dto.getCc_number());
+            txn.setAmount(dto.getAmount());
+            txn.setCategory(dto.getCategory());
+            txn.setLatitude(dto.getLatitude());
+            txn.setLongitude(dto.getLongitude());
             txn.setTimestamp(LocalDateTime.now());
 
             // Set fraud assessment
             double fraudProb = fraudResponse != null ? (Double) fraudResponse.get("fraud_probability") : 0.5;
-            txn.setFraudScore((int) (fraudProb * 100));
+            txn.setRiskScore(fraudProb);
             
             if (fraudProb >= 0.8) {
-                txn.setRiskLevel(RiskLevel.CRITICAL);
                 txn.setStatus("BLOCKED");
             } else if (fraudProb >= 0.6) {
-                txn.setRiskLevel(RiskLevel.HIGH);
                 txn.setStatus("FLAGGED");
             } else if (fraudProb >= 0.3) {
-                txn.setRiskLevel(RiskLevel.MEDIUM);
                 txn.setStatus("REVIEW");
             } else {
-                txn.setRiskLevel(RiskLevel.LOW);
                 txn.setStatus("APPROVED");
             }
 
             return new ResponseEntity<>(transactionRepository.save(txn), HttpStatus.CREATED);
         } catch (Exception e) {
-            throw new InvalidRequestException("Fraud detection failed");
+            throw new InvalidRequestException("Fraud detection failed: " + e.getMessage());
         }
     }
 }

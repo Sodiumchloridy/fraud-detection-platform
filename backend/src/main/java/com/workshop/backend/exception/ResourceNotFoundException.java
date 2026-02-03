@@ -1,5 +1,7 @@
 package com.workshop.backend.exception;
 
+import java.util.UUID;
+
 /**
  * Custom exception for resource not found scenarios
  * Thrown when a requested entity (Transaction, User, etc.) doesn't exist
@@ -11,5 +13,9 @@ public class ResourceNotFoundException extends RuntimeException {
 
     public ResourceNotFoundException(String resourceName, Long id) {
         super(String.format("%s not found with id: %d", resourceName, id));
+    }
+
+    public ResourceNotFoundException(String resourceName, UUID id) {
+        super(String.format("%s not found with id: %s", resourceName, id));
     }
 }

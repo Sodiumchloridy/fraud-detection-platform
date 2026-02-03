@@ -1,36 +1,40 @@
 package com.workshop.backend.repository;
 
 import com.workshop.backend.model.Transaction;
-import com.workshop.backend.model.Transaction.RiskLevel;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Repository for Transaction CRUD operations
  * Custom queries (derived, JPQL, native SQL)
  */
 @Repository
-public interface TransactionRepository extends JpaRepository<Transaction, Long> {
+public interface TransactionRepository extends JpaRepository<Transaction, UUID> {
 
     /**
-     * Derived query - finds transactions with specific risk level
+     * Finds high-risk transactions based on riskScore threshold
      */
-    List<Transaction> findByRiskLevel(RiskLevel riskLevel);
+    List<Transaction> findByRiskScoreGreaterThanEqual(Double threshold);
 
     /**
-     * Derived query - finds HIGH or CRITICAL risk transactions
-     * Used by: /api/transactions/high-risk endpoint
+     * Finds transactions by status
      */
-    List<Transaction> findByRiskLevelIn(List<RiskLevel> riskLevels);
+    List<Transaction> findByStatus(String status);
 
     /**
-     * JPQL aggregate query - counts transactions by risk level
+     * Finds transactions by credit card number
+     */
+    List<Transaction> findByCcNum(String ccNum);
+
+    /**
+     * JPQL aggregate query - counts high risk transactions (score >= 0.7)
      * Used by: /api/transactions/stats endpoint
      */
-    @Query("SELECT COUNT(t) FROM Transaction t WHERE t.riskLevel = :riskLevel")
-    Long countByRiskLevel(@Param("riskLevel") RiskLevel riskLevel);
+    @Query("SELECT COUNT(t) FROM Transaction t WHERE t.riskScore >= :threshold")
+    Long countByRiskScoreGreaterThanEqual(@Param("threshold") Double threshold);
 }

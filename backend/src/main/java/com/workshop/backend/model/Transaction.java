@@ -2,35 +2,41 @@ package com.workshop.backend.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
-/**
- * Domain class for Transaction entity
- * Maps to database table with JPA annotations
- */
 @Entity
 @Table(name = "transactions")
-@Data
+@Data // Lombok handles Getters/Setters
 public class Transaction {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
 
-    private String transactionId;
-    private BigDecimal amount;
-    private String type;
-    private String description;
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
+
+    // 1. Identity
+    @Column(nullable = false)
+    private String ccNum; // e.g., "user_123"
+
+    // 2. Features for Model
+    @Column(nullable = false)
+    private Double amount;
+
+    @Column(nullable = false)
+    private String category; // e.g., "gas_transport"
+
+    // 3. Spatio-Temporal Data (CRITICAL for Velocity)
+    @Column(nullable = false)
+    private Double latitude; 
+
+    @Column(nullable = false)
+    private Double longitude;
+
+    @Column(nullable = false)
     private LocalDateTime timestamp;
 
-    @Enumerated(EnumType.STRING)
-    private RiskLevel riskLevel;
-
-    private String status;
+    // 4. The Verdict
+    private Double riskScore; // 0.99
     
-    private Integer fraudScore; // AI fraud detection score (0-100)
-
-    public enum RiskLevel {
-        LOW, MEDIUM, HIGH, CRITICAL
-    }
+    private String status;    // "BLOCKED"
 }
