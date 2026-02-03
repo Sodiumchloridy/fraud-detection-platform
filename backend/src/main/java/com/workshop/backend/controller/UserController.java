@@ -12,7 +12,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * FEATURE 1 & 2: REST API Controller for User Authentication
+ * REST API Controller for User Authentication
  * Simplified to support login functionality needed by frontend
  */
 @RestController
@@ -24,8 +24,7 @@ public class UserController {
     private UserRepository userRepository;
 
     /**
-     * FEATURE 1: POST endpoint for user login
-     * FEATURE 5: Uses derived query findByUsername
+     * POST endpoint for user login
      * Used by: LoginComponent
      */
     @PostMapping("/login")
@@ -33,7 +32,7 @@ public class UserController {
         String username = credentials.get("username");
         String password = credentials.get("password");
         
-        // FEATURE 6: Input validation
+        // Input validation
         if (username == null || username.trim().isEmpty()) {
             throw new InvalidRequestException("Username is required");
         }
@@ -41,7 +40,7 @@ public class UserController {
             throw new InvalidRequestException("Password is required");
         }
         
-        // FEATURE 5: Derived query
+        // Derived query
         User user = userRepository.findByUsername(username)
             .orElseThrow(() -> new ResourceNotFoundException("Invalid username or password"));
         

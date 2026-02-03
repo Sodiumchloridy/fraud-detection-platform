@@ -6,7 +6,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
- * FEATURE 3: Domain class for Transaction entity
+ * Domain class for Transaction entity
  * Maps to database table with JPA annotations
  */
 @Entity

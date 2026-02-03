@@ -10,7 +10,7 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import org.springframework.web.servlet.NoHandlerFoundException;
 
 /**
- * FEATURE 6: Global exception handler for the entire application
+ * Global exception handler for the entire application
  * @RestControllerAdvice catches exceptions across all controllers
  * Returns custom error responses with appropriate HTTP status codes
  */
@@ -18,7 +18,7 @@ import org.springframework.web.servlet.NoHandlerFoundException;
 public class GlobalExceptionHandler {
 
     /**
-     * FEATURE 6: Handles ResourceNotFoundException
+     * Handles ResourceNotFoundException
      * Returns 404 NOT FOUND when requested resource doesn't exist
      */
     @ExceptionHandler(ResourceNotFoundException.class)
@@ -37,7 +37,7 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * FEATURE 6: Handles InvalidRequestException
+     * Handles InvalidRequestException
      * Returns 400 BAD REQUEST when client sends invalid data
      */
     @ExceptionHandler(InvalidRequestException.class)
@@ -56,7 +56,7 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * FEATURE 6: Handles malformed JSON in request body
+     * Handles malformed JSON in request body
      * Returns 400 BAD REQUEST when JSON cannot be parsed
      */
     @ExceptionHandler(HttpMessageNotReadableException.class)
@@ -75,7 +75,7 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * FEATURE 6: Handles type mismatch in path variables or request parameters
+     * Handles type mismatch in path variables or request parameters
      * Returns 400 BAD REQUEST when parameter type is wrong (e.g., string instead of number)
      */
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
@@ -99,7 +99,7 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * FEATURE 6: Handles requests to non-existent API endpoints
+     * Handles requests to non-existent API endpoints
      * Returns 404 NOT FOUND when URL path doesn't match any controller mapping
      */
     @ExceptionHandler(NoHandlerFoundException.class)
@@ -118,7 +118,7 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * FEATURE 6: Catch-all handler for any unexpected server errors
+     * Catch-all handler for any unexpected server errors
      * Returns 500 INTERNAL SERVER ERROR with safe error message
      * Prevents sensitive stack traces from being exposed to clients
      */

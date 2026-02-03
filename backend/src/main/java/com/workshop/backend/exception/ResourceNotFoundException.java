@@ -1,7 +1,7 @@
 package com.workshop.backend.exception;
 
 /**
- * FEATURE 6: Custom exception for resource not found scenarios
+ * Custom exception for resource not found scenarios
  * Thrown when a requested entity (Transaction, User, etc.) doesn't exist
  */
 public class ResourceNotFoundException extends RuntimeException {

@@ -7,14 +7,14 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 /**
- * FEATURE 4: Repository for User CRUD operations
- * FEATURE 5: Derived query methods
+ * Repository for User CRUD operations
+ * Derived query methods
  */
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
 
     /**
-     * FEATURE 5: Derived query - finds user by username
+     * Derived query - finds user by username
      * Used by: Login endpoint
      */
     Optional<User> findByUsername(String username);

@@ -4,7 +4,7 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 /**
- * FEATURE 6: Custom error response structure
+ * Custom error response structure
  * This class defines the structure of error responses sent to clients
  * Provides clear information about what went wrong
  */
