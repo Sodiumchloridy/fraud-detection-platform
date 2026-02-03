@@ -1,12 +1,12 @@
 package com.workshop.backend.controller;
 
-import com.workshop.backend.exception.InvalidRequestException;
-import com.workshop.backend.exception.ResourceNotFoundException;
 import com.workshop.backend.model.User;
 import com.workshop.backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -34,23 +34,23 @@ public class UserController {
         
         // Input validation
         if (username == null || username.trim().isEmpty()) {
-            throw new InvalidRequestException("Username is required");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Username is required");
         }
         if (password == null || password.trim().isEmpty()) {
-            throw new InvalidRequestException("Password is required");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password is required");
         }
         
         // Derived query
         User user = userRepository.findByUsername(username)
-            .orElseThrow(() -> new ResourceNotFoundException("Invalid username or password"));
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Invalid username or password"));
         
         // Simple password check (in production, use proper password hashing)
         if (!user.getPassword().equals(password)) {
-            throw new InvalidRequestException("Invalid username or password");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid username or password");
         }
         
         if (!user.isEnabled()) {
-            throw new InvalidRequestException("User account is disabled");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User account is disabled");
         }
         
         Map<String, Object> response = new HashMap<>();

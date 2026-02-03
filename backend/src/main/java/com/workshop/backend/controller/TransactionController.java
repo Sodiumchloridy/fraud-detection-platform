@@ -1,8 +1,6 @@
 package com.workshop.backend.controller;
 
 import com.workshop.backend.dto.TransactionDto;
-import com.workshop.backend.exception.InvalidRequestException;
-import com.workshop.backend.exception.ResourceNotFoundException;
 import com.workshop.backend.model.Transaction;
 import com.workshop.backend.repository.TransactionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -37,7 +36,7 @@ public class TransactionController {
     @GetMapping("/{id}")
     public ResponseEntity<Transaction> getTransactionById(@PathVariable UUID id) {
         Transaction transaction = transactionRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Transaction", id));
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Transaction not found with id: " + id));
         return ResponseEntity.ok(transaction);
     }
 
@@ -89,10 +88,10 @@ public class TransactionController {
     public ResponseEntity<Transaction> createTransaction(@RequestBody Transaction transaction) {
         // Input validation
         if (transaction.getAmount() == null || transaction.getAmount() <= 0) {
-            throw new InvalidRequestException("Transaction amount must be greater than zero");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Transaction amount must be greater than zero");
         }
         if (transaction.getCategory() == null || transaction.getCategory().trim().isEmpty()) {
-            throw new InvalidRequestException("Transaction category is required");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Transaction category is required");
         }
         
         // Set timestamp if not provided
@@ -116,7 +115,7 @@ public class TransactionController {
         
         // CRUD - Read and Update
         Transaction transaction = transactionRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Transaction", id));
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Transaction not found with id: " + id));
         
         transaction.setStatus(status);
         Transaction updated = transactionRepository.save(transaction);
@@ -131,7 +130,7 @@ public class TransactionController {
     public ResponseEntity<Map<String, String>> deleteTransaction(@PathVariable UUID id) {
         // Check existence before delete
         if (!transactionRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Transaction", id);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Transaction not found with id: " + id);
         }
         
         // CRUD - Delete
@@ -179,7 +178,7 @@ public class TransactionController {
 
             return new ResponseEntity<>(transactionRepository.save(txn), HttpStatus.CREATED);
         } catch (Exception e) {
-            throw new InvalidRequestException("Fraud detection failed: " + e.getMessage());
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Fraud detection failed: " + e.getMessage());
         }
     }
 }
