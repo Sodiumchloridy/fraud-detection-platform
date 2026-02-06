@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { MainLayoutComponent } from '../../../shared/layouts/main-layout/main-layout.component';
-import { TransactionService, Transaction } from '../../../core/services';
+import { TransactionService, Transaction, getRiskLevel } from '../../../core/services';
 
 @Component({
   selector: 'app-high-risk-alerts',
@@ -13,6 +13,7 @@ import { TransactionService, Transaction } from '../../../core/services';
 })
 export class HighRiskAlertsComponent implements OnInit {
   highRiskTransactions: Transaction[] = [];
+  getRiskLevel = getRiskLevel;
 
   constructor(private transactionService: TransactionService) {}
 

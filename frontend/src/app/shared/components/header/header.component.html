@@ -1,17 +1,12 @@
-<!-- Feature 4: Reusable header component used across multiple pages -->
-<!-- Feature 5: Receives data via @Input and emits events via @Output -->
 <header class="bg-white shadow-sm border-b border-gray-200">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="flex justify-between items-center py-4">
       <div class="flex items-center gap-8">
-        <!-- Feature 1: Interpolation for dynamic page title -->
         <h1 class="text-xl font-semibold text-gray-800">{{ pageTitle }}</h1>
-        <!-- Feature 1: Interpolation for dynamic user name -->
         <p class="text-sm text-gray-500">Welcome, {{ userName }}</p>
       </div>
       <div class="flex items-center gap-4">
         <div class="relative inline-block text-left">
-          <!-- Feature 3: Event binding for dropdown toggle -->
           <button 
             type="button"
             (click)="toggleDropdown()"
@@ -24,7 +19,6 @@
             </svg>
           </button>
           
-          <!-- Feature 6: Conditional rendering using @if directive -->
           @if (isDropdownOpen) {
             <div class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
               <div class="py-1" role="menu">
@@ -35,7 +29,6 @@
                   role="menuitem">
                   Settings
                 </a>
-                <!-- Feature 3: Event binding to emit logout event to parent -->
                 <a 
                   (click)="onLogout()" 
                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer" 

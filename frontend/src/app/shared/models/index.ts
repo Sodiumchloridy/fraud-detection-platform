@@ -1,7 +1,6 @@
 // Shared models barrel file
 // Export all shared TypeScript interfaces and types from this file
 
-// Example future exports:
-// export * from './transaction.model';
-// export * from './user.model';
-// export * from './alert.model';
+// Re-export transaction types from the service
+export type { Transaction, TransactionStats } from '../../core/services/transaction.service';
+export { getRiskLevel } from '../../core/services/transaction.service';

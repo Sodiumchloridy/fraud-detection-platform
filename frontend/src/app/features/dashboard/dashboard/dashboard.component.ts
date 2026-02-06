@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { MainLayoutComponent } from '../../../shared/layouts/main-layout/main-layout.component';
-import { TransactionService, Transaction, TransactionStats } from '../../../core/services';
+import { TransactionService, Transaction, TransactionStats, getRiskLevel } from '../../../core/services';
 
 /**
  * Feature 4: Dashboard component in component hierarchy (root -> dashboard -> layout -> header)
@@ -19,6 +19,7 @@ export class DashboardComponent implements OnInit {
   fraudAlerts = 0;
   transactions: Transaction[] = [];
   stats: TransactionStats | null = null;
+  getRiskLevel = getRiskLevel;
 
   constructor(private transactionService: TransactionService) {}
 

@@ -1,16 +1,11 @@
-<!-- Feature 4: Using layout component to wrap dashboard content -->
-<!-- Feature 5: Passing page title to layout via @Input -->
 <app-main-layout [pageTitle]="'Fraud Detection Dashboard'">
-  <!-- Feature 1: Content projection - dashboard content -->
   <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
     <div class="bg-white shadow rounded-lg p-6">
       <p class="text-sm font-medium text-gray-500">Transactions Today</p>
-      <!-- Feature 1: Interpolation for dynamic data -->
       <p class="text-3xl font-semibold text-gray-800">{{ transactionsToday }}</p>
     </div>
     <a routerLink="/high-risk-alerts" class="bg-white shadow rounded-lg p-6 block hover:bg-red-50 transition-colors">
       <p class="text-sm font-medium text-gray-500">High-Risk Alerts</p>
-      <!-- Feature 1: Interpolation for dynamic fraud alerts count -->
       <p class="text-3xl font-semibold text-red-600">{{ fraudAlerts }}</p>
     </a>
     <div class="bg-white shadow rounded-lg p-6">
@@ -19,29 +14,23 @@
     </div>
   </div>
 
-  <!-- Feature 2: Style binding with [style] -->
   <div class="shadow rounded-lg" [style.backgroundColor]="'white'">
     <h2 class="text-lg font-semibold p-6 border-b border-gray-200">Live Transaction Feed</h2>
     <div id="feed">
-      <!-- Feature 7: Rendering multiple elements using *ngFor -->
       <div *ngFor="let transaction of transactions"
         class="flex justify-between items-center p-4 border-b border-gray-200 last:border-b-0 hover:bg-gray-50">
-        <!-- Feature 1: Property binding with [routerLink] -->
         <a [routerLink]="['/transaction', transaction.id]" class="flex-grow flex justify-between items-center">
           <div>
-            <!-- Feature 1: Interpolation for transaction ID -->
-            <strong class="font-medium text-gray-800">{{ transaction.transactionId }}</strong>
-            <!-- Feature 1: Interpolation with pipe for currency formatting -->
-            <small class="block text-gray-500 text-sm">{{ transaction.amount | currency }} &bull; {{ transaction.type
+            <strong class="font-medium text-gray-800">{{ transaction.ccNum }}</strong>
+            <small class="block text-gray-500 text-sm">{{ transaction.amount | currency }} &bull; {{ transaction.category
               }} &bull; {{ transaction.timestamp | date:'short' }}</small>
           </div>
-          <!-- Feature 2: NgClass for conditional CSS classes based on risk level -->
           <span class="px-3 py-1 text-xs font-medium rounded-full" [ngClass]="{
-                  'bg-red-100 text-red-800': transaction.riskLevel === 'HIGH' || transaction.riskLevel === 'CRITICAL',
-                  'bg-yellow-100 text-yellow-800': transaction.riskLevel === 'MEDIUM',
-                  'bg-green-100 text-green-800': transaction.riskLevel === 'LOW'
+                  'bg-red-100 text-red-800': getRiskLevel(transaction.riskScore) === 'HIGH',
+                  'bg-yellow-100 text-yellow-800': getRiskLevel(transaction.riskScore) === 'MEDIUM',
+                  'bg-green-100 text-green-800': getRiskLevel(transaction.riskScore) === 'LOW'
                 }">
-            {{ transaction.riskLevel }} RISK
+            {{ getRiskLevel(transaction.riskScore) }} RISK
           </span>
         </a>
       </div>

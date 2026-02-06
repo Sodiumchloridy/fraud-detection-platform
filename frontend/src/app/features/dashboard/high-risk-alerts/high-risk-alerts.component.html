@@ -1,4 +1,3 @@
-<!-- Feature 4: Using layout component for consistent page structure -->
 <app-main-layout [pageTitle]="'High-Risk Alerts'">
   <div class="mb-4">
     <a routerLink="/dashboard" class="text-sm font-medium text-blue-600 hover:text-blue-800">&larr; Back to Dashboard</a>
@@ -7,17 +6,14 @@
   <div class="bg-white shadow rounded-lg">
     <h2 class="text-lg font-semibold p-6 border-b border-gray-200">High-Risk Transactions</h2>
     <div id="feed">
-      <!-- Feature 7: Using *ngFor to render multiple transaction items -->
       <div *ngFor="let transaction of highRiskTransactions" class="flex justify-between items-center p-4 border-b border-gray-200 last:border-b-0 hover:bg-gray-50">
-        <!-- Feature 1: Property binding for navigation -->
         <a [routerLink]="['/transaction', transaction.id]" class="flex-grow flex justify-between items-center">
           <div>
-            <!-- Feature 1: Interpolation for transaction data -->
-            <strong class="font-medium text-gray-800">{{ transaction.transactionId }}</strong>
-            <small class="block text-gray-500 text-sm">{{ transaction.amount | currency }} &bull; {{ transaction.type }} &bull; {{ transaction.timestamp | date:'short' }}</small>
+            <strong class="font-medium text-gray-800">{{ transaction.ccNum }}</strong>
+            <small class="block text-gray-500 text-sm">{{ transaction.amount | currency }} &bull; {{ transaction.category }} &bull; {{ transaction.timestamp | date:'short' }}</small>
           </div>
           <span class="px-3 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">
-            {{ transaction.riskLevel }} ({{ transaction.fraudScore }}%)
+            {{ getRiskLevel(transaction.riskScore) }} ({{ (transaction.riskScore * 100) | number:'1.0-1' }}%)
           </span>
         </a>
       </div>

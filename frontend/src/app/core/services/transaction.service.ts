@@ -3,15 +3,22 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 export interface Transaction {
-  id: number;
-  transactionId: string;
+  id: string;
+  ccNum: string;
   amount: number;
-  type: string;
-  description: string;
+  category: string;
+  latitude: number;
+  longitude: number;
   timestamp: string;
-  riskLevel: string;
+  riskScore: number;
   status: string;
-  fraudScore: number;
+}
+
+// Helper function to derive risk level from score
+export function getRiskLevel(riskScore: number): 'HIGH' | 'MEDIUM' | 'LOW' {
+  if (riskScore >= 0.7) return 'HIGH';
+  if (riskScore >= 0.4) return 'MEDIUM';
+  return 'LOW';
 }
 
 export interface TransactionStats {
@@ -36,7 +43,7 @@ export class TransactionService {
     return this.http.get<Transaction[]>(this.apiUrl);
   }
 
-  getTransactionById(id: number): Observable<Transaction> {
+  getTransactionById(id: string): Observable<Transaction> {
     return this.http.get<Transaction>(`${this.apiUrl}/${id}`);
   }
 
@@ -52,11 +59,11 @@ export class TransactionService {
     return this.http.post<Transaction>(this.apiUrl, transaction);
   }
 
-  updateTransactionStatus(id: number, status: string): Observable<Transaction> {
+  updateTransactionStatus(id: string, status: string): Observable<Transaction> {
     return this.http.patch<Transaction>(`${this.apiUrl}/${id}/status?status=${status}`, {});
   }
 
-  deleteTransaction(id: number): Observable<void> {
+  deleteTransaction(id: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 }
