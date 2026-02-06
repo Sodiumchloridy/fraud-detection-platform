@@ -3,6 +3,7 @@ import { LoginComponent } from './features/auth/login/login.component';
 import { DashboardComponent } from './features/dashboard/dashboard/dashboard.component';
 import { HighRiskAlertsComponent } from './features/dashboard/high-risk-alerts/high-risk-alerts.component';
 import { TransactionDetailsComponent } from './features/dashboard/transaction-details/transaction-details.component';
+import { PosSimulatorComponent } from './features/simulation/pos-simulator/pos-simulator.component';
 import { SettingsComponent } from './features/settings/settings/settings.component';
 import { NotFoundComponent } from './pages/not-found/not-found.component';
 
@@ -12,6 +13,7 @@ export const routes: Routes = [
   { path: 'dashboard', component: DashboardComponent },
   { path: 'high-risk-alerts', component: HighRiskAlertsComponent },
   { path: 'transaction/:id', component: TransactionDetailsComponent },
+  { path: 'simulator', component: PosSimulatorComponent },
   { path: 'settings', component: SettingsComponent },
   { path: '**', component: NotFoundComponent }
 ];

@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 import pandas as pd
 import numpy as np
+import xgboost as xgb
 from xgboost import XGBClassifier
 import time
 
@@ -10,6 +11,24 @@ model = XGBClassifier()
 model.load_model("model.json")
 user_memory = {}
 MAX_USERS_IN_MEMORY = 10000  # Prevent unbounded memory growth
+
+# Category encoding (must match training data)
+CATEGORY_ENCODING = {
+    'entertainment': 0,
+    'food_dining': 1,
+    'gas_transport': 2,
+    'grocery_net': 3,
+    'grocery_pos': 4,
+    'health_fitness': 5,
+    'home': 6,
+    'kids_pets': 7,
+    'misc_net': 8,
+    'misc_pos': 9,
+    'personal_care': 10,
+    'shopping_net': 11,
+    'shopping_pos': 12,
+    'travel': 13
+}
 
 def haversine_single(lat1, lon1, lat2, lon2):
     lat1, lon1, lat2, lon2 = map(np.radians, [lat1, lon1, lat2, lon2])
@@ -60,19 +79,23 @@ def predict_fraud(txn: Transaction):
         user_memory[txn.cc_number] = {'lat': txn.latitude, 'long': txn.longitude, 'history': new_history}
 
     # Must match XGBoost training columns exactly
-    input_data = pd.DataFrame([{
-        'amt': txn.amount,
-        'category': txn.category,
-        'merch_lat': txn.latitude,
-        'merch_long': txn.longitude,
-        'dist_diff': dist_diff,
-        'time_diff': time_diff,
-        'velocity': velocity,
-        'freq_1h': freq_1h
-    }])
-    input_data['category'] = input_data['category'].astype('category')
+    category_encoded = CATEGORY_ENCODING.get(txn.category, 0)
+    feature_order = ['amt', 'category', 'merch_lat', 'merch_long', 'dist_diff', 'time_diff', 'velocity', 'freq_1h']
+    input_data = pd.DataFrame([[
+        float(txn.amount),
+        float(category_encoded),
+        float(txn.latitude),
+        float(txn.longitude),
+        float(dist_diff),
+        float(time_diff),
+        float(velocity),
+        float(freq_1h)
+    ]], columns=feature_order)
     
-    prob = float(model.predict_proba(input_data)[0][1])
+    prob = float(model.get_booster().predict(
+        xgb.DMatrix(input_data, feature_names=feature_order)
+    )[0])
+    
     return {
         "fraud_probability": prob,
         "velocity_kmh": velocity,

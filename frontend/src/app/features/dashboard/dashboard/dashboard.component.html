@@ -1,5 +1,5 @@
 <app-main-layout [pageTitle]="'Fraud Detection Dashboard'">
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
     <div class="bg-white shadow rounded-lg p-6">
       <p class="text-sm font-medium text-gray-500">Transactions Today</p>
       <p class="text-3xl font-semibold text-gray-800">{{ transactionsToday }}</p>
@@ -12,6 +12,10 @@
       <p class="text-sm font-medium text-gray-500">Model Accuracy</p>
       <p class="text-3xl font-semibold text-green-600">99.8%</p>
     </div>
+    <a routerLink="/simulator" class="bg-white shadow rounded-lg p-6 block hover:bg-blue-50 transition-colors">
+      <p class="text-sm font-medium text-gray-500">POS Simulator</p>
+      <p class="text-xl font-semibold text-blue-600">Test Transactions &rarr;</p>
+    </a>
   </div>
 
   <div class="shadow rounded-lg" [style.backgroundColor]="'white'">
