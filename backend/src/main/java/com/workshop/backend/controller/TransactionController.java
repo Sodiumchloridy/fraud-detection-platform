@@ -1,14 +1,17 @@
 package com.workshop.backend.controller;
 
+import com.workshop.backend.service.SseEmitterService;
 import com.workshop.backend.dto.TransactionDto;
 import com.workshop.backend.model.Transaction;
 import com.workshop.backend.repository.TransactionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -26,6 +29,18 @@ public class TransactionController {
 
     @Autowired
     private RestTemplate restTemplate;
+
+    @Autowired
+    private SseEmitterService sseEmitterService;
+
+    /**
+     * SSE stream endpoint — clients connect here and receive real-time
+     * "transaction" and "stats" events whenever data changes.
+     */
+    @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter streamTransactions() {
+        return sseEmitterService.createEmitter();
+    }
 
     @GetMapping
     public ResponseEntity<List<Transaction>> getAllTransactions() {
@@ -101,6 +116,11 @@ public class TransactionController {
         
         // CRUD - Create
         Transaction savedTransaction = transactionRepository.save(transaction);
+
+        // Broadcast real-time update to SSE clients
+        sseEmitterService.broadcastTransaction(savedTransaction);
+        broadcastUpdatedStats();
+
         return new ResponseEntity<>(savedTransaction, HttpStatus.CREATED);
     }
 
@@ -176,9 +196,38 @@ public class TransactionController {
                 txn.setStatus("APPROVED");
             }
 
-            return new ResponseEntity<>(transactionRepository.save(txn), HttpStatus.CREATED);
+            Transaction saved = transactionRepository.save(txn);
+
+            // Broadcast real-time update to SSE clients
+            sseEmitterService.broadcastTransaction(saved);
+            broadcastUpdatedStats();
+
+            return new ResponseEntity<>(saved, HttpStatus.CREATED);
         } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Fraud detection failed: " + e.getMessage());
         }
+    }
+
+    /**
+     * Helper: recompute stats and broadcast to all SSE clients.
+     */
+    private void broadcastUpdatedStats() {
+        Map<String, Object> stats = new HashMap<>();
+        long totalCount = transactionRepository.count();
+        long lowCount = transactionRepository.countByRiskScoreGreaterThanEqual(0.0)
+                      - transactionRepository.countByRiskScoreGreaterThanEqual(0.3);
+        long mediumCount = transactionRepository.countByRiskScoreGreaterThanEqual(0.3)
+                         - transactionRepository.countByRiskScoreGreaterThanEqual(0.6);
+        long highCount = transactionRepository.countByRiskScoreGreaterThanEqual(0.6)
+                       - transactionRepository.countByRiskScoreGreaterThanEqual(0.8);
+        long criticalCount = transactionRepository.countByRiskScoreGreaterThanEqual(0.8);
+        stats.put("total", totalCount);
+        stats.put("lowRisk", lowCount);
+        stats.put("mediumRisk", mediumCount);
+        stats.put("highRisk", highCount);
+        stats.put("critical", criticalCount);
+        stats.put("flagged", highCount + criticalCount);
+        stats.put("blocked", criticalCount);
+        sseEmitterService.broadcastStats(stats);
     }
 }

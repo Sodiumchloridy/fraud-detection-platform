@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, NgZone } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
@@ -37,7 +37,9 @@ export interface TransactionStats {
 export class TransactionService {
   private apiUrl = 'http://localhost:8080/api/transactions';
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient, private zone: NgZone) { }
+
+  // ── REST endpoints ──
 
   getAllTransactions(): Observable<Transaction[]> {
     return this.http.get<Transaction[]>(this.apiUrl);
@@ -65,5 +67,67 @@ export class TransactionService {
 
   deleteTransaction(id: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
+
+  // ── SSE (Server-Sent Events) real-time stream ──
+
+  /**
+   * Connects to the backend SSE stream and emits new Transaction
+   * objects as they arrive. Automatically reconnects on error.
+   */
+  streamTransactions(): Observable<Transaction> {
+    return new Observable<Transaction>(observer => {
+      const eventSource = new EventSource(`${this.apiUrl}/stream`);
+
+      eventSource.addEventListener('transaction', (event: MessageEvent) => {
+        this.zone.run(() => {
+          try {
+            const transaction: Transaction = JSON.parse(event.data);
+            observer.next(transaction);
+          } catch (e) {
+            console.error('Failed to parse transaction SSE event', e);
+          }
+        });
+      });
+
+      eventSource.onerror = () => {
+        // EventSource auto-reconnects on error; we just log it
+        console.warn('SSE connection error — browser will auto-reconnect');
+      };
+
+      // Cleanup when the observable is unsubscribed
+      return () => {
+        eventSource.close();
+      };
+    });
+  }
+
+  /**
+   * Connects to the backend SSE stream and emits TransactionStats
+   * updates as they arrive.
+   */
+  streamStats(): Observable<TransactionStats> {
+    return new Observable<TransactionStats>(observer => {
+      const eventSource = new EventSource(`${this.apiUrl}/stream`);
+
+      eventSource.addEventListener('stats', (event: MessageEvent) => {
+        this.zone.run(() => {
+          try {
+            const stats: TransactionStats = JSON.parse(event.data);
+            observer.next(stats);
+          } catch (e) {
+            console.error('Failed to parse stats SSE event', e);
+          }
+        });
+      });
+
+      eventSource.onerror = () => {
+        console.warn('SSE stats connection error — browser will auto-reconnect');
+      };
+
+      return () => {
+        eventSource.close();
+      };
+    });
   }
 }
