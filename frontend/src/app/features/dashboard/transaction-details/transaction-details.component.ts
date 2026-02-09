@@ -42,8 +42,8 @@ export class TransactionDetailsComponent implements OnInit {
 
   fetchLocationName(lat: number, lon: number) {
     const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&zoom=12&accept-language=en-US,en&format=jsonv2`;
-    this.http.get<{ display_name: string }>(url).subscribe({
-      next: (res) => this.locationName = res.display_name,
+    this.http.get<{ display_name?: string; error?: string }>(url).subscribe({
+      next: (res) => this.locationName = (res.display_name && !res.error) ? res.display_name : `${lat}, ${lon}`,
       error: () => this.locationName = `${lat}, ${lon}`
     });
   }
