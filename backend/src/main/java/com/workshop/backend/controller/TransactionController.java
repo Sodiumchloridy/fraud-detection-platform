@@ -1,6 +1,8 @@
 package com.workshop.backend.controller;
 
+import com.workshop.backend.dto.FraudPredictionDto;
 import com.workshop.backend.dto.TransactionDto;
+import com.workshop.backend.mapper.TransactionMapper;
 import com.workshop.backend.model.Transaction;
 import com.workshop.backend.repository.TransactionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +29,9 @@ public class TransactionController {
     @Autowired
     private RestTemplate restTemplate;
 
+    @Autowired
+    private TransactionMapper transactionMapper;
+
     @GetMapping
     public ResponseEntity<List<Transaction>> getAllTransactions() {
         List<Transaction> transactions = transactionRepository.findAll();
@@ -46,7 +51,6 @@ public class TransactionController {
      */
     @GetMapping("/high-risk")
     public ResponseEntity<List<Transaction>> getHighRiskTransactions() {
-        // Find transactions with risk score >= 0.7
         List<Transaction> highRisk = transactionRepository.findByRiskScoreGreaterThanEqual(0.7);
         return ResponseEntity.ok(highRisk);
     }
@@ -81,30 +85,6 @@ public class TransactionController {
     }
 
     /**
-     * POST to create new transaction
-     * Used by: Dashboard for adding new transactions
-     */
-    @PostMapping
-    public ResponseEntity<Transaction> createTransaction(@RequestBody Transaction transaction) {
-        // Input validation
-        if (transaction.getAmount() == null || transaction.getAmount() <= 0) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Transaction amount must be greater than zero");
-        }
-        if (transaction.getCategory() == null || transaction.getCategory().trim().isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Transaction category is required");
-        }
-        
-        // Set timestamp if not provided
-        if (transaction.getTimestamp() == null) {
-            transaction.setTimestamp(LocalDateTime.now());
-        }
-        
-        // CRUD - Create
-        Transaction savedTransaction = transactionRepository.save(transaction);
-        return new ResponseEntity<>(savedTransaction, HttpStatus.CREATED);
-    }
-
-    /**
      * PATCH to update transaction status
      * Used by: TransactionDetailsComponent (mark as legitimate/fraud)
      */
@@ -124,54 +104,34 @@ public class TransactionController {
     }
 
     /**
-     * DELETE transaction
-     */
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Map<String, String>> deleteTransaction(@PathVariable UUID id) {
-        // Check existence before delete
-        if (!transactionRepository.existsById(id)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Transaction not found with id: " + id);
-        }
-        
-        // CRUD - Delete
-        transactionRepository.deleteById(id);
-        
-        Map<String, String> response = new HashMap<>();
-        response.put("message", "Transaction deleted successfully");
-        response.put("id", id.toString());
-        
-        return ResponseEntity.ok(response);
-    }
-
-    /**
      * POST new transaction with fraud detection
      */
     @PostMapping("/fraud-check")
     public ResponseEntity<Transaction> createTransactionWithFraudCheck(@RequestBody TransactionDto dto) {
         try {
-            // Call Python fraud detection
-            Map<String, Object> fraudResponse = restTemplate.postForObject(
-                "http://localhost:8000/predict", dto, Map.class);
+            FraudPredictionDto fraudResponse = restTemplate.postForObject(
+                "http://localhost:8000/predict", dto, FraudPredictionDto.class);
 
-            // Create transaction
-            Transaction txn = new Transaction();
-            txn.setCcNum(dto.getCc_number());
-            txn.setAmount(dto.getAmount());
-            txn.setCategory(dto.getCategory());
-            txn.setLatitude(dto.getLatitude());
-            txn.setLongitude(dto.getLongitude());
+            // Create transaction from DTO fields
+            Transaction txn = transactionMapper.toTransaction(dto);
             txn.setTimestamp(LocalDateTime.now());
 
-            // Set fraud assessment
-            double fraudProb = fraudResponse != null ? (Double) fraudResponse.get("fraud_probability") : 0.5;
+            // Required columns (avoid null constraint violations)
+            txn.setMerchant(dto.getMerchant() != null ? dto.getMerchant() : "");
+            txn.setChannel(dto.getChannel() != null ? dto.getChannel() : "in_store");
+
+            // Apply computed fraud features onto the transaction
+            double fraudProb = 0.5;
+            if (fraudResponse != null) {
+                fraudProb = fraudResponse.getFraudProbability();
+                transactionMapper.applyFeatures(fraudResponse.getFeatures(), txn);
+            }
             txn.setRiskScore(fraudProb);
             
-            if (fraudProb >= 0.8) {
+            if (fraudProb >= 0.70) {
                 txn.setStatus("BLOCKED");
-            } else if (fraudProb >= 0.6) {
+            } else if (fraudProb >= 0.40) {
                 txn.setStatus("FLAGGED");
-            } else if (fraudProb >= 0.3) {
-                txn.setStatus("REVIEW");
             } else {
                 txn.setStatus("APPROVED");
             }

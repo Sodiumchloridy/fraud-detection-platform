@@ -21,7 +21,7 @@
         class="animate-pop-in flex justify-between items-center p-4 border-b border-gray-200 last:border-b-0 hover:bg-gray-50">
         <a [routerLink]="['/transaction', transaction.id]" class="flex-grow flex justify-between items-center">
           <div>
-            <strong class="font-medium text-gray-800">{{ transaction.ccNum }}</strong>
+            <strong class="font-medium text-gray-800">{{ transaction.ccNumber }}</strong>
             <small class="block text-gray-500 text-sm">{{ transaction.amount | currency }} &bull; {{ transaction.category
               }} &bull; {{ transaction.timestamp | date:'short' }}</small>
           </div>

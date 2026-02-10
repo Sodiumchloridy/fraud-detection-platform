@@ -4,17 +4,35 @@ import { Observable } from 'rxjs';
 
 export interface Transaction {
   id: string;
-  ccNum: string;
+  ccNumber: string;
   amount: number;
   category: string;
+  timestamp: string;
+  merchant: string;
+  f_channel: string;
+
+  /* Location */
   latitude: number;
   longitude: number;
-  timestamp: string;
+
+  /* Fraud Features */
+  f_amount_zscore: number;
+  f_amount_to_avg_ratio: number;
+  f_travel_velocity_kmh: number;
+  f_travel_distance_km: number;
+  f_txn_count_1h: number;
+  f_txn_count_24h: number;
+  f_txn_count_7d: number;
+  f_seconds_since_last_txn: number;
+  f_hour_of_day: number;
+  f_is_new_device: number;
+  f_is_new_merchant: number;
+
+  /* Verdict */
   riskScore: number;
   status: string;
 }
 
-// Helper function to derive risk level from score
 export function getRiskLevel(riskScore: number): 'HIGH' | 'MEDIUM' | 'LOW' {
   if (riskScore >= 0.7) return 'HIGH';
   if (riskScore >= 0.4) return 'MEDIUM';
@@ -55,15 +73,7 @@ export class TransactionService {
     return this.http.get<TransactionStats>(`${this.apiUrl}/stats`);
   }
 
-  createTransaction(transaction: Partial<Transaction>): Observable<Transaction> {
-    return this.http.post<Transaction>(this.apiUrl, transaction);
-  }
-
   updateTransactionStatus(id: string, status: string): Observable<Transaction> {
     return this.http.patch<Transaction>(`${this.apiUrl}/${id}/status?status=${status}`, {});
-  }
-
-  deleteTransaction(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 }

@@ -1,12 +1,27 @@
 package com.workshop.backend.dto;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 @Data
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class TransactionDto {
-    private String cc_number;  // Credit card number
-    private Double amount;     // Transaction amount
-    private String category;   // Transaction category
-    private Double latitude;   // Location latitude
-    private Double longitude;  // Location longitude
+    
+    @JsonProperty("cc_number")
+    @JsonAlias("ccNumber")
+    private String ccNumber;
+
+    private Double amount;
+    private String category;
+    private Double latitude;
+    private Double longitude;
+
+    private String channel;
+    private String merchant;
+
+    @JsonProperty("device_id")
+    @JsonAlias("deviceId")
+    private String deviceId;
 }

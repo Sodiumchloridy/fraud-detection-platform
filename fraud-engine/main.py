@@ -6,13 +6,12 @@ import xgboost as xgb
 from xgboost import XGBClassifier
 import time
 
-app = FastAPI() # To run: uvicorn main:app --reload --port 8000
+app = FastAPI()
 model = XGBClassifier(enable_categorical=True)
-model.load_model("model.json")
+model.load_model("xgboost.json")
 user_memory = {}
-MAX_USERS_IN_MEMORY = 10000  # Prevent unbounded memory growth
+MAX_USERS = 10000
 
-# Category list (must match the training data's categorical values exactly)
 VALID_CATEGORIES = [
     'entertainment', 'food_dining', 'gas_transport', 'grocery_net',
     'grocery_pos', 'health_fitness', 'home', 'kids_pets',
@@ -20,119 +19,145 @@ VALID_CATEGORIES = [
     'shopping_pos', 'travel'
 ]
 
-def haversine_single(lat1, lon1, lat2, lon2):
+VALID_CHANNELS = ['in_store', 'online', 'atm']
+
+def haversine(lat1, lon1, lat2, lon2):
     lat1, lon1, lat2, lon2 = map(np.radians, [lat1, lon1, lat2, lon2])
-    dlon = lon2 - lon1 
-    dlat = lat2 - lat1 
+    dlat, dlon = lat2 - lat1, lon2 - lon1
     a = np.sin(dlat/2)**2 + np.cos(lat1) * np.cos(lat2) * np.sin(dlon/2)**2
-    c = 2 * np.arcsin(np.sqrt(a)) 
-    return c * 6371 
+    return 2 * np.arcsin(np.sqrt(a)) * 6371
+
+def get_user_state(cc_num: str) -> dict | None:
+    return user_memory.get(cc_num)
+
+def set_user_state(cc_num: str, state: dict):
+    if cc_num not in user_memory and len(user_memory) >= MAX_USERS:
+        del user_memory[next(iter(user_memory))]
+    user_memory[cc_num] = state
 
 class Transaction(BaseModel):
     cc_number: str
     amount: float
     category: str
+    channel: str = 'in_store'
     latitude: float
     longitude: float
+    merchant: str = ''
+    device_id: str = ''
+
+def compute_features(txn: Transaction, curr_time: float) -> tuple[dict, dict]:
+    """Returns (features_dict, updated_state)"""
+    
+    state = get_user_state(txn.cc_number)
+    
+    if state is None:
+        # First transaction for this user
+        state = {
+            'amounts': [],
+            'timestamps': [],
+            'lat': txn.latitude,
+            'long': txn.longitude,
+            'merchants': [],
+            'devices': []
+        }
+    
+    amounts = state['amounts']
+    timestamps = state['timestamps']
+    
+    # ── Amount Features ──
+    if len(amounts) > 0:
+        mean_amt = np.mean(amounts)
+        std_amt = np.std(amounts) if len(amounts) > 1 else 1.0
+        f_amount_zscore = (txn.amount - mean_amt) / (std_amt if std_amt > 0 else 1.0)
+        f_amount_to_avg_ratio = txn.amount / mean_amt if mean_amt > 0 else 1.0
+    else:
+        f_amount_zscore = 0.0
+        f_amount_to_avg_ratio = 1.0
+    
+    # ── Velocity Features ──
+    if timestamps:
+        f_travel_distance_km = haversine(state['lat'], state['long'], txn.latitude, txn.longitude)
+        f_seconds_since_last_txn = curr_time - timestamps[-1]
+        hours_diff = f_seconds_since_last_txn / 3600
+        f_travel_velocity_kmh = f_travel_distance_km / hours_diff if hours_diff > 0.0001 else 0.0
+    else:
+        f_travel_distance_km = 0.0
+        f_seconds_since_last_txn = 0.0
+        f_travel_velocity_kmh = 0.0
+    
+    # ── Frequency Features ──
+    f_txn_count_1h = sum(1 for t in timestamps if curr_time - t <= 3600) + 1
+    f_txn_count_24h = sum(1 for t in timestamps if curr_time - t <= 86400) + 1
+    f_txn_count_7d = sum(1 for t in timestamps if curr_time - t <= 604800) + 1
+    
+    # ── Time Features ──
+    f_hour_of_day = int((curr_time % 86400) // 3600)
+    
+    # ── Novelty Features ──
+    f_is_new_merchant = 0 if txn.merchant in state['merchants'] else 1
+    f_is_new_device = 0 if txn.device_id in state['devices'] else 1
+    
+    # ── Update State ──
+    # Keep last 100 amounts, 7 days of timestamps
+    cutoff_7d = curr_time - 604800
+    new_state = {
+        'amounts': (amounts + [txn.amount])[-100:],
+        'timestamps': [t for t in timestamps if t > cutoff_7d] + [curr_time],
+        'lat': txn.latitude,
+        'long': txn.longitude,
+        'merchants': list(set(state['merchants'] + [txn.merchant]))[-50:],
+        'devices': list(set(state['devices'] + [txn.device_id]))[-10:]
+    }
+    
+    features = {
+        'amt': txn.amount,
+        'category': VALID_CATEGORIES.index(txn.category) if txn.category in VALID_CATEGORIES else 0,
+        'channel': VALID_CHANNELS.index(txn.channel) if txn.channel in VALID_CHANNELS else 0,
+        'f_amount_zscore': f_amount_zscore,
+        'f_amount_to_avg_ratio': f_amount_to_avg_ratio,
+        'f_travel_velocity_kmh': f_travel_velocity_kmh,
+        'f_travel_distance_km': f_travel_distance_km,
+        'f_txn_count_1h': f_txn_count_1h,
+        'f_txn_count_24h': f_txn_count_24h,
+        'f_txn_count_7d': f_txn_count_7d,
+        'f_seconds_since_last_txn': f_seconds_since_last_txn,
+        'f_hour_of_day': f_hour_of_day,
+        'f_is_new_device': f_is_new_device,
+        'f_is_new_merchant': f_is_new_merchant
+    }
+    
+    return features, new_state
 
 @app.post("/predict")
 def predict_fraud(txn: Transaction):
     curr_time = time.time()
     
-    # Prevent memory overflow
-    if txn.cc_number not in user_memory and len(user_memory) >= MAX_USERS_IN_MEMORY:
-        oldest_user = next(iter(user_memory))
-        del user_memory[oldest_user]
+    features, new_state = compute_features(txn, curr_time)
+    set_user_state(txn.cc_number, new_state)
     
-    if txn.cc_number not in user_memory:
-        user_memory[txn.cc_number] = {'lat': txn.latitude, 'long': txn.longitude, 'history': [curr_time]}
-        dist_diff = 0.0
-        time_diff = 0.0
-        velocity = 0.0
-        freq_1h = 1
-    else:
-        state = user_memory[txn.cc_number]
-        
-        # Velocity
-        dist_diff = haversine_single(state['lat'], state['long'], txn.latitude, txn.longitude)
-        time_diff = (curr_time - state['history'][-1]) / 3600
-        velocity = (999999.0 if dist_diff > 0 else 0.0) if time_diff < 0.0001 else dist_diff / time_diff
-        
-        # Frequency (Burst Check)
-        cutoff = curr_time - 3600
-        new_history = [t for t in state['history'] if t > cutoff]
-        new_history.append(curr_time)
-        freq_1h = len(new_history)
-        
-        # Update State
-        user_memory[txn.cc_number] = {'lat': txn.latitude, 'long': txn.longitude, 'history': new_history}
-
-    # Build DataFrame using only numeric types to avoid string conversion issues
-    # The 'category' is mapped to its integer code (alphabetical order)
-    cat_mapping = {cat: i for i, cat in enumerate(VALID_CATEGORIES)}
-    cat_code = cat_mapping.get(txn.category, 0)
+    feature_order = [
+        'amt', 'category', 'channel',
+        'f_amount_zscore', 'f_amount_to_avg_ratio',
+        'f_travel_velocity_kmh', 'f_travel_distance_km',
+        'f_txn_count_1h', 'f_txn_count_24h', 'f_txn_count_7d',
+        'f_seconds_since_last_txn', 'f_hour_of_day',
+        'f_is_new_device', 'f_is_new_merchant'
+    ]
     
-    feature_order = ['amt', 'category', 'merch_lat', 'merch_long', 'dist_diff', 'time_diff', 'velocity', 'freq_1h']
-    input_data = pd.DataFrame({
-        'amt': [float(txn.amount)],
-        'category': [int(cat_code)],
-        'merch_lat': [float(txn.latitude)],
-        'merch_long': [float(txn.longitude)],
-        'dist_diff': [float(dist_diff)],
-        'time_diff': [float(time_diff)],
-        'velocity': [float(velocity)],
-        'freq_1h': [float(freq_1h)]
-    })[feature_order]
+    input_df = pd.DataFrame([features])[feature_order]
     
-    # Explicitly set feature types and names so the booster
-    # recognises column 'category' as categorical (integer-coded)
-    feature_types = ['float', 'c', 'float', 'float', 'float', 'float', 'float', 'float']
+    feature_types = ['float', 'c', 'c'] + ['float'] * 11
     dmatrix = xgb.DMatrix(
-        input_data,
+        input_df,
         enable_categorical=True,
         feature_names=feature_order,
-        feature_types=feature_types,
+        feature_types=feature_types
     )
-    ml_score = float(model.get_booster().predict(dmatrix)[0])
-
-    # ── Hybrid scoring: rule-based adjustments ──────────────────────
-    # The ML model (trained on Sparkov) is strong on category+amount
-    # patterns but weak on velocity/frequency anomalies.
-    # Layer deterministic rules to catch what the model misses.
     
-    rule_flags = []
-    rule_boost = 0.0
-    
-    # Rule 1 — Impossible travel (velocity > speed of a commercial jet ~900 km/h)
-    if velocity > 900:
-        rule_boost += 0.4
-        rule_flags.append(f"impossible_velocity({velocity:.0f}km/h)")
-    
-    # Rule 2 — Rapid-fire transactions (>4 in one hour)
-    if freq_1h > 4:
-        rule_boost += 0.25
-        rule_flags.append(f"burst({freq_1h}_in_1h)")
-    
-    # Rule 3 — High amount in risky online channel
-    if txn.amount > 500 and txn.category in ('misc_net', 'shopping_net', 'grocery_net'):
-        rule_boost += 0.15
-        rule_flags.append(f"high_amt_online(${txn.amount:.0f})")
-    
-    # Combine: ML score + rule boost, capped at 1.0
-    # Uses max(ml, combined) so rules can only INCREASE risk, never lower it
-    combined = min(ml_score + rule_boost, 1.0)
-    final_score = max(ml_score, combined)
-    
-    print(f"Velocity: {velocity:.2f} km/h | Freq(1h): {freq_1h} | "
-          f"ML: {ml_score:.6f} | Rules: +{rule_boost:.2f} {rule_flags} | "
-          f"Final: {final_score:.6f}")
+    fraud_prob = float(model.get_booster().predict(dmatrix)[0])
     
     return {
-        "fraud_probability": final_score,
-        "ml_score": ml_score,
-        "rule_boost": rule_boost,
-        "rule_flags": rule_flags,
-        "velocity_kmh": velocity,
-        "frequency_1h": freq_1h,
-        "is_fraud": final_score > 0.5
+        "fraud_probability": fraud_prob,
+        "is_fraud": fraud_prob > 0.5,
+        "features": features
     }
