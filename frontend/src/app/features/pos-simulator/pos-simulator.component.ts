@@ -3,8 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import { MainLayoutComponent } from '../../../shared/layouts/main-layout/main-layout.component';
-import { Transaction, getRiskLevel } from '../../../core/services';
+import { MainLayoutComponent } from '../../shared/layouts/main-layout/main-layout.component';
+import { Transaction, getRiskLevel } from '../../core/services';
 
 interface TransactionRequest {
   cc_number: string;

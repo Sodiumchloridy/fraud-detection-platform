@@ -1,4 +1,3 @@
-// Core services barrel file
 export * from './transaction.service';
 export * from './user.service';
 
