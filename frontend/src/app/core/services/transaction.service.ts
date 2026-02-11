@@ -9,7 +9,7 @@ export interface Transaction {
   category: string;
   timestamp: string;
   merchant: string;
-  f_channel: string;
+  channel: string;
 
   /* Location */
   latitude: number;

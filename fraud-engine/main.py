@@ -1,12 +1,29 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from typing import Optional
 import pandas as pd
 import numpy as np
 import xgboost as xgb
 from xgboost import XGBClassifier
 import time
+from litellm import completion
+from dotenv import load_dotenv
 
+load_dotenv()
 app = FastAPI()
+
+# Allow the Angular frontend (and local dev tools) to call this API from the browser.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:4200",
+        "http://127.0.0.1:4200",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"] ,
+    allow_headers=["*"],
+)
 model = XGBClassifier(enable_categorical=True)
 model.load_model("xgboost.json")
 user_memory = {}
@@ -40,10 +57,10 @@ class Transaction(BaseModel):
     amount: float
     category: str
     channel: str = 'in_store'
-    latitude: float
-    longitude: float
-    merchant: str = ''
-    device_id: str = ''
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    merchant: Optional[str] = ''
+    device_id: Optional[str] = ''
 
 def compute_features(txn: Transaction, curr_time: float) -> tuple[dict, dict]:
     """Returns (features_dict, updated_state)"""
@@ -161,3 +178,39 @@ def predict_fraud(txn: Transaction):
         "is_fraud": fraud_prob > 0.5,
         "features": features
     }
+
+class TransactionAnalysisRequest(BaseModel):
+    id: Optional[str] = None
+    ccNumber: Optional[str] = None
+    amount: Optional[float] = None
+    category: Optional[str] = None
+    timestamp: Optional[str] = None
+    merchant: Optional[str] = None
+    channel: Optional[str] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    f_amount_zscore: Optional[float] = None
+    f_amount_to_avg_ratio: Optional[float] = None
+    f_travel_velocity_kmh: Optional[float] = None
+    f_travel_distance_km: Optional[float] = None
+    f_txn_count_1h: Optional[int] = None
+    f_txn_count_24h: Optional[int] = None
+    f_txn_count_7d: Optional[int] = None
+    f_seconds_since_last_txn: Optional[float] = None
+    f_hour_of_day: Optional[int] = None
+    f_is_new_device: Optional[int] = None
+    f_is_new_merchant: Optional[int] = None
+    riskScore: Optional[float] = None
+    status: Optional[str] = None
+
+@app.post("/analyze-transaction")
+def analyze_transaction(txn: TransactionAnalysisRequest):
+    response = completion(
+        model="cerebras/qwen-3-32b",
+        messages=[{"role": "user", "content": f"""Analyze the following transaction for potential reasons why it was flagged as fraudulent.
+        Reply in a short concise paragraph. Do not take the risk score and status into account.
+        Transaction Details:
+        {txn.model_dump_json()}"""}]
+    )
+
+    return { "reason": response.choices[0].message.content } # type: ignore

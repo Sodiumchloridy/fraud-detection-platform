@@ -2,25 +2,30 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, RouterModule } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
 import { MainLayoutComponent } from '../../../shared/layouts/main-layout/main-layout.component';
 import { TransactionService, Transaction, getRiskLevel } from '../../../core/services';
+import { LlmService } from '../../../core/services/llm.service';
+import { MarkdownModule } from 'ngx-markdown';
 
 @Component({
   selector: 'app-transaction-details',
   standalone: true,
-  imports: [CommonModule, RouterModule, MainLayoutComponent],
+  imports: [CommonModule, RouterModule, MainLayoutComponent, MarkdownModule],
   templateUrl: './transaction-details.component.html',
   styleUrls: []
 })
 export class TransactionDetailsComponent implements OnInit {
   transaction: Transaction | null = null;
   locationName: string | null = null;
+  analysisReason: string | null = null;
   getRiskLevel = getRiskLevel;
 
   constructor(
     private route: ActivatedRoute,
     private transactionService: TransactionService,
-    private http: HttpClient
+    private http: HttpClient,
+    private llmService: LlmService
   ) {}
 
   ngOnInit() {
@@ -32,9 +37,14 @@ export class TransactionDetailsComponent implements OnInit {
 
   loadTransaction(id: string) {
     this.transactionService.getTransactionById(id).subscribe({
-      next: (data) => {
+      next: async (data) => {
         this.transaction = data;
         this.fetchLocationName(data.latitude, data.longitude);
+        if (this.getRiskLevel(data.riskScore) !== 'LOW') {
+          this.analysisReason = await this.getAnalysisReason();
+        } else {
+          this.analysisReason = null;
+        }
       },
       error: (err) => console.error('Error loading transaction:', err)
     });
@@ -58,6 +68,12 @@ export class TransactionDetailsComponent implements OnInit {
         error: (err) => console.error('Error updating status:', err)
       });
     }
+  }
+
+  async getAnalysisReason(): Promise<string> {
+    if (!this.transaction) return 'Loading analysis...';
+    const result = await firstValueFrom(this.llmService.analyzeTransaction(this.transaction));
+    return result?.reason || 'No analysis available';
   }
 }
 
