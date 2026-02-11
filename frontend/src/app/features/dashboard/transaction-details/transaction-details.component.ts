@@ -6,12 +6,11 @@ import { firstValueFrom } from 'rxjs';
 import { MainLayoutComponent } from '../../../shared/layouts/main-layout/main-layout.component';
 import { TransactionService, Transaction, getRiskLevel } from '../../../core/services';
 import { LlmService } from '../../../core/services/llm.service';
-import { MarkdownModule } from 'ngx-markdown';
 
 @Component({
   selector: 'app-transaction-details',
   standalone: true,
-  imports: [CommonModule, RouterModule, MainLayoutComponent, MarkdownModule],
+  imports: [CommonModule, RouterModule, MainLayoutComponent],
   templateUrl: './transaction-details.component.html',
   styleUrls: []
 })
@@ -39,8 +38,10 @@ export class TransactionDetailsComponent implements OnInit {
     this.transactionService.getTransactionById(id).subscribe({
       next: async (data) => {
         this.transaction = data;
-        this.fetchLocationName(data.latitude, data.longitude);
-        if (this.getRiskLevel(data.riskScore) !== 'LOW') {
+        if (data.latitude && data.longitude) {
+          this.fetchLocationName(data.latitude, data.longitude);
+        }
+        if (data.riskScore && this.getRiskLevel(data.riskScore) !== 'LOW') {
           this.analysisReason = await this.getAnalysisReason();
         } else {
           this.analysisReason = null;
@@ -72,8 +73,14 @@ export class TransactionDetailsComponent implements OnInit {
 
   async getAnalysisReason(): Promise<string> {
     if (!this.transaction) return 'Loading analysis...';
-    const result = await firstValueFrom(this.llmService.analyzeTransaction(this.transaction));
-    return result?.reason || 'No analysis available';
+    try {
+      const result = await firstValueFrom(this.llmService.analyzeTransaction(this.transaction));
+      console.log('Analysis result:', result);
+      return result?.reason?.trim() || 'No analysis available';
+    } catch (error) {
+      console.error('Error getting analysis reason:', error);
+      return 'Error loading analysis';
+    }
   }
 }
 

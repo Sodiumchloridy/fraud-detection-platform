@@ -48,7 +48,9 @@
         </span>
       </div>
     </div>
-    @if (getRiskLevel(transaction.riskScore) !== 'LOW') { <markdown class="text-justify whitespace-pre-wrap">{{ analysisReason || 'Loading analysis...' }}</markdown> }
+    @if (getRiskLevel(transaction.riskScore) !== 'LOW') { 
+        <div class="text-gray-700 whitespace-pre-wrap">{{ analysisReason || 'Loading analysis...' }}</div>
+    }
   </div>
 
   <div *ngIf="transaction" class="bg-white shadow rounded-lg p-8">
