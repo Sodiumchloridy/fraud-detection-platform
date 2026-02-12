@@ -48,11 +48,11 @@
         </span>
       </div>
     </div>
-    @if (getRiskLevel(transaction.riskScore) !== 'LOW') { 
-        <div class="text-gray-700 whitespace-pre-wrap">{{ analysisReason || 'Loading analysis...' }}</div>
-        <label class="block text-sm text-gray-500 mt-8">Raw Data</label>
-        <pre class="bg-gray-100 rounded-md p-8 mt-4">{{ transaction | json }}</pre>
+    @if (getRiskLevel(transaction.riskScore) !== 'LOW') {
+    <div class="text-gray-700 whitespace-pre-wrap">{{ analysisReason || 'Loading analysis...' }}</div>
     }
+    <label class="block text-sm text-gray-500 mt-8">Raw Data</label>
+    <pre class="bg-gray-100 rounded-md p-8 mt-4">{{ transaction | json }}</pre>
   </div>
 
   <div *ngIf="transaction" class="bg-white shadow rounded-lg p-8">
