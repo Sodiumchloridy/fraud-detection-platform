@@ -9,11 +9,11 @@ from xgboost import XGBClassifier
 import time
 from litellm import completion
 from dotenv import load_dotenv
+from datetime import datetime
 
 load_dotenv()
-app = FastAPI()
+app = FastAPI() # uv run uvicorn main:app --reload
 
-# Allow the Angular frontend (and local dev tools) to call this API from the browser.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -61,6 +61,17 @@ class Transaction(BaseModel):
     longitude: Optional[float] = None
     merchant: Optional[str] = ''
     device_id: Optional[str] = ''
+    timestamp: Optional[str] = None
+    
+    @property
+    def local_hour_of_day(self) -> int:
+        """Calculate hour in user's timezone based on longitude (rough estimate)"""
+        if self.timestamp and self.longitude is not None:
+            utc_dt = datetime.fromisoformat(self.timestamp.replace('Z', '+00:00'))
+            tz_offset_hours = round(self.longitude / 15)
+            local_hour = (utc_dt.hour + tz_offset_hours) % 24
+            return local_hour
+        return int((time.time() % 86400) // 3600)  # fallback to UTC
 
 def compute_features(txn: Transaction, curr_time: float) -> tuple[dict, dict]:
     """Returns (features_dict, updated_state)"""
@@ -108,7 +119,8 @@ def compute_features(txn: Transaction, curr_time: float) -> tuple[dict, dict]:
     f_txn_count_7d = sum(1 for t in timestamps if curr_time - t <= 604800) + 1
     
     # ── Time Features ──
-    f_hour_of_day = int((curr_time % 86400) // 3600)
+    # Use local hour based on transaction location for better fraud detection
+    f_hour_of_day = txn.local_hour_of_day
     
     # ── Novelty Features ──
     f_is_new_merchant = 0 if txn.merchant in state['merchants'] else 1
@@ -147,7 +159,10 @@ def compute_features(txn: Transaction, curr_time: float) -> tuple[dict, dict]:
 
 @app.post("/predict")
 def predict_fraud(txn: Transaction):
-    curr_time = time.time()
+    if txn.timestamp is not None:
+        curr_time = datetime.fromisoformat(txn.timestamp.replace('Z', '+00:00')).timestamp()
+    else:
+        curr_time = time.time()
     
     features, new_state = compute_features(txn, curr_time)
     set_user_state(txn.cc_number, new_state)

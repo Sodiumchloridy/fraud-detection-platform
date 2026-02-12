@@ -12,7 +12,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -114,9 +116,9 @@ public class TransactionController {
 
             // Create transaction from DTO fields
             Transaction txn = transactionMapper.toTransaction(dto);
-            txn.setTimestamp(LocalDateTime.now());
-
-            // Required columns (avoid null constraint violations)
+            txn.setTimestamp(dto.getTimestamp() != null
+                    ? LocalDateTime.ofInstant(Instant.parse(dto.getTimestamp()), ZoneId.systemDefault())
+                    : LocalDateTime.now());
             txn.setMerchant(dto.getMerchant() != null ? dto.getMerchant() : "");
             txn.setChannel(dto.getChannel() != null ? dto.getChannel() : "in_store");
 

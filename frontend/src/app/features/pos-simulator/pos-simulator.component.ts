@@ -12,6 +12,7 @@ interface TransactionRequest {
   category: string;
   latitude: number;
   longitude: number;
+  timestamp: string;
 }
 
 interface SimulationResult {
@@ -88,7 +89,8 @@ export class PosSimulatorComponent {
       amount: this.amount,
       category: this.category,
       latitude: this.latitude,
-      longitude: this.longitude
+      longitude: this.longitude,
+      timestamp: new Date().toISOString()
     };
     
     this.http.post<Transaction>(`${this.apiUrl}/fraud-check`, request).subscribe({

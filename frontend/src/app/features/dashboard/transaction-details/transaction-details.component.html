@@ -38,7 +38,7 @@
     <h2 class="text-lg font-semibold mb-6">AI Fraud Analysis</h2>
     <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-6">
       <div>
-        <label class="block text-sm text-gray-500 mb-1">Risk Score</label>
+        <label class="text-sm text-gray-500 mb-1 mr-4">Risk Score</label>
         <span class="px-3 py-1 text-xs font-medium rounded-full" [ngClass]="{
                 'bg-red-100 text-red-800': getRiskLevel(transaction.riskScore) === 'HIGH',
                 'bg-yellow-100 text-yellow-800': getRiskLevel(transaction.riskScore) === 'MEDIUM',
@@ -50,6 +50,8 @@
     </div>
     @if (getRiskLevel(transaction.riskScore) !== 'LOW') { 
         <div class="text-gray-700 whitespace-pre-wrap">{{ analysisReason || 'Loading analysis...' }}</div>
+        <label class="block text-sm text-gray-500 mt-8">Raw Data</label>
+        <pre class="bg-gray-100 rounded-md p-8 mt-4">{{ transaction | json }}</pre>
     }
   </div>
 

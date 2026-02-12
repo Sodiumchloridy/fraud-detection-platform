@@ -24,4 +24,6 @@ public class TransactionDto {
     @JsonProperty("device_id")
     @JsonAlias("deviceId")
     private String deviceId;
+    
+    private String timestamp;
 }

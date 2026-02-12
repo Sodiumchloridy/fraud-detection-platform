@@ -4,6 +4,7 @@ import com.workshop.backend.dto.TransactionDto;
 import com.workshop.backend.dto.TransactionFeaturesDto;
 import com.workshop.backend.model.Transaction;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.ReportingPolicy;
 import org.mapstruct.factory.Mappers;
@@ -13,6 +14,7 @@ public interface TransactionMapper {
 
     TransactionMapper INSTANCE = Mappers.getMapper(TransactionMapper.class);
 
+    @Mapping(target = "timestamp", ignore = true)
     Transaction toTransaction(TransactionDto transactionDto);
 
     void applyFeatures(TransactionFeaturesDto features, @MappingTarget Transaction transaction);
