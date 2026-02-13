@@ -6,15 +6,16 @@ import { TransactionDetailsComponent } from './features/dashboard/transaction-de
 import { PosSimulatorComponent } from './features/pos-simulator/pos-simulator.component';
 import { SettingsComponent } from './features/settings/settings/settings.component';
 import { NotFoundComponent } from './pages/not-found/not-found.component';
+import { authGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
   { path: 'login', component: LoginComponent },
-  { path: 'dashboard', component: DashboardComponent },
-  { path: 'high-risk-alerts', component: HighRiskAlertsComponent },
-  { path: 'transaction/:id', component: TransactionDetailsComponent },
-  { path: 'simulator', component: PosSimulatorComponent },
-  { path: 'settings', component: SettingsComponent },
+  { path: 'dashboard', component: DashboardComponent, canActivate: [authGuard] },
+  { path: 'high-risk-alerts', component: HighRiskAlertsComponent, canActivate: [authGuard] },
+  { path: 'transaction/:id', component: TransactionDetailsComponent, canActivate: [authGuard] },
+  { path: 'simulator', component: PosSimulatorComponent, canActivate: [authGuard] },
+  { path: 'settings', component: SettingsComponent, canActivate: [authGuard] },
   { path: '**', component: NotFoundComponent }
 ];
 
