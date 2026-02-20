@@ -1,11 +1,10 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RouterLink],
   templateUrl: './header.component.html',
   styleUrls: []
 })
@@ -20,9 +19,5 @@ export class HeaderComponent {
   
   toggleDropdown() {
     this.isDropdownOpen = !this.isDropdownOpen;
-  }
-  
-  onLogout() {
-    this.logout.emit();
   }
 }

@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { ActivatedRoute, RouterModule } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { MainLayoutComponent } from '../../../shared/layouts/main-layout/main-layout.component';
 import { TransactionService, Transaction, getRiskLevel } from '../../../core/services';
@@ -10,7 +10,7 @@ import { LlmService } from '../../../core/services/llm.service';
 @Component({
   selector: 'app-transaction-details',
   standalone: true,
-  imports: [CommonModule, RouterModule, MainLayoutComponent],
+  imports: [CommonModule, RouterLink, MainLayoutComponent],
   templateUrl: './transaction-details.component.html',
   styleUrls: []
 })
@@ -41,11 +41,9 @@ export class TransactionDetailsComponent implements OnInit {
         if (data.latitude && data.longitude) {
           this.fetchLocationName(data.latitude, data.longitude);
         }
-        if (data.riskScore && this.getRiskLevel(data.riskScore) !== 'LOW') {
-          this.analysisReason = await this.getAnalysisReason();
-        } else {
-          this.analysisReason = null;
-        }
+        this.analysisReason = (data.riskScore && this.getRiskLevel(data.riskScore) !== 'LOW')
+          ? await this.getAnalysisReason()
+          : null;
       },
       error: (err) => console.error('Error loading transaction:', err)
     });
@@ -60,26 +58,21 @@ export class TransactionDetailsComponent implements OnInit {
   }
 
   markAs(status: string) {
-    if (this.transaction) {
-      this.transactionService.updateTransactionStatus(this.transaction.id, status).subscribe({
-        next: () => {
-          alert(`Transaction marked as: ${status}. Thank you for your feedback.`);
-          this.loadTransaction(this.transaction!.id);
-        },
-        error: (err) => console.error('Error updating status:', err)
-      });
-    }
+    if (!this.transaction) return;
+    this.transactionService.updateTransactionStatus(this.transaction.id, status).subscribe({
+      next: () => {
+        alert(`Transaction marked as: ${status}. Thank you for your feedback.`);
+        this.loadTransaction(this.transaction!.id);
+      },
+      error: (err) => console.error('Error updating status:', err)
+    });
   }
 
   async getAnalysisReason(): Promise<string> {
     if (!this.transaction) return 'Loading analysis...';
-    try {
-      const result = await firstValueFrom(this.llmService.analyzeTransaction(this.transaction));
-      return result?.reason?.trim() || 'No analysis available';
-    } catch (error) {
-      console.error('Error getting analysis reason:', error);
-      return 'Error loading analysis';
-    }
+    return firstValueFrom(this.llmService.analyzeTransaction(this.transaction))
+      .then(r => r?.reason?.trim() || 'No analysis available')
+      .catch(() => 'Error loading analysis');
   }
 }
 

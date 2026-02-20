@@ -6,7 +6,7 @@ import com.workshop.backend.dto.UserResponse;
 import com.workshop.backend.model.Role;
 import com.workshop.backend.model.User;
 import com.workshop.backend.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -15,6 +15,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 
 /**
  * REST API Controller for User Management
@@ -22,24 +23,20 @@ import java.util.Locale;
  */
 @RestController
 @RequestMapping("/api/users")
+@RequiredArgsConstructor
 public class UserController {
 
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     /**
      * GET all users (admin only)
      */
     @GetMapping
     public ResponseEntity<List<UserResponse>> getAllUsers() {
-        List<UserResponse> users = userRepository.findAll().stream()
+        return ResponseEntity.ok(userRepository.findAll().stream()
             .map(this::toResponse)
-            .toList();
-
-        return ResponseEntity.ok(users);
+            .toList());
     }
 
     /**
@@ -72,21 +69,10 @@ public class UserController {
         User user = userRepository.findById(id)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
-        if (request.getEmail() != null && !request.getEmail().isBlank()) {
-            user.setEmail(request.getEmail().trim());
-        }
-
-        if (request.getRole() != null && !request.getRole().isBlank()) {
-            user.setRole(parseRole(request.getRole()));
-        }
-
-        if (request.getEnabled() != null) {
-            user.setEnabled(request.getEnabled());
-        }
-
-        if (request.getPassword() != null && !request.getPassword().isBlank()) {
-            user.setPassword(passwordEncoder.encode(request.getPassword()));
-        }
+        Optional.ofNullable(request.getEmail()).filter(s -> !s.isBlank()).map(String::trim).ifPresent(user::setEmail);
+        Optional.ofNullable(request.getRole()).filter(s -> !s.isBlank()).map(this::parseRole).ifPresent(user::setRole);
+        Optional.ofNullable(request.getEnabled()).ifPresent(user::setEnabled);
+        Optional.ofNullable(request.getPassword()).filter(s -> !s.isBlank()).map(passwordEncoder::encode).ifPresent(user::setPassword);
 
         User updated = userRepository.save(user);
         return ResponseEntity.ok(toResponse(updated));
@@ -106,21 +92,15 @@ public class UserController {
     }
 
     private void validateCreateRequest(CreateUserRequest request) {
-        if (request.getUsername() == null || request.getUsername().isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Username is required");
-        }
+        requireNonBlank(request.getUsername(), "Username");
+        requireNonBlank(request.getPassword(), "Password");
+        requireNonBlank(request.getEmail(), "Email");
+        requireNonBlank(request.getRole(), "Role");
+    }
 
-        if (request.getPassword() == null || request.getPassword().isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password is required");
-        }
-
-        if (request.getEmail() == null || request.getEmail().isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email is required");
-        }
-
-        if (request.getRole() == null || request.getRole().isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Role is required");
-        }
+    private void requireNonBlank(String value, String fieldName) {
+        if (value == null || value.isBlank())
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, fieldName + " is required");
     }
 
     private Role parseRole(String role) {

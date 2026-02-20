@@ -7,8 +7,8 @@ router = APIRouter()
 
 @router.post("/analyze-transaction")
 def analyze_transaction(txn: dict = Body(...)):
-    txn.pop('riskScore', None)
-    txn.pop('status', None)
+    for k in ('riskScore', 'status', 'latitude', 'longitude'):
+        txn.pop(k, None)
     
     response = completion(
         model="cerebras/llama3.1-8b",

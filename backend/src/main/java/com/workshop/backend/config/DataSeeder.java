@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.workshop.backend.dto.TransactionDto;
 import com.workshop.backend.repository.TransactionRepository;
 import com.workshop.backend.security.JwtUtil;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,21 +30,15 @@ import java.util.*;
  * the fraud-engine's velocity / frequency features behave realistically.
  */
 @Component
+@RequiredArgsConstructor
 public class DataSeeder {
 
     private static final Logger log = LoggerFactory.getLogger(DataSeeder.class);
 
-    @Autowired
-    private TransactionRepository transactionRepository;
-
-    @Autowired
-    private RestTemplate restTemplate;
-
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @Autowired
-    private JwtUtil jwtUtil;
+    private final TransactionRepository transactionRepository;
+    private final RestTemplate restTemplate;
+    private final ObjectMapper objectMapper;
+    private final JwtUtil jwtUtil;
 
     @Value("${server.port:8080}")
     private int serverPort;

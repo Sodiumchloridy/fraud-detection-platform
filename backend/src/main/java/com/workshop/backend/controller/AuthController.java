@@ -3,7 +3,7 @@ package com.workshop.backend.controller;
 import com.workshop.backend.model.User;
 import com.workshop.backend.repository.UserRepository;
 import com.workshop.backend.security.JwtUtil;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -12,7 +12,6 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -21,16 +20,12 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/auth")
+@RequiredArgsConstructor
 public class AuthController {
 
-    @Autowired
-    private AuthenticationManager authenticationManager;
-
-    @Autowired
-    private JwtUtil jwtUtil;
-
-    @Autowired
-    private UserRepository userRepository;
+    private final AuthenticationManager authenticationManager;
+    private final JwtUtil jwtUtil;
+    private final UserRepository userRepository;
 
     /**
      * POST /api/auth/login
@@ -41,13 +36,10 @@ public class AuthController {
         String username = credentials.get("username");
         String password = credentials.get("password");
 
-        if (username == null || username.isBlank()) {
+        if (username == null || username.isBlank())
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Username is required");
-        }
-        
-        if (password == null || password.isBlank()) {
+        if (password == null || password.isBlank())
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password is required");
-        }
 
         try {
             authenticationManager.authenticate(
@@ -62,13 +54,12 @@ public class AuthController {
 
         String token = jwtUtil.generateToken(user.getUsername(), user.getRole().name());
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("token", token);
-        response.put("userId", user.getId());
-        response.put("username", user.getUsername());
-        response.put("role", user.getRole().name());
-        response.put("email", user.getEmail());
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(Map.of(
+            "token", token,
+            "userId", user.getId(),
+            "username", user.getUsername(),
+            "role", user.getRole().name(),
+            "email", user.getEmail()
+        ));
     }
 }

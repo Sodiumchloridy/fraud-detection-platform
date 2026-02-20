@@ -5,7 +5,7 @@ import com.workshop.backend.dto.TransactionDto;
 import com.workshop.backend.mapper.TransactionMapper;
 import com.workshop.backend.model.Transaction;
 import com.workshop.backend.repository.TransactionRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,28 +15,22 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/transactions")
+@RequiredArgsConstructor
 public class TransactionController {
 
-    @Autowired
-    private TransactionRepository transactionRepository;
-
-    @Autowired
-    private RestTemplate restTemplate;
-
-    @Autowired
-    private TransactionMapper transactionMapper;
+    private final TransactionRepository transactionRepository;
+    private final RestTemplate restTemplate;
+    private final TransactionMapper transactionMapper;
 
     @GetMapping
     public ResponseEntity<List<Transaction>> getAllTransactions() {
-        List<Transaction> transactions = transactionRepository.findAll();
-        return ResponseEntity.ok(transactions);
+        return ResponseEntity.ok(transactionRepository.findAll());
     }
 
     @GetMapping("/{id}")
@@ -52,8 +46,7 @@ public class TransactionController {
      */
     @GetMapping("/high-risk")
     public ResponseEntity<List<Transaction>> getHighRiskTransactions() {
-        List<Transaction> highRisk = transactionRepository.findByRiskScoreGreaterThanEqual(0.7);
-        return ResponseEntity.ok(highRisk);
+        return ResponseEntity.ok(transactionRepository.findByRiskScoreGreaterThanEqual(0.7));
     }
 
     /**
@@ -68,14 +61,15 @@ public class TransactionController {
         long highAndUp    = transactionRepository.countByRiskScoreGreaterThanEqual(0.7);
         long critical     = transactionRepository.countByRiskScoreGreaterThanEqual(0.9);
 
-        Map<String, Object> stats = new HashMap<>();
-        stats.put("total",      total);
-        stats.put("lowRisk",    total - mediumAndUp);
-        stats.put("mediumRisk", mediumAndUp - highAndUp);
-        stats.put("highRisk",   highAndUp - critical);
-        stats.put("critical",   critical);
-        stats.put("flagged",    highAndUp);   // matches /high-risk threshold (>= 0.7)
-        stats.put("blocked",    critical);
+        Map<String, Object> stats = Map.of(
+            "total",      total,
+            "lowRisk",    total - mediumAndUp,
+            "mediumRisk", mediumAndUp - highAndUp,
+            "highRisk",   highAndUp - critical,
+            "critical",   critical,
+            "flagged",    highAndUp,
+            "blocked",    critical
+        );
 
         return ResponseEntity.ok(stats);
     }
@@ -123,14 +117,7 @@ public class TransactionController {
                 transactionMapper.applyFeatures(fraudResponse.getFeatures(), txn);
             }
             txn.setRiskScore(fraudProb);
-            
-            if (fraudProb >= 0.70) {
-                txn.setStatus("BLOCKED");
-            } else if (fraudProb >= 0.40) {
-                txn.setStatus("FLAGGED");
-            } else {
-                txn.setStatus("APPROVED");
-            }
+            txn.setStatus(fraudProb >= 0.70 ? "BLOCKED" : fraudProb >= 0.40 ? "FLAGGED" : "APPROVED");
 
             return new ResponseEntity<>(transactionRepository.save(txn), HttpStatus.CREATED);
         } catch (Exception e) {

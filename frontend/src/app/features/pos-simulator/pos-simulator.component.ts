@@ -1,7 +1,8 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { RouterLink } from '@angular/router';
+import { finalize } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { MainLayoutComponent } from '../../shared/layouts/main-layout/main-layout.component';
 import { Transaction, getRiskLevel } from '../../core/services';
@@ -23,7 +24,7 @@ interface SimulationResult {
 @Component({
   selector: 'app-pos-simulator',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, MainLayoutComponent],
+  imports: [CommonModule, FormsModule, RouterLink, MainLayoutComponent],
   templateUrl: './pos-simulator.component.html',
   styleUrls: []
 })
@@ -75,9 +76,8 @@ export class PosSimulatorComponent {
   
   constructor(private http: HttpClient) {}
   
-  selectLocation(location: { name: string; lat: number; lon: number }) {
-    this.latitude = location.lat;
-    this.longitude = location.lon;
+  selectLocation({ lat, lon }: { name: string; lat: number; lon: number }) {
+    [this.latitude, this.longitude] = [lat, lon];
   }
   
   submitTransaction() {
@@ -93,18 +93,11 @@ export class PosSimulatorComponent {
       timestamp: new Date().toISOString()
     };
     
-    this.http.post<Transaction>(`${this.apiUrl}/fraud-check`, request).subscribe({
-      next: (transaction) => {
-        this.results.unshift({
-          transaction,
-          timestamp: new Date()
-        });
-        this.isLoading = false;
-      },
-      error: (err) => {
-        this.error = err.error?.message || 'Failed to process transaction';
-        this.isLoading = false;
-      }
+    this.http.post<Transaction>(`${this.apiUrl}/fraud-check`, request).pipe(
+      finalize(() => this.isLoading = false)
+    ).subscribe({
+      next: (transaction) => this.results.unshift({ transaction, timestamp: new Date() }),
+      error: (err) => this.error = err.error?.message || 'Failed to process transaction'
     });
   }
   

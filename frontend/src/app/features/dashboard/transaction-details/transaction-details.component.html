@@ -4,7 +4,8 @@
       Dashboard</a>
   </div>
 
-  <div *ngIf="transaction" class="bg-white shadow rounded-lg p-8 mb-6">
+  @if (transaction) {
+  <div class="bg-white shadow rounded-lg p-8 mb-6">
     <h2 class="text-lg font-semibold mb-6 pb-4 border-b border-gray-200">Transaction Summary</h2>
     <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
       <div>
@@ -34,7 +35,7 @@
     </div>
   </div>
 
-  <div *ngIf="transaction" class="bg-white shadow rounded-lg p-8 mb-6">
+  <div class="bg-white shadow rounded-lg p-8 mb-6">
     <h2 class="text-lg font-semibold mb-6">AI Fraud Analysis</h2>
     <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-6">
       <div>
@@ -55,7 +56,7 @@
     <pre class="bg-gray-100 rounded-md p-8 mt-4">{{ transaction | json }}</pre>
   </div>
 
-  <div *ngIf="transaction" class="bg-white shadow rounded-lg p-8">
+  <div class="bg-white shadow rounded-lg p-8">
     <h2 class="text-lg font-semibold mb-4">Analyst Review</h2>
     <p class="text-sm text-gray-500 mb-6">As a fraud analyst, you can mark this transaction's final status. This
       feedback will be used to improve the AI model.</p>
@@ -68,8 +69,11 @@
         Fraudulent</button>
     </div>
   </div>
+  }
 
-  <div *ngIf="!transaction" class="bg-white shadow rounded-lg p-8">
+  @if (!transaction) {
+  <div class="bg-white shadow rounded-lg p-8">
     <p class="text-gray-500">Loading transaction details...</p>
   </div>
+  }
 </app-main-layout>

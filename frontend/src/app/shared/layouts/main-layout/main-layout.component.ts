@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { HeaderComponent } from '../../components/header/header.component';
@@ -11,17 +11,14 @@ import { UserService } from '../../../core/services/user.service';
   templateUrl: './main-layout.component.html',
   styleUrls: []
 })
-export class MainLayoutComponent implements OnInit {
+export class MainLayoutComponent {
   @Input() pageTitle: string = 'Dashboard ';
-  userName: string = '';
-  isAdmin = false;
+  userName: string;
+  isAdmin: boolean;
 
-  constructor(private router: Router, private userService: UserService) {}
-
-  ngOnInit() {
-    const user = this.userService.getCurrentUser();
-    this.userName = user ? user.username : 'User';
-    this.isAdmin = this.userService.isAdmin();
+  constructor(private router: Router, private userService: UserService) {
+    this.userName = userService.getCurrentUser()?.username ?? 'User';
+    this.isAdmin = userService.isAdmin();
   }
 
   handleLogout() {

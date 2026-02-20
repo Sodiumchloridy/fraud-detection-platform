@@ -1,11 +1,10 @@
 from fastapi import APIRouter
 from datetime import datetime
 import pandas as pd
-import xgboost as xgb
+from xgboost import XGBClassifier, DMatrix
 import time
-from xgboost import XGBClassifier
 
-from models import Transaction
+from models import Transaction, parse_ts
 from features import compute_features, set_user_state, VELOCITY_BLOCK_THRESHOLD_KMH
 
 router = APIRouter()
@@ -27,7 +26,7 @@ FEATURE_TYPES = ['float', 'c', 'c'] + ['float'] * 11
 
 @router.post("/predict")
 def predict_fraud(txn: Transaction):
-    curr_time = (datetime.fromisoformat(txn.timestamp.replace('Z', '+00:00')).timestamp()
+    curr_time = (parse_ts(txn.timestamp).timestamp()
                  if txn.timestamp else time.time())
 
     features, new_state = compute_features(txn, curr_time)
@@ -37,7 +36,7 @@ def predict_fraud(txn: Transaction):
         fraud_prob = 1.0
     else:
         input_df = pd.DataFrame([features])[FEATURE_ORDER]
-        dmatrix = xgb.DMatrix(input_df, enable_categorical=True,
+        dmatrix = DMatrix(input_df, enable_categorical=True,
                               feature_names=FEATURE_ORDER, feature_types=FEATURE_TYPES)
         fraud_prob = float(model.get_booster().predict(dmatrix)[0])
 

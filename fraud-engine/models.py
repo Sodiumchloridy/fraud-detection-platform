@@ -4,6 +4,11 @@ from datetime import datetime
 import time
 
 
+def parse_ts(ts: str) -> datetime:
+    """Parse an ISO timestamp, treating 'Z' as UTC."""
+    return datetime.fromisoformat(ts.replace('Z', '+00:00'))
+
+
 class Transaction(BaseModel):
     cc_number: str
     amount: float
@@ -19,7 +24,6 @@ class Transaction(BaseModel):
     def local_hour_of_day(self) -> int:
         """Calculate hour in user's timezone based on longitude (rough estimate)"""
         if self.timestamp and self.longitude is not None:
-            utc_dt = datetime.fromisoformat(self.timestamp.replace('Z', '+00:00'))
-            local_hour = (utc_dt.hour + round(self.longitude / 15)) % 24
-            return local_hour
+            utc_dt = parse_ts(self.timestamp)
+            return (utc_dt.hour + round(self.longitude / 15)) % 24
         return int((time.time() % 86400) // 3600)
