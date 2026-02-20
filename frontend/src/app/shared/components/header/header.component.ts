@@ -10,8 +10,9 @@ import { RouterModule } from '@angular/router';
   styleUrls: []
 })
 export class HeaderComponent {
-  @Input() pageTitle: string = 'Fraud Detection Dashboard';
+  @Input() pageTitle: string = 'Dashboard';
   @Input() userName: string = 'Admin';
+  @Input() showAdminOptions: boolean = false;
   @Output() logout = new EventEmitter<void>();
   
   // Track dropdown menu visibility

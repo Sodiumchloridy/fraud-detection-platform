@@ -62,26 +62,21 @@ public class TransactionController {
      */
     @GetMapping("/stats")
     public ResponseEntity<Map<String, Object>> getTransactionStats() {
+        // 3 queries aligned with frontend getRiskLevel thresholds (HIGH >= 0.7, MEDIUM >= 0.4)
+        long total        = transactionRepository.count();
+        long mediumAndUp  = transactionRepository.countByRiskScoreGreaterThanEqual(0.4);
+        long highAndUp    = transactionRepository.countByRiskScoreGreaterThanEqual(0.7);
+        long critical     = transactionRepository.countByRiskScoreGreaterThanEqual(0.9);
+
         Map<String, Object> stats = new HashMap<>();
-        
-        // Aggregate queries
-        long totalCount = transactionRepository.count();
-        long lowCount = transactionRepository.countByRiskScoreGreaterThanEqual(0.0) 
-                      - transactionRepository.countByRiskScoreGreaterThanEqual(0.3);
-        long mediumCount = transactionRepository.countByRiskScoreGreaterThanEqual(0.3)
-                         - transactionRepository.countByRiskScoreGreaterThanEqual(0.6);
-        long highCount = transactionRepository.countByRiskScoreGreaterThanEqual(0.6)
-                       - transactionRepository.countByRiskScoreGreaterThanEqual(0.8);
-        long criticalCount = transactionRepository.countByRiskScoreGreaterThanEqual(0.8);
-        
-        stats.put("total", totalCount);
-        stats.put("lowRisk", lowCount);
-        stats.put("mediumRisk", mediumCount);
-        stats.put("highRisk", highCount);
-        stats.put("critical", criticalCount);
-        stats.put("flagged", highCount + criticalCount);
-        stats.put("blocked", criticalCount);
-        
+        stats.put("total",      total);
+        stats.put("lowRisk",    total - mediumAndUp);
+        stats.put("mediumRisk", mediumAndUp - highAndUp);
+        stats.put("highRisk",   highAndUp - critical);
+        stats.put("critical",   critical);
+        stats.put("flagged",    highAndUp);   // matches /high-risk threshold (>= 0.7)
+        stats.put("blocked",    critical);
+
         return ResponseEntity.ok(stats);
     }
 

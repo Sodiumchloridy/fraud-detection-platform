@@ -23,6 +23,21 @@ export interface LoginResponse {
   email: string;
 }
 
+export interface CreateUserRequest {
+  username: string;
+  password: string;
+  email: string;
+  role: 'ADMIN' | 'ANALYST';
+  enabled: boolean;
+}
+
+export interface UpdateUserRequest {
+  email?: string;
+  role?: 'ADMIN' | 'ANALYST';
+  enabled?: boolean;
+  password?: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -80,5 +95,21 @@ export class UserService {
 
   isAnalyst(): boolean {
     return this.hasRole('ANALYST');
+  }
+
+  getAllUsers(): Observable<User[]> {
+    return this.http.get<User[]>(`${this.apiUrl}/users`);
+  }
+
+  createUser(payload: CreateUserRequest): Observable<User> {
+    return this.http.post<User>(`${this.apiUrl}/users`, payload);
+  }
+
+  updateUser(userId: number, payload: UpdateUserRequest): Observable<User> {
+    return this.http.put<User>(`${this.apiUrl}/users/${userId}`, payload);
+  }
+
+  deleteUser(userId: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/users/${userId}`);
   }
 }

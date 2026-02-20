@@ -1,10 +1,11 @@
 <header class="bg-white shadow-sm border-b border-gray-200">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="flex justify-between items-center py-4">
-      <div class="flex items-center gap-8">
-        <h1 class="text-xl font-semibold text-gray-800">{{ pageTitle }}</h1>
-        <p class="text-sm text-gray-500">Welcome, {{ userName }}</p>
-      </div>
+      
+      <h1 class="text-xl font-bold text-gray-900">
+        {{ pageTitle }}
+      </h1>
+
       <div class="flex items-center gap-4">
         <div class="relative inline-block text-left">
           <button 
@@ -22,6 +23,15 @@
           @if (isDropdownOpen) {
             <div class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
               <div class="py-1" role="menu">
+                @if (showAdminOptions) {
+                  <a 
+                    routerLink="/admin/users" 
+                    (click)="isDropdownOpen = false"
+                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" 
+                    role="menuitem">
+                    User Management
+                  </a>
+                }
                 <a 
                   routerLink="/settings" 
                   (click)="isDropdownOpen = false"

@@ -75,7 +75,6 @@ export class TransactionDetailsComponent implements OnInit {
     if (!this.transaction) return 'Loading analysis...';
     try {
       const result = await firstValueFrom(this.llmService.analyzeTransaction(this.transaction));
-      console.log('Analysis result:', result);
       return result?.reason?.trim() || 'No analysis available';
     } catch (error) {
       console.error('Error getting analysis reason:', error);

@@ -11,7 +11,7 @@ def analyze_transaction(txn: dict = Body(...)):
     txn.pop('status', None)
     
     response = completion(
-        model="cerebras/qwen-3-32b",
+        model="cerebras/llama3.1-8b",
         messages=[{"role": "user", "content": f"""Analyze the following transaction for potential reasons why it was flagged as fraudulent.
         Reply in a short concise paragraph.
         Transaction Details:

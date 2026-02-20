@@ -12,14 +12,16 @@ import { UserService } from '../../../core/services/user.service';
   styleUrls: []
 })
 export class MainLayoutComponent implements OnInit {
-  @Input() pageTitle: string = 'Fraud Detection Dashboard';
+  @Input() pageTitle: string = 'Dashboard ';
   userName: string = '';
+  isAdmin = false;
 
   constructor(private router: Router, private userService: UserService) {}
 
   ngOnInit() {
     const user = this.userService.getCurrentUser();
     this.userName = user ? user.username : 'User';
+    this.isAdmin = this.userService.isAdmin();
   }
 
   handleLogout() {

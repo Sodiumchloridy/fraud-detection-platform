@@ -2,7 +2,7 @@ import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { MainLayoutComponent } from '../../../shared/layouts/main-layout/main-layout.component';
-import { TransactionService, Transaction, getRiskLevel } from '../../../core/services';
+import { TransactionService, getRiskLevel } from '../../../core/services';
 import { timer } from 'rxjs';
 import { map, share, switchMap } from 'rxjs/operators';
 
@@ -33,9 +33,5 @@ export class DashboardComponent {
   );
 
   constructor(private transactionService: TransactionService) {}
-
-  trackByTransactionId(index: number, transaction: Transaction): string {
-    return transaction.id;
-  }
 }
 

@@ -14,11 +14,11 @@
     </a>
   </div>
 
-  <div class="shadow rounded-lg" [style.backgroundColor]="'white'">
+  <div class="bg-white shadow rounded-lg">
     <h2 class="text-lg font-semibold p-6 border-b border-gray-200">Live Transaction Feed</h2>
     <div id="feed">
-      <div *ngFor="let transaction of transactions$ | async; trackBy: trackByTransactionId"
-        class="animate-pop-in flex justify-between items-center p-4 border-b border-gray-200 last:border-b-0 hover:bg-gray-50">
+      @for (transaction of transactions$ | async; track transaction.id) {
+      <div class="animate-pop-in flex justify-between items-center p-4 border-b border-gray-200 last:border-b-0 hover:bg-gray-50">
         <a [routerLink]="['/transaction', transaction.id]" class="flex-grow flex justify-between items-center">
           <div>
             <strong class="font-medium text-gray-800">{{ transaction.ccNumber }}</strong>
@@ -34,6 +34,7 @@
           </span>
         </a>
       </div>
+      }
     </div>
   </div>
 </app-main-layout>
