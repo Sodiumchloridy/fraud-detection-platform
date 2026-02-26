@@ -15,9 +15,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api/transactions")
@@ -99,8 +97,24 @@ public class TransactionController {
     @PostMapping("/fraud-check")
     public ResponseEntity<Transaction> createTransactionWithFraudCheck(@RequestBody TransactionDto dto) {
         try {
+            // Fetch user's historical transactions from DB
+            List<Transaction> history = transactionRepository.findByCcNumberOrderByTimestampAsc(dto.getCcNumber());
+            List<Map<String, Object>> historyList = history.stream().map(t -> {
+                Map<String, Object> m = new HashMap<>();
+                m.put("amount", t.getAmount());
+                m.put("timestamp", t.getTimestamp().toString());
+                m.put("latitude", t.getLatitude() != null ? t.getLatitude() : 0.0);
+                m.put("longitude", t.getLongitude() != null ? t.getLongitude() : 0.0);
+                m.put("merchant", t.getMerchant() != null ? t.getMerchant() : "");
+                return m;
+            }).toList();
+
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("transaction", dto);
+            payload.put("history", historyList);
+
             FraudPredictionDto fraudResponse = restTemplate.postForObject(
-                "http://localhost:8000/predict", dto, FraudPredictionDto.class);
+                "http://localhost:8000/predict", payload, FraudPredictionDto.class);
 
             // Create transaction from DTO fields
             Transaction txn = transactionMapper.toTransaction(dto);

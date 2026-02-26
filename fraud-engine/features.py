@@ -1,10 +1,8 @@
 import numpy as np
-from models import Transaction
+from models import Transaction, HistoricalTxn, parse_ts
 
 
-MAX_USERS = 10000
 VELOCITY_BLOCK_THRESHOLD_KMH = 1500.0
-
 VALID_CATEGORIES = [
     'entertainment', 'food_dining', 'gas_transport', 'grocery_net',
     'grocery_pos', 'health_fitness', 'home', 'kids_pets',
@@ -12,11 +10,8 @@ VALID_CATEGORIES = [
     'shopping_pos', 'travel'
 ]
 CATEGORY_INDEX = {c: i for i, c in enumerate(VALID_CATEGORIES)}
-
 VALID_CHANNELS = ['in_store', 'online', 'atm']
 CHANNEL_INDEX = {c: i for i, c in enumerate(VALID_CHANNELS)}
-
-user_memory: dict[str, dict] = {}
 
 
 def haversine(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
@@ -26,20 +21,15 @@ def haversine(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     return 2 * np.arcsin(np.sqrt(a)) * 6371
 
 
-def set_user_state(cc_num: str, state: dict):
-    if cc_num not in user_memory and len(user_memory) >= MAX_USERS:
-        del user_memory[next(iter(user_memory))]
-    user_memory[cc_num] = state
-
-
-def compute_features(txn: Transaction, curr_time: float) -> tuple[dict, dict]:
-    state = user_memory.get(txn.cc_number) or {
-        'amounts': [], 'timestamps': [],
-        'lat': txn.latitude, 'long': txn.longitude,
-        'merchants': [], 'devices': []
-    }
-
-    amounts, timestamps = state['amounts'], state['timestamps']
+def compute_features(txn: Transaction, curr_time: float, history: list[HistoricalTxn]) -> dict:
+    if history:
+        amounts = [h.amount for h in history][-100:]
+        timestamps = [parse_ts(h.timestamp).timestamp() for h in history]
+        last = history[-1]
+        merchants = list({h.merchant for h in history if h.merchant})
+    else:
+        amounts, timestamps, merchants = [], [], []
+        last = None
 
     # Amount features
     if amounts:
@@ -51,8 +41,8 @@ def compute_features(txn: Transaction, curr_time: float) -> tuple[dict, dict]:
         f_amount_zscore, f_amount_to_avg_ratio = 0.0, 1.0
 
     # Velocity features
-    if timestamps:
-        f_travel_distance_km = haversine(state['lat'], state['long'], txn.latitude, txn.longitude)  # type: ignore
+    if last and timestamps:
+        f_travel_distance_km = haversine(last.latitude, last.longitude, txn.latitude, txn.longitude)  # type: ignore
         f_seconds_since_last_txn = curr_time - timestamps[-1]
         f_travel_velocity_kmh = f_travel_distance_km * 3600 / f_seconds_since_last_txn if f_seconds_since_last_txn > 0.36 else 0.0
     else:
@@ -62,17 +52,7 @@ def compute_features(txn: Transaction, curr_time: float) -> tuple[dict, dict]:
     txn_counts = {w: sum(1 for t in timestamps if curr_time - t <= w) + 1
                   for w in (3600, 86400, 604800)}
 
-    # Update state
-    cutoff_7d = curr_time - 604800
-    new_state = {
-        'amounts': (amounts + [txn.amount])[-100:],
-        'timestamps': [t for t in timestamps if t > cutoff_7d] + [curr_time],
-        'lat': txn.latitude, 'long': txn.longitude,
-        'merchants': [*{*state['merchants'], txn.merchant}][-50:],
-        'devices': [*{*state['devices'], txn.device_id}][-10:]
-    }
-
-    features = {
+    return {
         'amt': txn.amount,
         'category': CATEGORY_INDEX.get(txn.category, 0),
         'channel': CHANNEL_INDEX.get(txn.channel, 0),
@@ -85,8 +65,6 @@ def compute_features(txn: Transaction, curr_time: float) -> tuple[dict, dict]:
         'f_txn_count_7d': txn_counts[604800],
         'f_seconds_since_last_txn': f_seconds_since_last_txn,
         'f_hour_of_day': txn.local_hour_of_day,
-        'f_is_new_device': int(txn.device_id not in state['devices']),
-        'f_is_new_merchant': int(txn.merchant not in state['merchants'])
+        'f_is_new_device': int(txn.device_id not in []),
+        'f_is_new_merchant': int(txn.merchant not in merchants)
     }
-
-    return features, new_state

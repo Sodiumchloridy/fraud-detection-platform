@@ -27,3 +27,16 @@ class Transaction(BaseModel):
             utc_dt = parse_ts(self.timestamp)
             return (utc_dt.hour + round(self.longitude / 15)) % 24
         return int((time.time() % 86400) // 3600)
+
+
+class HistoricalTxn(BaseModel):
+    amount: float
+    timestamp: str
+    latitude: float = 0.0
+    longitude: float = 0.0
+    merchant: str = ''
+
+
+class PredictRequest(BaseModel):
+    transaction: Transaction
+    history: list[HistoricalTxn] = []
