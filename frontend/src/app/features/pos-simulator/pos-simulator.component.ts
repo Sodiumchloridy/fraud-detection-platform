@@ -13,6 +13,7 @@ interface TransactionRequest {
   category: string;
   latitude: number;
   longitude: number;
+  merchant: string;
   timestamp: string;
 }
 
@@ -33,6 +34,7 @@ export class PosSimulatorComponent {
   
   // Form fields
   ccNumber = 'user_001';
+  merchant = 'Gerbang Alaf Restaurants Sdn Bhd';
   amount = 50;
   category = 'grocery_pos';
   latitude = 40.7128;
@@ -46,6 +48,7 @@ export class PosSimulatorComponent {
     { name: 'Houston, TX', lat: 29.7604, lon: -95.3698 },
     { name: 'London, UK', lat: 51.5074, lon: -0.1278 },
     { name: 'Tokyo, Japan', lat: 35.6762, lon: 139.6503 },
+    { name: 'Kuala Lumpur, Malaysia', lat: 3.1390, lon: 101.6869 },
   ];
   
   // Transaction categories matching the model
@@ -86,11 +89,12 @@ export class PosSimulatorComponent {
     
     const request: TransactionRequest = {
       cc_number: this.ccNumber,
+      merchant: this.merchant,
       amount: this.amount,
       category: this.category,
       latitude: this.latitude,
       longitude: this.longitude,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
     
     this.http.post<Transaction>(`${this.apiUrl}/fraud-check`, request).pipe(

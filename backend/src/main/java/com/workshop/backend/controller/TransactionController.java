@@ -1,22 +1,23 @@
 package com.workshop.backend.controller;
 
-import com.workshop.backend.dto.FraudPredictionDto;
-import com.workshop.backend.dto.TransactionDto;
-import com.workshop.backend.mapper.TransactionMapper;
-import com.workshop.backend.model.Transaction;
-import com.workshop.backend.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
-
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
 import org.springframework.security.core.Authentication;
+
+import com.workshop.backend.dto.FraudPredictionDto;
+import com.workshop.backend.dto.TransactionDto;
+import com.workshop.backend.mapper.TransactionMapper;
+import com.workshop.backend.model.Transaction;
+import com.workshop.backend.repository.TransactionRepository;
+import com.workshop.backend.enums.TransactionStatus;
 
 @RestController
 @RequestMapping("/api/transactions")
@@ -86,8 +87,9 @@ public class TransactionController {
         Transaction transaction = transactionRepository.findById(id)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Transaction not found with id: " + id));
         
-        transaction.setStatus(status);
-        transaction.setIsFraud("APPROVED".equals(status) ? 0 : 1);
+        TransactionStatus txnStatus = TransactionStatus.valueOf(status.toUpperCase());
+        transaction.setStatus(txnStatus);
+        transaction.setIsFraud(TransactionStatus.APPROVED.equals(txnStatus) ? 0 : 1);
         transaction.setReviewedBy(authentication.getName());
         transaction.setReviewedAt(LocalDateTime.now());
         Transaction updated = transactionRepository.save(transaction);

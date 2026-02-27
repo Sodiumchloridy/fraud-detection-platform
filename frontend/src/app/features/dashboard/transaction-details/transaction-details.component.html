@@ -4,7 +4,6 @@
     Dashboard</a>
 
   @if (transaction) {
-  <!-- Bento detail grid -->
   <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
 
     <!-- Summary card — spans 2 -->
@@ -14,6 +13,10 @@
         <div>
           <p class="text-[11px] uppercase tracking-widest text-slate-400 mb-1">Credit Card</p>
           <p class="text-sm font-medium text-slate-700">{{ transaction.ccNumber }}</p>
+        </div>
+        <div>
+          <p class="text-[11px] uppercase tracking-widest text-slate-400 mb-1">Merchant</p>
+          <p class="text-sm font-medium text-slate-700">{{ transaction.merchant }}</p>
         </div>
         <div>
           <p class="text-[11px] uppercase tracking-widest text-slate-400 mb-1">Amount</p>
