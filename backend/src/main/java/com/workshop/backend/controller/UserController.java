@@ -3,7 +3,7 @@ package com.workshop.backend.controller;
 import com.workshop.backend.dto.CreateUserRequest;
 import com.workshop.backend.dto.UpdateUserRequest;
 import com.workshop.backend.dto.UserResponse;
-import com.workshop.backend.model.Role;
+import com.workshop.backend.enums.Role;
 import com.workshop.backend.model.User;
 import com.workshop.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;

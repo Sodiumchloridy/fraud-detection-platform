@@ -56,5 +56,12 @@ public class Transaction {
 
     /* System & Verdict */
     private Double riskScore;
-    private String status;
+    
+    @Enumerated(EnumType.STRING)
+    private TransactionStatus status;
+
+    /* Human Review */
+    private Integer isFraud;
+    private String reviewedBy;
+    private LocalDateTime reviewedAt;
 }

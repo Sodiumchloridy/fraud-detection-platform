@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import com.workshop.backend.enums.Role;
+
 @Entity
 @Table(name = "users")
 @Data

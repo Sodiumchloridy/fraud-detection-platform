@@ -16,6 +16,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
+import org.springframework.security.core.Authentication;
 
 @RestController
 @RequestMapping("/api/transactions")
@@ -74,18 +75,21 @@ public class TransactionController {
 
     /**
      * PATCH to update transaction status
-     * Used by: TransactionDetailsComponent (mark as legitimate/fraud)
      */
     @PatchMapping("/{id}/status")
     public ResponseEntity<Transaction> updateTransactionStatus(
             @PathVariable UUID id,
-            @RequestParam String status) {
+            @RequestParam String status,
+            Authentication authentication) {
         
         // CRUD - Read and Update
         Transaction transaction = transactionRepository.findById(id)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Transaction not found with id: " + id));
         
         transaction.setStatus(status);
+        transaction.setIsFraud("APPROVED".equals(status) ? 0 : 1);
+        transaction.setReviewedBy(authentication.getName());
+        transaction.setReviewedAt(LocalDateTime.now());
         Transaction updated = transactionRepository.save(transaction);
         
         return ResponseEntity.ok(updated);
@@ -131,7 +135,7 @@ public class TransactionController {
                 transactionMapper.applyFeatures(fraudResponse.getFeatures(), txn);
             }
             txn.setRiskScore(fraudProb);
-            txn.setStatus(fraudProb >= 0.70 ? "BLOCKED" : fraudProb >= 0.40 ? "FLAGGED" : "APPROVED");
+            txn.setStatus(fraudProb >= 0.70 ? TransactionStatus.BLOCKED : fraudProb >= 0.40 ? TransactionStatus.FLAGGED : TransactionStatus.APPROVED);
 
             return new ResponseEntity<>(transactionRepository.save(txn), HttpStatus.CREATED);
         } catch (Exception e) {

@@ -1,4 +1,4 @@
-package com.workshop.backend.model;
+package com.workshop.backend.enums;
 
 public enum Role {
     ADMIN,

@@ -28,9 +28,14 @@ export interface Transaction {
   f_is_new_device: number;
   f_is_new_merchant: number;
 
-  /* Verdict */
+  /* System & Verdict */
   riskScore: number;
   status: string;
+
+  /* Human Review */
+  isFraud: number;
+  reviewedBy: string;
+  reviewedAt: string;
 }
 
 export function getRiskLevel(riskScore: number): 'HIGH' | 'MEDIUM' | 'LOW' {
