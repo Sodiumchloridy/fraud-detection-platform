@@ -1,48 +1,36 @@
-<app-main-layout [pageTitle]="'Account Settings'">
-  <div class="mb-4">
-    <a routerLink="/dashboard" class="text-sm font-medium text-blue-600 hover:text-blue-800">&larr; Back to Dashboard</a>
-  </div>
+<app-main-layout [pageTitle]="'Settings'">
+  <a routerLink="/dashboard" class="inline-flex items-center gap-1 text-xs font-medium text-slate-400 hover:text-indigo-600 transition mb-5">&larr; Dashboard</a>
 
-  <div class="bg-white shadow rounded-lg p-8 mb-6">
-    <h2 class="text-lg font-semibold mb-6 pb-4 border-b border-gray-200">Multi-Factor Authentication (MFA)</h2>
-    <div class="flex justify-between items-center py-4 border-b border-gray-200">
-      <div>
-        <strong class="font-medium">Enable MFA</strong>
-        <p class="text-sm text-gray-500">Increase your account security by requiring a second authentication factor.</p>
-      </div>
-      <label class="relative inline-flex items-center cursor-pointer">
-        <input type="checkbox" [(ngModel)]="mfaEnabled" class="sr-only peer">
-        <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-green-300 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
-      </label>
-    </div>
-    <div class="flex justify-between items-center py-4 border-b border-gray-200">
-      <div>
-        <strong class="font-medium">Authenticator App</strong>
-        <p class="text-sm text-gray-500">Google Authenticator</p>
-      </div>
-      <button class="text-sm font-medium text-gray-600 hover:text-blue-500 border border-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50">Remove</button>
-    </div>
-    <div class="flex justify-between items-center py-4">
-      <div>
-        <strong class="font-medium">SMS Number</strong>
-        <p class="text-sm text-gray-500">...1234</p>
-      </div>
-      <button class="text-sm font-medium text-gray-600 hover:text-blue-500 border border-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50">Remove</button>
-    </div>
-    <div class="mt-6">
-      <button class="bg-blue-500 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-600 transition-colors">Add New Method</button>
-    </div>
-  </div>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
 
-  <div class="bg-white shadow rounded-lg p-8">
-    <h2 class="text-lg font-semibold mb-6 pb-4 border-b border-gray-200">Account Actions</h2>
-    <div class="flex justify-between items-center py-4">
-      <div>
-        <strong class="font-medium">Delete Account</strong>
-        <p class="text-sm text-gray-500">Permanently delete your account and all associated data.</p>
+    <!-- MFA card — spans 2 -->
+    <div class="md:col-span-2 bg-white rounded-[1.25rem] shadow-[0_1px_3px_rgba(0,0,0,.04)] p-7">
+      <h2 class="text-sm font-semibold text-slate-800 mb-5 pb-4 border-b border-slate-100">Multi-Factor Authentication</h2>
+      <div class="flex items-center justify-between py-4 border-b border-slate-100">
+        <div><p class="text-sm font-medium text-slate-700">Enable MFA</p><p class="text-xs text-slate-400 mt-0.5">Require a second authentication factor.</p></div>
+        <label class="relative inline-flex items-center cursor-pointer">
+          <input type="checkbox" [(ngModel)]="mfaEnabled" class="sr-only peer">
+          <div class="w-11 h-6 bg-slate-200 rounded-full peer peer-checked:bg-indigo-500 after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
+        </label>
       </div>
-      <button class="bg-red-500 text-white px-6 py-2 rounded-lg font-medium hover:bg-red-600 transition-colors">Delete Account</button>
+      <div class="flex items-center justify-between py-4 border-b border-slate-100">
+        <div><p class="text-sm font-medium text-slate-700">Authenticator App</p><p class="text-xs text-slate-400 mt-0.5">Google Authenticator</p></div>
+        <button class="text-xs font-medium text-slate-500 border border-slate-200 px-3.5 py-2 rounded-xl hover:bg-slate-50 transition">Remove</button>
+      </div>
+      <div class="flex items-center justify-between py-4">
+        <div><p class="text-sm font-medium text-slate-700">SMS Number</p><p class="text-xs text-slate-400 mt-0.5">&hellip;1234</p></div>
+        <button class="text-xs font-medium text-slate-500 border border-slate-200 px-3.5 py-2 rounded-xl hover:bg-slate-50 transition">Remove</button>
+      </div>
+      <button class="mt-5 px-5 py-2.5 rounded-xl text-sm font-medium bg-gradient-to-r from-indigo-500 to-violet-600 text-white hover:opacity-90 transition shadow-sm">Add New Method</button>
     </div>
+
+    <!-- Danger zone -->
+    <div class="bg-white rounded-[1.25rem] shadow-[0_1px_3px_rgba(0,0,0,.04)] p-7 flex flex-col">
+      <h2 class="text-sm font-semibold text-slate-800 mb-5 pb-4 border-b border-slate-100">Danger Zone</h2>
+      <p class="text-xs text-slate-400 mb-auto">Permanently delete your account and all associated data. This action cannot be undone.</p>
+      <button class="mt-6 w-full py-2.5 rounded-xl text-sm font-medium bg-rose-500 text-white hover:bg-rose-600 transition">Delete Account</button>
+    </div>
+
   </div>
 </app-main-layout>
 

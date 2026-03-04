@@ -1,17 +1,21 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { RouterLink } from '@angular/router';
+import { finalize } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
-import { MainLayoutComponent } from '../../../shared/layouts/main-layout/main-layout.component';
-import { Transaction, getRiskLevel } from '../../../core/services';
+import { MainLayoutComponent } from '../../shared/layouts/main-layout/main-layout.component';
+import { Transaction, getRiskLevel } from '../../core/services';
 
-interface TransactionRequest {
+interface TransactionRequestDto {
   cc_number: string;
   amount: number;
   category: string;
   latitude: number;
   longitude: number;
+  device_id: string;
+  merchant: string;
+  timestamp: string;
 }
 
 interface SimulationResult {
@@ -22,7 +26,7 @@ interface SimulationResult {
 @Component({
   selector: 'app-pos-simulator',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, MainLayoutComponent],
+  imports: [CommonModule, FormsModule, RouterLink, MainLayoutComponent],
   templateUrl: './pos-simulator.component.html',
   styleUrls: []
 })
@@ -31,6 +35,7 @@ export class PosSimulatorComponent {
   
   // Form fields
   ccNumber = 'user_001';
+  merchant = 'Gerbang Alaf Restaurants Sdn Bhd';
   amount = 50;
   category = 'grocery_pos';
   latitude = 40.7128;
@@ -39,11 +44,9 @@ export class PosSimulatorComponent {
   // Preset locations for quick selection
   locations = [
     { name: 'New York, NY', lat: 40.7128, lon: -74.006 },
-    { name: 'Los Angeles, CA', lat: 34.0522, lon: -118.2437 },
-    { name: 'Chicago, IL', lat: 41.8781, lon: -87.6298 },
-    { name: 'Houston, TX', lat: 29.7604, lon: -95.3698 },
     { name: 'London, UK', lat: 51.5074, lon: -0.1278 },
     { name: 'Tokyo, Japan', lat: 35.6762, lon: 139.6503 },
+    { name: 'Kuala Lumpur, Malaysia', lat: 3.1390, lon: 101.6869 },
   ];
   
   // Transaction categories matching the model
@@ -64,6 +67,9 @@ export class PosSimulatorComponent {
     'travel'
   ];
   
+  // Selected location preset
+  selectedLocation: string | null = null;
+
   // Simulation results
   results: SimulationResult[] = [];
   isLoading = false;
@@ -74,35 +80,31 @@ export class PosSimulatorComponent {
   
   constructor(private http: HttpClient) {}
   
-  selectLocation(location: { name: string; lat: number; lon: number }) {
-    this.latitude = location.lat;
-    this.longitude = location.lon;
+  selectLocation({ name, lat, lon }: { name: string; lat: number; lon: number }) {
+    this.selectedLocation = name;
+    [this.latitude, this.longitude] = [lat, lon];
   }
   
   submitTransaction() {
     this.isLoading = true;
     this.error = null;
     
-    const request: TransactionRequest = {
+    const request: TransactionRequestDto = {
       cc_number: this.ccNumber,
+      merchant: this.merchant,
       amount: this.amount,
       category: this.category,
       latitude: this.latitude,
-      longitude: this.longitude
+      longitude: this.longitude,
+      timestamp: new Date().toISOString(),
+      device_id: "renovo_pos_sim_123456"
     };
     
-    this.http.post<Transaction>(`${this.apiUrl}/fraud-check`, request).subscribe({
-      next: (transaction) => {
-        this.results.unshift({
-          transaction,
-          timestamp: new Date()
-        });
-        this.isLoading = false;
-      },
-      error: (err) => {
-        this.error = err.error?.message || 'Failed to process transaction';
-        this.isLoading = false;
-      }
+    this.http.post<Transaction>(`${this.apiUrl}/fraud-check`, request).pipe(
+      finalize(() => this.isLoading = false)
+    ).subscribe({
+      next: (transaction) => this.results.unshift({ transaction, timestamp: new Date() }),
+      error: (err) => this.error = err.error?.message || 'Failed to process transaction'
     });
   }
   

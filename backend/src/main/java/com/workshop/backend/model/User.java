@@ -1,7 +1,10 @@
 package com.workshop.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.Data;
+
+import com.workshop.backend.enums.Role;
 
 @Entity
 @Table(name = "users")
@@ -14,9 +17,13 @@ public class User {
     @Column(unique = true)
     private String username;
 
-    private String password; // In production, this would be hashed
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    private String password;
+
     private String email;
-    private String role;
+
+    @Enumerated(EnumType.STRING)
+    private Role role;
 
     private boolean enabled = true;
 }

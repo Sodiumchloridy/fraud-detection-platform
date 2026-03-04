@@ -1,65 +1,123 @@
 package com.workshop.backend.controller;
 
+import com.workshop.backend.dto.CreateUserRequest;
+import com.workshop.backend.dto.UpdateUserRequest;
+import com.workshop.backend.dto.UserResponse;
+import com.workshop.backend.enums.Role;
 import com.workshop.backend.model.User;
 import com.workshop.backend.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
+import java.util.Locale;
+import java.util.Optional;
 
 /**
- * REST API Controller for User Authentication
- * Simplified to support login functionality needed by frontend
+ * REST API Controller for User Management
+ * Secured: ADMIN role only (configured in SecurityConfig)
  */
 @RestController
 @RequestMapping("/api/users")
-@CrossOrigin(origins = "http://localhost:4200")
+@RequiredArgsConstructor
 public class UserController {
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     /**
-     * POST endpoint for user login
-     * Used by: LoginComponent
+     * GET all users (admin only)
      */
-    @PostMapping("/login")
-    public ResponseEntity<Map<String, Object>> login(@RequestBody Map<String, String> credentials) {
-        String username = credentials.get("username");
-        String password = credentials.get("password");
-        
-        // Input validation
-        if (username == null || username.trim().isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Username is required");
+    @GetMapping
+    public ResponseEntity<List<UserResponse>> getAllUsers() {
+        return ResponseEntity.ok(userRepository.findAll().stream()
+            .map(this::toResponse)
+            .toList());
+    }
+
+    /**
+     * POST create user (admin only)
+     */
+    @PostMapping
+    public ResponseEntity<UserResponse> createUser(@RequestBody CreateUserRequest request) {
+        validateCreateRequest(request);
+
+        if (userRepository.existsByUsername(request.getUsername())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Username already exists");
         }
-        if (password == null || password.trim().isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password is required");
+
+        User user = new User();
+        user.setUsername(request.getUsername().trim());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setEmail(request.getEmail().trim());
+        user.setRole(parseRole(request.getRole()));
+        user.setEnabled(request.getEnabled() == null || request.getEnabled());
+
+        User saved = userRepository.save(user);
+        return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(saved));
+    }
+
+    /**
+     * PUT update user fields (admin only)
+     */
+    @PutMapping("/{id}")
+    public ResponseEntity<UserResponse> updateUser(@PathVariable Long id, @RequestBody UpdateUserRequest request) {
+        User user = userRepository.findById(id)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        Optional.ofNullable(request.getEmail()).filter(s -> !s.isBlank()).map(String::trim).ifPresent(user::setEmail);
+        Optional.ofNullable(request.getRole()).filter(s -> !s.isBlank()).map(this::parseRole).ifPresent(user::setRole);
+        Optional.ofNullable(request.getEnabled()).ifPresent(user::setEnabled);
+        Optional.ofNullable(request.getPassword()).filter(s -> !s.isBlank()).map(passwordEncoder::encode).ifPresent(user::setPassword);
+
+        User updated = userRepository.save(user);
+        return ResponseEntity.ok(toResponse(updated));
+    }
+
+    /**
+     * DELETE user (admin only)
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+        if (!userRepository.existsById(id)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
         }
-        
-        // Derived query
-        User user = userRepository.findByUsername(username)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Invalid username or password"));
-        
-        // Simple password check (in production, use proper password hashing)
-        if (!user.getPassword().equals(password)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid username or password");
+
+        userRepository.deleteById(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    private void validateCreateRequest(CreateUserRequest request) {
+        requireNonBlank(request.getUsername(), "Username");
+        requireNonBlank(request.getPassword(), "Password");
+        requireNonBlank(request.getEmail(), "Email");
+        requireNonBlank(request.getRole(), "Role");
+    }
+
+    private void requireNonBlank(String value, String fieldName) {
+        if (value == null || value.isBlank())
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, fieldName + " is required");
+    }
+
+    private Role parseRole(String role) {
+        try {
+            return Role.valueOf(role.trim().toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException ex) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid role. Allowed values: ADMIN, ANALYST");
         }
-        
-        if (!user.isEnabled()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User account is disabled");
-        }
-        
-        Map<String, Object> response = new HashMap<>();
-        response.put("success", true);
-        response.put("userId", user.getId());
-        response.put("username", user.getUsername());
-        response.put("role", user.getRole());
-        response.put("message", "Login successful");
-        
-        return ResponseEntity.ok(response);
+    }
+
+    private UserResponse toResponse(User user) {
+        return new UserResponse(
+            user.getId(),
+            user.getUsername(),
+            user.getEmail(),
+            user.getRole().name(),
+            user.isEnabled()
+        );
     }
 }

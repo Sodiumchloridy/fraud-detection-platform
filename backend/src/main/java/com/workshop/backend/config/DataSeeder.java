@@ -4,6 +4,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.workshop.backend.dto.TransactionDto;
 import com.workshop.backend.repository.TransactionRepository;
+import com.workshop.backend.security.JwtUtil;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +13,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
@@ -25,18 +30,15 @@ import java.util.*;
  * the fraud-engine's velocity / frequency features behave realistically.
  */
 @Component
+@RequiredArgsConstructor
 public class DataSeeder {
 
     private static final Logger log = LoggerFactory.getLogger(DataSeeder.class);
 
-    @Autowired
-    private TransactionRepository transactionRepository;
-
-    @Autowired
-    private RestTemplate restTemplate;
-
-    @Autowired
-    private ObjectMapper objectMapper;
+    private final TransactionRepository transactionRepository;
+    private final RestTemplate restTemplate;
+    private final ObjectMapper objectMapper;
+    private final JwtUtil jwtUtil;
 
     @Value("${server.port:8080}")
     private int serverPort;
@@ -61,11 +63,18 @@ public class DataSeeder {
         String endpoint = "http://localhost:" + serverPort + "/api/transactions/fraud-check";
         Random rng = new Random(42);
 
+        // Generate a JWT token for the system seeder (uses ADMIN role)
+        String token = jwtUtil.generateToken("admin", "ADMIN");
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
         for (int i = 0; i < seeds.size(); i++) {
             TransactionDto dto = seeds.get(i);
             long delay = 500 + rng.nextInt(2500);
             try { Thread.sleep(delay); } catch (InterruptedException e) { Thread.currentThread().interrupt(); break; }
-            restTemplate.postForObject(endpoint, dto, Map.class);
+            HttpEntity<TransactionDto> entity = new HttpEntity<>(dto, headers);
+            restTemplate.postForObject(endpoint, entity, Map.class);
             log.info("[{}/{}] Sent {} ${}", i + 1, seeds.size(), dto.getCategory(), dto.getAmount());
         }
         log.info("Seeding complete — {} transactions in database.", transactionRepository.count());

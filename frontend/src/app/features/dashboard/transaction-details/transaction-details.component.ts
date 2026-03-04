@@ -1,26 +1,30 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { ActivatedRoute, RouterModule } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
 import { MainLayoutComponent } from '../../../shared/layouts/main-layout/main-layout.component';
 import { TransactionService, Transaction, getRiskLevel } from '../../../core/services';
+import { LlmService } from '../../../core/services/llm.service';
 
 @Component({
   selector: 'app-transaction-details',
   standalone: true,
-  imports: [CommonModule, RouterModule, MainLayoutComponent],
+  imports: [CommonModule, RouterLink, MainLayoutComponent],
   templateUrl: './transaction-details.component.html',
   styleUrls: []
 })
 export class TransactionDetailsComponent implements OnInit {
   transaction: Transaction | null = null;
   locationName: string | null = null;
+  analysisReason: string | null = null;
   getRiskLevel = getRiskLevel;
 
   constructor(
     private route: ActivatedRoute,
     private transactionService: TransactionService,
-    private http: HttpClient
+    private http: HttpClient,
+    private llmService: LlmService
   ) {}
 
   ngOnInit() {
@@ -32,9 +36,14 @@ export class TransactionDetailsComponent implements OnInit {
 
   loadTransaction(id: string) {
     this.transactionService.getTransactionById(id).subscribe({
-      next: (data) => {
+      next: async (data) => {
         this.transaction = data;
-        this.fetchLocationName(data.latitude, data.longitude);
+        if (data.latitude && data.longitude) {
+          this.fetchLocationName(data.latitude, data.longitude);
+        }
+        this.analysisReason = (data.riskScore && this.getRiskLevel(data.riskScore) !== 'LOW')
+          ? await this.getAnalysisReason()
+          : null;
       },
       error: (err) => console.error('Error loading transaction:', err)
     });
@@ -42,22 +51,28 @@ export class TransactionDetailsComponent implements OnInit {
 
   fetchLocationName(lat: number, lon: number) {
     const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&zoom=12&accept-language=en-US,en&format=jsonv2`;
-    this.http.get<{ display_name: string }>(url).subscribe({
-      next: (res) => this.locationName = res.display_name,
+    this.http.get<{ display_name?: string; error?: string }>(url).subscribe({
+      next: (res) => this.locationName = (res.display_name && !res.error) ? res.display_name : `${lat}, ${lon}`,
       error: () => this.locationName = `${lat}, ${lon}`
     });
   }
 
   markAs(status: string) {
-    if (this.transaction) {
-      this.transactionService.updateTransactionStatus(this.transaction.id, status).subscribe({
-        next: () => {
-          alert(`Transaction marked as: ${status}. Thank you for your feedback.`);
-          this.loadTransaction(this.transaction!.id);
-        },
-        error: (err) => console.error('Error updating status:', err)
-      });
-    }
+    if (!this.transaction) return;
+    this.transactionService.updateTransactionStatus(this.transaction.id, status).subscribe({
+      next: () => {
+        alert(`Transaction marked as: ${status}. Thank you for your feedback.`);
+        this.loadTransaction(this.transaction!.id);
+      },
+      error: (err) => console.error('Error updating status:', err)
+    });
+  }
+
+  async getAnalysisReason(): Promise<string> {
+    if (!this.transaction) return 'Loading analysis...';
+    return firstValueFrom(this.llmService.analyzeTransaction(this.transaction))
+      .then(r => r?.reason?.trim() || 'No analysis available')
+      .catch(() => 'Error loading analysis');
   }
 }
 

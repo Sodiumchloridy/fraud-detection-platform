@@ -1,51 +1,39 @@
 package com.workshop.backend.controller;
 
-import com.workshop.backend.service.SseEmitterService;
-import com.workshop.backend.dto.TransactionDto;
-import com.workshop.backend.model.Transaction;
-import com.workshop.backend.repository.TransactionRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
-
+import java.time.Instant;
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.time.ZoneId;
+import java.util.*;
+import org.springframework.security.core.Authentication;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import com.workshop.backend.dto.FraudPredictionDto;
+import com.workshop.backend.dto.TransactionDto;
+import com.workshop.backend.mapper.TransactionMapper;
+import com.workshop.backend.model.Transaction;
+import com.workshop.backend.repository.TransactionRepository;
+import com.workshop.backend.enums.TransactionStatus;
 
 @RestController
 @RequestMapping("/api/transactions")
-@CrossOrigin(origins = "http://localhost:4200")
+@RequiredArgsConstructor
 public class TransactionController {
 
-    @Autowired
-    private TransactionRepository transactionRepository;
-
-    @Autowired
-    private RestTemplate restTemplate;
-
-    @Autowired
-    private SseEmitterService sseEmitterService;
-
-    /**
-     * SSE stream endpoint — clients connect here and receive real-time
-     * "transaction" and "stats" events whenever data changes.
-     */
-    @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter streamTransactions() {
-        return sseEmitterService.createEmitter();
-    }
+    private final TransactionRepository transactionRepository;
+    private final RestTemplate restTemplate;
+    private final TransactionMapper transactionMapper;
+    private final ObjectMapper objectMapper;
 
     @GetMapping
     public ResponseEntity<List<Transaction>> getAllTransactions() {
-        List<Transaction> transactions = transactionRepository.findAll();
-        return ResponseEntity.ok(transactions);
+        return ResponseEntity.ok(transactionRepository.findAll());
     }
 
     @GetMapping("/{id}")
@@ -61,9 +49,7 @@ public class TransactionController {
      */
     @GetMapping("/high-risk")
     public ResponseEntity<List<Transaction>> getHighRiskTransactions() {
-        // Find transactions with risk score >= 0.7
-        List<Transaction> highRisk = transactionRepository.findByRiskScoreGreaterThanEqual(0.7);
-        return ResponseEntity.ok(highRisk);
+        return ResponseEntity.ok(transactionRepository.findByRiskScoreGreaterThanEqual(0.7));
     }
 
     /**
@@ -72,95 +58,46 @@ public class TransactionController {
      */
     @GetMapping("/stats")
     public ResponseEntity<Map<String, Object>> getTransactionStats() {
-        Map<String, Object> stats = new HashMap<>();
-        
-        // Aggregate queries
-        long totalCount = transactionRepository.count();
-        long lowCount = transactionRepository.countByRiskScoreGreaterThanEqual(0.0) 
-                      - transactionRepository.countByRiskScoreGreaterThanEqual(0.3);
-        long mediumCount = transactionRepository.countByRiskScoreGreaterThanEqual(0.3)
-                         - transactionRepository.countByRiskScoreGreaterThanEqual(0.6);
-        long highCount = transactionRepository.countByRiskScoreGreaterThanEqual(0.6)
-                       - transactionRepository.countByRiskScoreGreaterThanEqual(0.8);
-        long criticalCount = transactionRepository.countByRiskScoreGreaterThanEqual(0.8);
-        
-        stats.put("total", totalCount);
-        stats.put("lowRisk", lowCount);
-        stats.put("mediumRisk", mediumCount);
-        stats.put("highRisk", highCount);
-        stats.put("critical", criticalCount);
-        stats.put("flagged", highCount + criticalCount);
-        stats.put("blocked", criticalCount);
-        
+        // 3 queries aligned with frontend getRiskLevel thresholds (HIGH >= 0.7, MEDIUM >= 0.4)
+        long total        = transactionRepository.count();
+        long mediumAndUp  = transactionRepository.countByRiskScoreGreaterThanEqual(0.4);
+        long highAndUp    = transactionRepository.countByRiskScoreGreaterThanEqual(0.7);
+        long critical     = transactionRepository.countByRiskScoreGreaterThanEqual(0.9);
+
+        Map<String, Object> stats = Map.of(
+            "total",      total,
+            "lowRisk",    total - mediumAndUp,
+            "mediumRisk", mediumAndUp - highAndUp,
+            "highRisk",   highAndUp - critical,
+            "critical",   critical,
+            "flagged",    highAndUp,
+            "blocked",    critical
+        );
+
         return ResponseEntity.ok(stats);
     }
 
     /**
-     * POST to create new transaction
-     * Used by: Dashboard for adding new transactions
-     */
-    @PostMapping
-    public ResponseEntity<Transaction> createTransaction(@RequestBody Transaction transaction) {
-        // Input validation
-        if (transaction.getAmount() == null || transaction.getAmount() <= 0) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Transaction amount must be greater than zero");
-        }
-        if (transaction.getCategory() == null || transaction.getCategory().trim().isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Transaction category is required");
-        }
-        
-        // Set timestamp if not provided
-        if (transaction.getTimestamp() == null) {
-            transaction.setTimestamp(LocalDateTime.now());
-        }
-        
-        // CRUD - Create
-        Transaction savedTransaction = transactionRepository.save(transaction);
-
-        // Broadcast real-time update to SSE clients
-        sseEmitterService.broadcastTransaction(savedTransaction);
-        broadcastUpdatedStats();
-
-        return new ResponseEntity<>(savedTransaction, HttpStatus.CREATED);
-    }
-
-    /**
      * PATCH to update transaction status
-     * Used by: TransactionDetailsComponent (mark as legitimate/fraud)
      */
     @PatchMapping("/{id}/status")
     public ResponseEntity<Transaction> updateTransactionStatus(
             @PathVariable UUID id,
-            @RequestParam String status) {
+            @RequestParam String status,
+            Authentication authentication) {
         
         // CRUD - Read and Update
         Transaction transaction = transactionRepository.findById(id)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Transaction not found with id: " + id));
         
-        transaction.setStatus(status);
+        TransactionStatus txnStatus = TransactionStatus.valueOf(status.toUpperCase());
+        transaction.setStatus(txnStatus);
+        transaction.setIsFraud(TransactionStatus.APPROVED.equals(txnStatus) ? 0 : 1);
+        transaction.setReviewedBy(authentication.getName());
+        transaction.setReviewedAt(LocalDateTime.now());
         Transaction updated = transactionRepository.save(transaction);
         
         return ResponseEntity.ok(updated);
-    }
-
-    /**
-     * DELETE transaction
-     */
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Map<String, String>> deleteTransaction(@PathVariable UUID id) {
-        // Check existence before delete
-        if (!transactionRepository.existsById(id)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Transaction not found with id: " + id);
-        }
-        
-        // CRUD - Delete
-        transactionRepository.deleteById(id);
-        
-        Map<String, String> response = new HashMap<>();
-        response.put("message", "Transaction deleted successfully");
-        response.put("id", id.toString());
-        
-        return ResponseEntity.ok(response);
     }
 
     /**
@@ -169,40 +106,39 @@ public class TransactionController {
     @PostMapping("/fraud-check")
     public ResponseEntity<Transaction> createTransactionWithFraudCheck(@RequestBody TransactionDto dto) {
         try {
-            // Call Python fraud detection
-            Map<String, Object> fraudResponse = restTemplate.postForObject(
-                "http://localhost:8000/predict", dto, Map.class);
+            // Fetch user's historical transactions from DB
+            List<Transaction> history = transactionRepository.findByCcNumberOrderByTimestampAsc(dto.getCcNumber());
 
-            // Create transaction
-            Transaction txn = new Transaction();
-            txn.setCcNum(dto.getCc_number());
-            txn.setAmount(dto.getAmount());
-            txn.setCategory(dto.getCategory());
-            txn.setLatitude(dto.getLatitude());
-            txn.setLongitude(dto.getLongitude());
-            txn.setTimestamp(LocalDateTime.now());
+            // Serialize full entities — new fields automatically flow through
+            List<Map<String, Object>> historyList = history.stream()
+                .map(t -> objectMapper.convertValue(t, new com.fasterxml.jackson.core.type.TypeReference<Map<String, Object>>() {}))
+                .toList();
 
-            // Set fraud assessment
-            double fraudProb = fraudResponse != null ? (Double) fraudResponse.get("fraud_probability") : 0.5;
-            txn.setRiskScore(fraudProb);
-            
-            if (fraudProb >= 0.8) {
-                txn.setStatus("BLOCKED");
-            } else if (fraudProb >= 0.6) {
-                txn.setStatus("FLAGGED");
-            } else if (fraudProb >= 0.3) {
-                txn.setStatus("REVIEW");
-            } else {
-                txn.setStatus("APPROVED");
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("transaction", dto);
+            payload.put("history", historyList);
+
+            FraudPredictionDto fraudResponse = restTemplate.postForObject(
+                "http://localhost:8000/predict", payload, FraudPredictionDto.class);
+
+            // Create transaction from DTO fields
+            Transaction txn = transactionMapper.toTransaction(dto);
+            txn.setTimestamp(dto.getTimestamp() != null
+                    ? LocalDateTime.ofInstant(Instant.parse(dto.getTimestamp()), ZoneId.systemDefault())
+                    : LocalDateTime.now());
+            txn.setMerchant(dto.getMerchant() != null ? dto.getMerchant() : "");
+            txn.setChannel(dto.getChannel() != null ? dto.getChannel() : "in_store");
+
+            // Apply computed fraud features onto the transaction
+            double fraudProb = 0.5;
+            if (fraudResponse != null) {
+                fraudProb = fraudResponse.getFraudProbability();
+                transactionMapper.applyFeatures(fraudResponse.getFeatures(), txn);
             }
+            txn.setRiskScore(fraudProb);
+            txn.setStatus(fraudProb >= 0.70 ? TransactionStatus.BLOCKED : fraudProb >= 0.40 ? TransactionStatus.FLAGGED : TransactionStatus.APPROVED);
 
-            Transaction saved = transactionRepository.save(txn);
-
-            // Broadcast real-time update to SSE clients
-            sseEmitterService.broadcastTransaction(saved);
-            broadcastUpdatedStats();
-
-            return new ResponseEntity<>(saved, HttpStatus.CREATED);
+            return new ResponseEntity<>(transactionRepository.save(txn), HttpStatus.CREATED);
         } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Fraud detection failed: " + e.getMessage());
         }

@@ -4,17 +4,40 @@ import { Observable } from 'rxjs';
 
 export interface Transaction {
   id: string;
-  ccNum: string;
+  ccNumber: string;
   amount: number;
   category: string;
+  timestamp: string;
+  merchant: string;
+  channel: string;
+
+  /* Location */
   latitude: number;
   longitude: number;
-  timestamp: string;
+
+  /* Fraud Features */
+  f_amount_zscore: number;
+  f_amount_to_avg_ratio: number;
+  f_travel_velocity_kmh: number;
+  f_travel_distance_km: number;
+  f_txn_count_1h: number;
+  f_txn_count_24h: number;
+  f_txn_count_7d: number;
+  f_seconds_since_last_txn: number;
+  f_hour_of_day: number;
+  f_is_new_device: number;
+  f_is_new_merchant: number;
+
+  /* System & Verdict */
   riskScore: number;
   status: string;
+
+  /* Human Review */
+  isFraud: number;
+  reviewedBy: string;
+  reviewedAt: string;
 }
 
-// Helper function to derive risk level from score
 export function getRiskLevel(riskScore: number): 'HIGH' | 'MEDIUM' | 'LOW' {
   if (riskScore >= 0.7) return 'HIGH';
   if (riskScore >= 0.4) return 'MEDIUM';
@@ -57,77 +80,7 @@ export class TransactionService {
     return this.http.get<TransactionStats>(`${this.apiUrl}/stats`);
   }
 
-  createTransaction(transaction: Partial<Transaction>): Observable<Transaction> {
-    return this.http.post<Transaction>(this.apiUrl, transaction);
-  }
-
   updateTransactionStatus(id: string, status: string): Observable<Transaction> {
     return this.http.patch<Transaction>(`${this.apiUrl}/${id}/status?status=${status}`, {});
-  }
-
-  deleteTransaction(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`);
-  }
-
-  // ── SSE (Server-Sent Events) real-time stream ──
-
-  /**
-   * Connects to the backend SSE stream and emits new Transaction
-   * objects as they arrive. Automatically reconnects on error.
-   */
-  streamTransactions(): Observable<Transaction> {
-    return new Observable<Transaction>(observer => {
-      const eventSource = new EventSource(`${this.apiUrl}/stream`);
-
-      eventSource.addEventListener('transaction', (event: MessageEvent) => {
-        this.zone.run(() => {
-          try {
-            const transaction: Transaction = JSON.parse(event.data);
-            observer.next(transaction);
-          } catch (e) {
-            console.error('Failed to parse transaction SSE event', e);
-          }
-        });
-      });
-
-      eventSource.onerror = () => {
-        // EventSource auto-reconnects on error; we just log it
-        console.warn('SSE connection error — browser will auto-reconnect');
-      };
-
-      // Cleanup when the observable is unsubscribed
-      return () => {
-        eventSource.close();
-      };
-    });
-  }
-
-  /**
-   * Connects to the backend SSE stream and emits TransactionStats
-   * updates as they arrive.
-   */
-  streamStats(): Observable<TransactionStats> {
-    return new Observable<TransactionStats>(observer => {
-      const eventSource = new EventSource(`${this.apiUrl}/stream`);
-
-      eventSource.addEventListener('stats', (event: MessageEvent) => {
-        this.zone.run(() => {
-          try {
-            const stats: TransactionStats = JSON.parse(event.data);
-            observer.next(stats);
-          } catch (e) {
-            console.error('Failed to parse stats SSE event', e);
-          }
-        });
-      });
-
-      eventSource.onerror = () => {
-        console.warn('SSE stats connection error — browser will auto-reconnect');
-      };
-
-      return () => {
-        eventSource.close();
-      };
-    });
   }
 }

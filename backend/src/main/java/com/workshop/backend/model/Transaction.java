@@ -5,38 +5,67 @@ import lombok.Data;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import com.workshop.backend.enums.TransactionStatus;
+
 @Entity
 @Table(name = "transactions")
-@Data // Lombok handles Getters/Setters
+@Data
 public class Transaction {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    // 1. Identity
+    /* Core Transaction Data */
     @Column(nullable = false)
-    private String ccNum; // e.g., "user_123"
+    private String ccNumber;
 
-    // 2. Features for Model
     @Column(nullable = false)
     private Double amount;
 
     @Column(nullable = false)
-    private String category; // e.g., "gas_transport"
-
-    // 3. Spatio-Temporal Data (CRITICAL for Velocity)
-    @Column(nullable = false)
-    private Double latitude; 
-
-    @Column(nullable = false)
-    private Double longitude;
+    private String category;
 
     @Column(nullable = false)
     private LocalDateTime timestamp;
 
-    // 4. The Verdict
-    private Double riskScore; // 0.99
+    @Column(nullable = false)
+    private String merchant;
+
+    @Column(nullable = false)
+    private String channel;
+
+    private String deviceId;
+
+    /* Location Data */
+    private Double latitude;
+    private Double longitude;
+
+    /* Fraud Features */
+    private Double f_amount_zscore;
+    private Double f_amount_to_avg_ratio;
+
+    private Double f_travel_velocity_kmh;
+    private Double f_travel_distance_km;
+
+    private Integer f_txn_count_1h;
+    private Integer f_txn_count_24h;
+    private Integer f_txn_count_7d;
+
+    private Double f_seconds_since_last_txn;
+    private Integer f_hour_of_day;
+
+    private Integer f_is_new_device;
+    private Integer f_is_new_merchant;
+
+    /* System & Verdict */
+    private Double riskScore;
     
-    private String status;    // "BLOCKED"
+    @Enumerated(EnumType.STRING)
+    private TransactionStatus status;
+
+    /* Human Review */
+    private Integer isFraud;
+    private String reviewedBy;
+    private LocalDateTime reviewedAt;
 }

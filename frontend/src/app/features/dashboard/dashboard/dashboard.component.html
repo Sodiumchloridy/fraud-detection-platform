@@ -1,39 +1,52 @@
-<app-main-layout [pageTitle]="'Fraud Detection Dashboard'">
-  <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-    <div class="bg-white shadow rounded-lg p-6">
-      <p class="text-sm font-medium text-gray-500">Transactions Today</p>
-      <p class="text-3xl font-semibold text-gray-800">{{ (stats$ | async)?.total || 0 }}</p>
-    </div>
-    <a routerLink="/high-risk-alerts" class="bg-white shadow rounded-lg p-6 block hover:bg-red-50 transition-colors">
-      <p class="text-sm font-medium text-gray-500">High-Risk Alerts</p>
-      <p class="text-3xl font-semibold text-red-600">{{ (stats$ | async)?.flagged || 0 }}</p>
-    </a>
-    <a routerLink="/simulator" class="bg-white shadow rounded-lg p-6 block hover:bg-blue-50 transition-colors">
-      <p class="text-sm font-medium text-gray-500">POS Simulator</p>
-      <p class="text-xl font-semibold text-blue-600">Test Transactions &rarr;</p>
-    </a>
-  </div>
+<app-main-layout [pageTitle]="'Dashboard'">
+  <!-- Bento Grid -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
 
-  <div class="shadow rounded-lg" [style.backgroundColor]="'white'">
-    <h2 class="text-lg font-semibold p-6 border-b border-gray-200">Live Transaction Feed</h2>
-    <div id="feed">
-      <div *ngFor="let transaction of transactions$ | async; trackBy: trackByTransactionId"
-        class="animate-pop-in flex justify-between items-center p-4 border-b border-gray-200 last:border-b-0 hover:bg-gray-50">
-        <a [routerLink]="['/transaction', transaction.id]" class="flex-grow flex justify-between items-center">
-          <div>
-            <strong class="font-medium text-gray-800">{{ transaction.ccNum }}</strong>
-            <small class="block text-gray-500 text-sm">{{ transaction.amount | currency }} &bull; {{ transaction.category
-              }} &bull; {{ transaction.timestamp | date:'short' }}</small>
+    <!-- Transactions Today -->
+    <div class="bg-white rounded-[1.25rem] p-7 shadow-[0_1px_3px_rgba(0,0,0,.04)]">
+      <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-widest">Transactions</p>
+      <p class="mt-3 text-4xl font-extrabold text-slate-800">{{ (stats$ | async)?.total || 0 }}</p>
+      <p class="mt-1 text-xs text-slate-400">today</p>
+    </div>
+
+    <!-- Flagged Alerts -->
+    <a routerLink="/high-risk-alerts" class="bg-rose-50 rounded-[1.25rem] p-7 shadow-[0_1px_3px_rgba(0,0,0,.04)] hover:shadow-md transition-shadow group">
+      <p class="text-[11px] font-semibold text-rose-400 uppercase tracking-widest">Flagged</p>
+      <p class="mt-3 text-4xl font-extrabold text-rose-600">{{ (stats$ | async)?.flagged || 0 }}</p>
+      <p class="mt-1 text-xs text-rose-400 group-hover:text-rose-600 transition-colors">View alerts &rarr;</p>
+    </a>
+
+    <!-- POS Simulator -->
+    <a routerLink="/simulator" class="bg-gradient-to-br from-indigo-500 to-violet-600 rounded-[1.25rem] p-7 shadow-[0_1px_3px_rgba(0,0,0,.04)] hover:shadow-md transition-shadow group">
+      <p class="text-[11px] font-semibold text-indigo-200/70 uppercase tracking-widest">Simulator</p>
+      <p class="mt-3 text-lg font-bold text-white">Test Transactions</p>
+      <p class="mt-1 text-xs text-indigo-200/60 group-hover:text-white transition-colors">Open POS &rarr;</p>
+    </a>
+
+    <!-- Live Transaction Feed -->
+    <div class="md:col-span-3 bg-white rounded-[1.25rem] shadow-[0_1px_3px_rgba(0,0,0,.04)] overflow-hidden">
+      <div class="px-7 py-5 border-b border-slate-100 flex items-center justify-between">
+        <h2 class="text-sm font-semibold text-slate-800">Live Transaction Feed</h2>
+        <span class="inline-flex items-center gap-1.5 text-[11px] text-slate-400">
+          <span class="size-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Auto-refresh
+        </span>
+      </div>
+      @for (transaction of transactions$ | async; track transaction.id) {
+        <a [routerLink]="['/transaction', transaction.id]"
+           class="animate-bento flex items-center justify-between px-7 py-4 border-b border-slate-50 last:border-b-0 hover:bg-slate-50/60 transition-colors">
+          <div class="min-w-0">
+            <p class="text-sm font-medium text-slate-700 truncate">{{ transaction.ccNumber }}</p>
+            <p class="text-xs text-slate-400 mt-0.5">{{ transaction.amount | currency }} &middot; {{ transaction.category }} &middot; {{ transaction.timestamp | date:'short' }}</p>
           </div>
-          <span class="px-3 py-1 text-xs font-medium rounded-full" [ngClass]="{
-                  'bg-red-100 text-red-800': getRiskLevel(transaction.riskScore) === 'HIGH',
-                  'bg-yellow-100 text-yellow-800': getRiskLevel(transaction.riskScore) === 'MEDIUM',
-                  'bg-green-100 text-green-800': getRiskLevel(transaction.riskScore) === 'LOW'
-                }">
-            {{ getRiskLevel(transaction.riskScore) }} RISK
+          <span class="ml-4 shrink-0 px-3 py-1 text-[11px] font-semibold rounded-full" [ngClass]="{
+            'bg-rose-100 text-rose-700':   getRiskLevel(transaction.riskScore) === 'HIGH',
+            'bg-amber-100 text-amber-700': getRiskLevel(transaction.riskScore) === 'MEDIUM',
+            'bg-emerald-100 text-emerald-700': getRiskLevel(transaction.riskScore) === 'LOW'
+          }">
+            {{ getRiskLevel(transaction.riskScore) }}
           </span>
         </a>
-      </div>
+      }
     </div>
   </div>
 </app-main-layout>

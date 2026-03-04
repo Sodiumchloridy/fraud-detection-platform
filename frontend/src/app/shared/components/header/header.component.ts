@@ -1,27 +1,19 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterLink],
   templateUrl: './header.component.html',
   styleUrls: []
 })
 export class HeaderComponent {
-  @Input() pageTitle: string = 'Fraud Detection Dashboard';
-  @Input() userName: string = 'Admin';
+  @Input() pageTitle = 'Dashboard';
+  @Input() userName = 'Admin';
+  @Input() showAdminOptions = false;
   @Output() logout = new EventEmitter<void>();
-  
-  // Track dropdown menu visibility
   isDropdownOpen = false;
-  
-  toggleDropdown() {
-    this.isDropdownOpen = !this.isDropdownOpen;
-  }
-  
-  onLogout() {
-    this.logout.emit();
-  }
+  toggleDropdown() { this.isDropdownOpen = !this.isDropdownOpen; }
 }

@@ -16,25 +16,10 @@ import java.util.UUID;
 @Repository
 public interface TransactionRepository extends JpaRepository<Transaction, UUID> {
 
-    /**
-     * Finds high-risk transactions based on riskScore threshold
-     */
     List<Transaction> findByRiskScoreGreaterThanEqual(Double threshold);
 
-    /**
-     * Finds transactions by status
-     */
-    List<Transaction> findByStatus(String status);
+    List<Transaction> findByCcNumberOrderByTimestampAsc(String ccNumber);
 
-    /**
-     * Finds transactions by credit card number
-     */
-    List<Transaction> findByCcNum(String ccNum);
-
-    /**
-     * JPQL aggregate query - counts high risk transactions (score >= 0.7)
-     * Used by: /api/transactions/stats endpoint
-     */
     @Query("SELECT COUNT(t) FROM Transaction t WHERE t.riskScore >= :threshold")
     Long countByRiskScoreGreaterThanEqual(@Param("threshold") Double threshold);
 }
