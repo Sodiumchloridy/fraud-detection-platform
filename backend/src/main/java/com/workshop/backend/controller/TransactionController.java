@@ -143,27 +143,4 @@ public class TransactionController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Fraud detection failed: " + e.getMessage());
         }
     }
-
-    /**
-     * Helper: recompute stats and broadcast to all SSE clients.
-     */
-    private void broadcastUpdatedStats() {
-        Map<String, Object> stats = new HashMap<>();
-        long totalCount = transactionRepository.count();
-        long lowCount = transactionRepository.countByRiskScoreGreaterThanEqual(0.0)
-                      - transactionRepository.countByRiskScoreGreaterThanEqual(0.3);
-        long mediumCount = transactionRepository.countByRiskScoreGreaterThanEqual(0.3)
-                         - transactionRepository.countByRiskScoreGreaterThanEqual(0.6);
-        long highCount = transactionRepository.countByRiskScoreGreaterThanEqual(0.6)
-                       - transactionRepository.countByRiskScoreGreaterThanEqual(0.8);
-        long criticalCount = transactionRepository.countByRiskScoreGreaterThanEqual(0.8);
-        stats.put("total", totalCount);
-        stats.put("lowRisk", lowCount);
-        stats.put("mediumRisk", mediumCount);
-        stats.put("highRisk", highCount);
-        stats.put("critical", criticalCount);
-        stats.put("flagged", highCount + criticalCount);
-        stats.put("blocked", criticalCount);
-        sseEmitterService.broadcastStats(stats);
-    }
 }

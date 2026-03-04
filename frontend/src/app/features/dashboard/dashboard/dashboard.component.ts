@@ -33,5 +33,9 @@ export class DashboardComponent implements OnDestroy {
   );
 
   constructor(private transactionService: TransactionService) {}
+
+  ngOnDestroy(): void {
+    // any cleanup logic if needed
+  }
 }
 
