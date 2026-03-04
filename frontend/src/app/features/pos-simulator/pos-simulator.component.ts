@@ -7,12 +7,13 @@ import { HttpClient } from '@angular/common/http';
 import { MainLayoutComponent } from '../../shared/layouts/main-layout/main-layout.component';
 import { Transaction, getRiskLevel } from '../../core/services';
 
-interface TransactionRequest {
+interface TransactionRequestDto {
   cc_number: string;
   amount: number;
   category: string;
   latitude: number;
   longitude: number;
+  device_id: string;
   merchant: string;
   timestamp: string;
 }
@@ -43,9 +44,6 @@ export class PosSimulatorComponent {
   // Preset locations for quick selection
   locations = [
     { name: 'New York, NY', lat: 40.7128, lon: -74.006 },
-    { name: 'Los Angeles, CA', lat: 34.0522, lon: -118.2437 },
-    { name: 'Chicago, IL', lat: 41.8781, lon: -87.6298 },
-    { name: 'Houston, TX', lat: 29.7604, lon: -95.3698 },
     { name: 'London, UK', lat: 51.5074, lon: -0.1278 },
     { name: 'Tokyo, Japan', lat: 35.6762, lon: 139.6503 },
     { name: 'Kuala Lumpur, Malaysia', lat: 3.1390, lon: 101.6869 },
@@ -69,6 +67,9 @@ export class PosSimulatorComponent {
     'travel'
   ];
   
+  // Selected location preset
+  selectedLocation: string | null = null;
+
   // Simulation results
   results: SimulationResult[] = [];
   isLoading = false;
@@ -79,7 +80,8 @@ export class PosSimulatorComponent {
   
   constructor(private http: HttpClient) {}
   
-  selectLocation({ lat, lon }: { name: string; lat: number; lon: number }) {
+  selectLocation({ name, lat, lon }: { name: string; lat: number; lon: number }) {
+    this.selectedLocation = name;
     [this.latitude, this.longitude] = [lat, lon];
   }
   
@@ -87,7 +89,7 @@ export class PosSimulatorComponent {
     this.isLoading = true;
     this.error = null;
     
-    const request: TransactionRequest = {
+    const request: TransactionRequestDto = {
       cc_number: this.ccNumber,
       merchant: this.merchant,
       amount: this.amount,
@@ -95,6 +97,7 @@ export class PosSimulatorComponent {
       latitude: this.latitude,
       longitude: this.longitude,
       timestamp: new Date().toISOString(),
+      device_id: "renovo_pos_sim_123456"
     };
     
     this.http.post<Transaction>(`${this.apiUrl}/fraud-check`, request).pipe(

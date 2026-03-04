@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import Optional
 from datetime import datetime
 import time
@@ -30,11 +30,14 @@ class Transaction(BaseModel):
 
 
 class HistoricalTxn(BaseModel):
+    model_config = ConfigDict(extra='allow')
+
     amount: float
     timestamp: str
     latitude: float = 0.0
     longitude: float = 0.0
     merchant: str = ''
+    device_id: str = ''
 
 
 class PredictRequest(BaseModel):

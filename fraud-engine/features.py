@@ -24,18 +24,22 @@ def haversine(lat1, lon1, lat2, lon2):
 
 def _parse_history(history):
     if not history:
-        return [], [], None, set()
+        return [], [], None, set(), set()
     amounts    = [h.amount for h in history][-100:]
     timestamps = [parse_ts(h.timestamp).timestamp() for h in history]
     merchants  = {h.merchant for h in history if h.merchant}
-    return amounts, timestamps, history[-1], merchants
+    devices    = {h.device_id for h in history if h.device_id}
+    return amounts, timestamps, history[-1], merchants, devices
 
 def _amount_features(amount, amounts):
     if not amounts:
         return 0.0, 1.0
     mean = np.mean(amounts)
     std  = np.std(amounts) if len(amounts) > 1 else 1.0
-    return (amount - mean) / (std or 1.0), amount / mean if mean else 1.0
+    zscore = (amount - mean) / std if std > 0 else 0.0
+    if len(amounts) < 30:
+        zscore = 0.0  # Avoid overfitting to small samples
+    return zscore, amount / mean if mean else 1.0
 
 def _velocity_features(txn, last, timestamps, curr_time):
     if not (last and timestamps):
@@ -53,7 +57,7 @@ def _txn_counts(timestamps, curr_time):
 # Public APIs
 
 def compute_features(txn: Transaction, curr_time: float, history: list[HistoricalTxn]) -> dict:
-    amounts, timestamps, last, merchants = _parse_history(history)
+    amounts, timestamps, last, merchants, devices = _parse_history(history)
     zscore, ratio  = _amount_features(txn.amount, amounts)
     dist, dt, vel  = _velocity_features(txn, last, timestamps, curr_time)
     counts         = _txn_counts(timestamps, curr_time)
@@ -71,7 +75,7 @@ def compute_features(txn: Transaction, curr_time: float, history: list[Historica
         'f_txn_count_7d':           counts[604800],
         'f_seconds_since_last_txn': dt,
         'f_hour_of_day':            txn.local_hour_of_day,
-        'f_is_new_device':          int(txn.device_id not in []),
+        'f_is_new_device':          int(txn.device_id not in devices),
         'f_is_new_merchant':        int(txn.merchant not in merchants),
     }
 

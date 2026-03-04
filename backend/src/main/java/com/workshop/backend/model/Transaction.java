@@ -35,6 +35,8 @@ public class Transaction {
     @Column(nullable = false)
     private String channel;
 
+    private String deviceId;
+
     /* Location Data */
     private Double latitude;
     private Double longitude;

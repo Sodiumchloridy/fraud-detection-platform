@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
 import org.springframework.security.core.Authentication;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.workshop.backend.dto.FraudPredictionDto;
 import com.workshop.backend.dto.TransactionDto;
@@ -27,6 +28,7 @@ public class TransactionController {
     private final TransactionRepository transactionRepository;
     private final RestTemplate restTemplate;
     private final TransactionMapper transactionMapper;
+    private final ObjectMapper objectMapper;
 
     @GetMapping
     public ResponseEntity<List<Transaction>> getAllTransactions() {
@@ -105,15 +107,11 @@ public class TransactionController {
         try {
             // Fetch user's historical transactions from DB
             List<Transaction> history = transactionRepository.findByCcNumberOrderByTimestampAsc(dto.getCcNumber());
-            List<Map<String, Object>> historyList = history.stream().map(t -> {
-                Map<String, Object> m = new HashMap<>();
-                m.put("amount", t.getAmount());
-                m.put("timestamp", t.getTimestamp().toString());
-                m.put("latitude", t.getLatitude() != null ? t.getLatitude() : 0.0);
-                m.put("longitude", t.getLongitude() != null ? t.getLongitude() : 0.0);
-                m.put("merchant", t.getMerchant() != null ? t.getMerchant() : "");
-                return m;
-            }).toList();
+
+            // Serialize full entities — new fields automatically flow through
+            List<Map<String, Object>> historyList = history.stream()
+                .map(t -> objectMapper.convertValue(t, new com.fasterxml.jackson.core.type.TypeReference<Map<String, Object>>() {}))
+                .toList();
 
             Map<String, Object> payload = new HashMap<>();
             payload.put("transaction", dto);
