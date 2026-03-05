@@ -52,7 +52,7 @@
         {{ getRiskLevel(transaction.riskScore) }} RISK
       </span>
       <p class="mt-3 text-3xl font-extrabold text-slate-800">{{ (transaction.riskScore * 100) | number:'1.0-1' }}%</p>
-      <p class="text-xs text-slate-400 mt-1">confidence score</p>
+      <p class="text-xs text-slate-400 mt-1">risk score</p>
     </div>
 
     <!-- AI Analysis card — full width -->
@@ -73,9 +73,9 @@
       @if (!transaction.reviewedBy) {
       <div class="flex flex-col gap-2.5">
         <button (click)="markAs('APPROVED')"
-          class="w-full py-2.5 rounded-xl text-sm font-medium bg-emerald-500 text-white hover:bg-emerald-600 transition">Legitimate</button>
+          class="w-full py-2.5 rounded-xl text-sm font-medium bg-[#2D8C8C] text-white hover:bg-[#267878] transition">Legitimate</button>
         <button (click)="markAs('BLOCKED')"
-          class="w-full py-2.5 rounded-xl text-sm font-medium bg-rose-500 text-white hover:bg-rose-600 transition">Fraudulent</button>
+          class="w-full py-2.5 rounded-xl text-sm font-medium border border-[#2D8C8C] text-[#2D8C8C] bg-white hover:bg-[#2D8C8C]/5 transition">Fraudulent</button>
       </div>
       } @else {
       <p class="text-sm text-slate-600">This transaction has been {{ transaction.status.toLowerCase() }} by {{

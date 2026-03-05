@@ -39,8 +39,8 @@ export interface Transaction {
 }
 
 export function getRiskLevel(riskScore: number): 'HIGH' | 'MEDIUM' | 'LOW' {
-  if (riskScore >= 0.7) return 'HIGH';
-  if (riskScore >= 0.4) return 'MEDIUM';
+  if (riskScore >= 0.8) return 'HIGH';
+  if (riskScore >= 0.5) return 'MEDIUM';
   return 'LOW';
 }
 

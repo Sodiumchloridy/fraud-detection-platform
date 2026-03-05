@@ -1,7 +1,7 @@
 <app-main-layout [pageTitle]="'User Management'">
   <div class="flex items-center justify-between mb-5">
     <a routerLink="/dashboard" class="inline-flex items-center gap-1 text-xs font-medium text-slate-400 hover:text-indigo-600 transition">&larr; Dashboard</a>
-    <button (click)="loadUsers()" class="text-xs font-medium text-slate-500 border border-slate-200 px-3.5 py-2 rounded-xl hover:bg-slate-50 transition">Refresh</button>
+    <button (click)="loadUsers()" class="text-xs font-medium text-[#2D8C8C] border border-[#2D8C8C] bg-white px-3.5 py-2 rounded-xl hover:bg-[#2D8C8C]/5 transition">Refresh</button>
   </div>
 
   @if (errorMessage) {
@@ -22,7 +22,7 @@
         <option value="ANALYST">ANALYST</option>
         <option value="ADMIN">ADMIN</option>
       </select>
-      <button (click)="createUser()" class="py-2.5 rounded-xl text-sm font-medium bg-gradient-to-r from-indigo-500 to-violet-600 text-white hover:opacity-90 transition shadow-sm">Add User</button>
+      <button (click)="createUser()" class="py-2.5 rounded-xl text-sm font-medium bg-[#2D8C8C] text-white hover:bg-[#267878] transition shadow-sm">Add User</button>
     </div>
   </div>
 
@@ -68,8 +68,8 @@
                   </label>
                 </td>
                 <td class="px-7 py-4 text-right space-x-2">
-                  <button (click)="saveUser(user)" class="px-3.5 py-2 text-xs font-medium rounded-xl bg-emerald-500 text-white hover:bg-emerald-600 transition">Save</button>
-                  <button (click)="deleteUser(user)" class="px-3.5 py-2 text-xs font-medium rounded-xl bg-rose-500 text-white hover:bg-rose-600 transition">Delete</button>
+                  <button (click)="saveUser(user)" class="px-3.5 py-2 text-xs font-medium rounded-xl bg-[#2D8C8C] text-white hover:bg-[#267878] transition">Save</button>
+                  <button (click)="deleteUser(user)" class="px-3.5 py-2 text-xs font-medium rounded-xl border border-[#2D8C8C] text-[#2D8C8C] bg-white hover:bg-[#2D8C8C]/5 transition">Delete</button>
                 </td>
               </tr>
             }
