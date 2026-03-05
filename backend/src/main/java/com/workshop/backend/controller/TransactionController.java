@@ -14,8 +14,8 @@ import java.util.*;
 import org.springframework.security.core.Authentication;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import com.workshop.backend.dto.FraudPredictionDto;
-import com.workshop.backend.dto.TransactionDto;
+import com.workshop.backend.dto.FraudPredictionResponse;
+import com.workshop.backend.dto.TransactionRequest;
 import com.workshop.backend.mapper.TransactionMapper;
 import com.workshop.backend.model.Transaction;
 import com.workshop.backend.repository.TransactionRepository;
@@ -104,7 +104,7 @@ public class TransactionController {
      * POST new transaction with fraud detection
      */
     @PostMapping("/fraud-check")
-    public ResponseEntity<Transaction> createTransactionWithFraudCheck(@RequestBody TransactionDto dto) {
+    public ResponseEntity<Transaction> createTransactionWithFraudCheck(@RequestBody TransactionRequest dto) {
         try {
             // Fetch user's historical transactions from DB
             List<Transaction> history = transactionRepository.findByCcNumberOrderByTimestampAsc(dto.getCcNumber());
@@ -118,8 +118,8 @@ public class TransactionController {
             payload.put("transaction", dto);
             payload.put("history", historyList);
 
-            FraudPredictionDto fraudResponse = restTemplate.postForObject(
-                "http://localhost:8000/predict", payload, FraudPredictionDto.class);
+            FraudPredictionResponse fraudResponse = restTemplate.postForObject(
+                "http://localhost:8000/predict", payload, FraudPredictionResponse.class);
 
             // Create transaction from DTO fields
             Transaction txn = transactionMapper.toTransaction(dto);
@@ -136,7 +136,7 @@ public class TransactionController {
                 transactionMapper.applyFeatures(fraudResponse.getFeatures(), txn);
             }
             txn.setRiskScore(fraudProb);
-            txn.setStatus(fraudProb >= 0.70 ? TransactionStatus.BLOCKED : fraudProb >= 0.40 ? TransactionStatus.FLAGGED : TransactionStatus.APPROVED);
+            txn.setStatus(fraudProb >= 0.80 ? TransactionStatus.BLOCKED : fraudProb >= 0.50 ? TransactionStatus.FLAGGED : TransactionStatus.APPROVED);
 
             return new ResponseEntity<>(transactionRepository.save(txn), HttpStatus.CREATED);
         } catch (Exception e) {

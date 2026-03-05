@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 @Data
-public class FraudPredictionDto {
+public class FraudPredictionResponse {
     @JsonProperty("fraud_probability")
     private Double fraudProbability;
 
@@ -12,5 +12,5 @@ public class FraudPredictionDto {
     private Boolean isFraud;
 
     @JsonProperty("features")
-    private TransactionFeaturesDto features;
+    private FraudFeaturesResponse features;
 }

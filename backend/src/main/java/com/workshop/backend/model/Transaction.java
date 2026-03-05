@@ -1,5 +1,6 @@
 package com.workshop.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;
@@ -35,6 +36,7 @@ public class Transaction {
     @Column(nullable = false)
     private String channel;
 
+    @JsonProperty("device_id")
     private String deviceId;
 
     /* Location Data */

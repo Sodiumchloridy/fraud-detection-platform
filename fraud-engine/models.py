@@ -31,7 +31,6 @@ class Transaction(BaseModel):
 
 class HistoricalTxn(BaseModel):
     model_config = ConfigDict(extra='allow')
-
     amount: float
     timestamp: str
     latitude: float = 0.0

@@ -7,7 +7,7 @@ import lombok.Data;
 
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class TransactionDto {
+public class TransactionRequest {
     
     @JsonProperty("cc_number")
     @JsonAlias("ccNumber")

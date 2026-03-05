@@ -2,7 +2,7 @@ package com.workshop.backend.config;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.workshop.backend.dto.TransactionDto;
+import com.workshop.backend.dto.TransactionRequest;
 import com.workshop.backend.repository.TransactionRepository;
 import com.workshop.backend.security.JwtUtil;
 import lombok.RequiredArgsConstructor;
@@ -51,10 +51,10 @@ public class DataSeeder {
             return;
         }
 
-        List<TransactionDto> seeds;
+        List<TransactionRequest> seeds;
         try {
             InputStream inputStream = new ClassPathResource("transactions.json").getInputStream();
-            seeds = objectMapper.readValue(inputStream, new TypeReference<List<TransactionDto>>() {});
+            seeds = objectMapper.readValue(inputStream, new TypeReference<List<TransactionRequest>>() {});
         } catch (Exception e) {
             throw new RuntimeException("Failed to load transactions.json", e);
         }
@@ -70,10 +70,10 @@ public class DataSeeder {
         headers.setContentType(MediaType.APPLICATION_JSON);
 
         for (int i = 0; i < seeds.size(); i++) {
-            TransactionDto dto = seeds.get(i);
+            TransactionRequest dto = seeds.get(i);
             long delay = 500 + rng.nextInt(2500);
             try { Thread.sleep(delay); } catch (InterruptedException e) { Thread.currentThread().interrupt(); break; }
-            HttpEntity<TransactionDto> entity = new HttpEntity<>(dto, headers);
+            HttpEntity<TransactionRequest> entity = new HttpEntity<>(dto, headers);
             restTemplate.postForObject(endpoint, entity, Map.class);
             log.info("[{}/{}] Sent {} ${}", i + 1, seeds.size(), dto.getCategory(), dto.getAmount());
         }

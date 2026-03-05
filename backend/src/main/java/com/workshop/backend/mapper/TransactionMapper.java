@@ -1,7 +1,7 @@
 package com.workshop.backend.mapper;
 
-import com.workshop.backend.dto.TransactionDto;
-import com.workshop.backend.dto.TransactionFeaturesDto;
+import com.workshop.backend.dto.TransactionRequest;
+import com.workshop.backend.dto.FraudFeaturesResponse;
 import com.workshop.backend.model.Transaction;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -12,7 +12,7 @@ import org.mapstruct.ReportingPolicy;
 public interface TransactionMapper {
 
     @Mapping(target = "timestamp", ignore = true)
-    Transaction toTransaction(TransactionDto transactionDto);
+    Transaction toTransaction(TransactionRequest transactionRequest);
 
-    void applyFeatures(TransactionFeaturesDto features, @MappingTarget Transaction transaction);
+    void applyFeatures(FraudFeaturesResponse features, @MappingTarget Transaction transaction);
 }

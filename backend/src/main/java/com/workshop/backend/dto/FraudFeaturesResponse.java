@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 @Data
-public class TransactionFeaturesDto {
+public class FraudFeaturesResponse {
 
     @JsonProperty("f_amount_zscore")
     private Double f_amount_zscore;
