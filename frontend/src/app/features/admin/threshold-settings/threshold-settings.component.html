@@ -1,14 +1,9 @@
-<app-main-layout [pageTitle]="'Fraud Detection Thresholds'">
-  <a routerLink="/dashboard"
-    class="inline-flex items-center gap-1 text-xs font-medium text-slate-400 hover:text-indigo-600 transition mb-5">&larr;
-    Dashboard</a>
-
-  @if (loading) {
-  <div class="bg-white rounded-[1.25rem] shadow-[0_1px_3px_rgba(0,0,0,.04)] p-10 text-center max-w-2xl mx-auto">
-    <p class="text-sm text-slate-400">Loading threshold configuration&hellip;</p>
-  </div>
-  } @else {
-  <div class="max-w-2xl mx-auto space-y-5">
+@if (loading) {
+<div class="bg-white rounded-[1.25rem] shadow-[0_1px_3px_rgba(0,0,0,.04)] p-10 text-center">
+  <p class="text-sm text-slate-400">Loading threshold configuration&hellip;</p>
+</div>
+} @else {
+<div class="space-y-5">
 
     <!-- Explanation card -->
     <div class="bg-white rounded-[1.25rem] shadow-[0_1px_3px_rgba(0,0,0,.04)] p-7">
@@ -108,4 +103,3 @@
     </div>
   </div>
   }
-</app-main-layout>

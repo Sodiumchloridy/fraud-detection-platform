@@ -4,7 +4,8 @@ from xgboost import XGBClassifier, DMatrix
 import time
 
 from models import PredictRequest, parse_ts
-from features import compute_features, VELOCITY_BLOCK_THRESHOLD_KMH
+from features import compute_features
+from rules import apply_rules
 
 router = APIRouter()
 
@@ -31,16 +32,16 @@ def predict_fraud(req: PredictRequest):
 
     features = compute_features(txn, curr_time, req.history)
 
-    if features['f_travel_velocity_kmh'] > VELOCITY_BLOCK_THRESHOLD_KMH:
-        fraud_prob = 1.0
-    else:
-        input_df = pd.DataFrame([features])[FEATURE_ORDER]
-        dmatrix = DMatrix(input_df, enable_categorical=True,
-                              feature_names=FEATURE_ORDER, feature_types=FEATURE_TYPES)
-        fraud_prob = float(model.get_booster().predict(dmatrix)[0])
+    input_df = pd.DataFrame([features])[FEATURE_ORDER]
+    dmatrix = DMatrix(input_df, enable_categorical=True,
+                          feature_names=FEATURE_ORDER, feature_types=FEATURE_TYPES)
+    ml_score = float(model.get_booster().predict(dmatrix)[0])
+
+    fraud_prob, triggered_rules = apply_rules(features, ml_score)
 
     return {
         "fraud_probability": fraud_prob,
         "is_fraud": fraud_prob > 0.5,
-        "features": features
+        "features": features,
+        "triggered_rules": triggered_rules,
     }

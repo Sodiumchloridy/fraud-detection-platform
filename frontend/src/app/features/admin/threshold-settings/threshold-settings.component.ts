@@ -1,14 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
-import { MainLayoutComponent } from '../../../shared/layouts/main-layout/main-layout.component';
 import { TransactionService, ThresholdConfig } from '../../../core/services';
 
 @Component({
   selector: 'app-threshold-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, MainLayoutComponent],
+  imports: [CommonModule, FormsModule],
   templateUrl: './threshold-settings.component.html',
 })
 export class ThresholdSettingsComponent implements OnInit {

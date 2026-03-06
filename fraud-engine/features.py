@@ -2,7 +2,6 @@ import numpy as np
 from models import Transaction, HistoricalTxn, parse_ts
 
 
-VELOCITY_BLOCK_THRESHOLD_KMH = 1500.0
 CATEGORIES = [
     'entertainment', 'food_dining', 'gas_transport', 'grocery_net',
     'grocery_pos', 'health_fitness', 'home', 'kids_pets',
