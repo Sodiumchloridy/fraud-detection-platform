@@ -25,7 +25,7 @@
     <div class="flex items-center justify-between mb-4">
       <div class="flex items-center gap-3">
         <label class="relative inline-flex items-center cursor-pointer">
-          <input type="checkbox" [checked]="rule.enabled" (change)="toggleRule(rule)" class="sr-only peer">
+          <input type="checkbox" [checked]="rule.enabled" (change)="rule.enabled = !rule.enabled" class="sr-only peer">
           <div class="w-10 h-5 bg-slate-200 rounded-full peer peer-checked:bg-emerald-500
                       after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white
                       after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-5"></div>

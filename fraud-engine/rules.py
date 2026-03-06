@@ -1,4 +1,7 @@
+import operator as op
 from pydantic import BaseModel
+
+OPS = {'>': op.gt, '>=': op.ge, '<': op.lt, '<=': op.le, '==': op.eq}
 
 class Rule(BaseModel):
     id: str
@@ -107,19 +110,8 @@ def apply_rules(features: dict, base_score: float) -> tuple[float, list[str]]:
         if value is None:
             continue
 
-        hit = False
-        if rule.operator == ">"  and value > rule.threshold:
-            hit = True
-        elif rule.operator == ">=" and value >= rule.threshold:
-            hit = True
-        elif rule.operator == "<"  and value < rule.threshold:
-            hit = True
-        elif rule.operator == "<=" and value <= rule.threshold:
-            hit = True
-        elif rule.operator == "==" and value == rule.threshold:
-            hit = True
-
-        if hit:
+        cmp = OPS.get(rule.operator)
+        if cmp and cmp(value, rule.threshold):
             triggered.append(rule.id)
             if rule.override:
                 score = max(score, rule.penalty)

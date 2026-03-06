@@ -78,11 +78,3 @@ def compute_features(txn: Transaction, curr_time: float, history: list[Historica
         'f_is_new_merchant':        int(txn.merchant not in merchants),
     }
 
-
-def get_lstm_features(history: list[HistoricalTxn], seq_len: int = 50):
-    """Raw sequence for LSTM — feature list TBD."""
-    # TODO: decide on final feature columns
-    return [
-        [h.amount, parse_ts(h.timestamp).hour]
-        for h in history[-seq_len:]
-    ]

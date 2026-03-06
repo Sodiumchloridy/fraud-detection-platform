@@ -1,12 +1,11 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RulesService, FraudRule } from '../../../core/services';
 
 @Component({
   selector: 'app-rules-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule],
   templateUrl: './rules-settings.component.html',
 })
 export class RulesSettingsComponent implements OnInit {
@@ -46,10 +45,6 @@ export class RulesSettingsComponent implements OnInit {
         this.loading = false;
       },
     });
-  }
-
-  toggleRule(rule: FraudRule) {
-    rule.enabled = !rule.enabled;
   }
 
   removeRule(index: number) {
