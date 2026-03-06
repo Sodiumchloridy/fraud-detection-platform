@@ -74,13 +74,13 @@
         <div class="space-y-3 max-h-[600px] overflow-y-auto pr-1">
           @for (result of results; track result.timestamp) {
             <div class="p-4 rounded-2xl border" [ngClass]="{
-              'border-rose-200 bg-rose-50/50':    getRiskLevel(result.transaction.riskScore) === 'HIGH',
-              'border-amber-200 bg-amber-50/50':  getRiskLevel(result.transaction.riskScore) === 'MEDIUM',
-              'border-emerald-200 bg-emerald-50/50': getRiskLevel(result.transaction.riskScore) === 'LOW'
+              'border-rose-200 bg-rose-50/50':    result.transaction.status === 'BLOCKED',
+              'border-amber-200 bg-amber-50/50':  result.transaction.status === 'FLAGGED',
+              'border-emerald-200 bg-emerald-50/50': result.transaction.status === 'APPROVED'
             }">
               <div class="flex items-start justify-between mb-1.5">
                 <p class="text-sm font-medium text-slate-700">{{ result.transaction.ccNumber }} &middot; {{ result.transaction.amount | currency }}</p>
-                <span class="ml-3 shrink-0 px-2.5 py-1 text-[11px] font-semibold rounded-full" [ngClass]="getRiskBadgeClass(result.transaction.riskScore)">{{ getRiskLevel(result.transaction.riskScore) }} {{ (result.transaction.riskScore * 100) | number:'1.0-1' }}%</span>
+                <span class="ml-3 shrink-0 px-2.5 py-1 text-[11px] font-semibold rounded-full" [ngClass]="getStatusBadgeClass(result.transaction.status)">{{ result.transaction.status }} {{ (result.transaction.riskScore * 100) | number:'1.0-1' }}%</span>
               </div>
               <p class="text-xs text-slate-400">{{ result.transaction.category }} &middot; {{ result.transaction.status }} &middot; {{ result.timestamp | date:'short' }}</p>
               <a [routerLink]="['/transaction', result.transaction.id]" class="inline-block mt-2 text-xs font-medium text-indigo-500 hover:text-indigo-700 transition">Details &rarr;</a>

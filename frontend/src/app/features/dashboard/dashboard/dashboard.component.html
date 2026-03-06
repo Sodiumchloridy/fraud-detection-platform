@@ -10,7 +10,7 @@
     </div>
 
     <!-- Flagged Alerts -->
-    <a routerLink="/high-risk-alerts" class="bg-rose-50 rounded-[1.25rem] p-7 shadow-[0_1px_3px_rgba(0,0,0,.04)] hover:shadow-md transition-shadow group">
+    <a routerLink="/flagged-transactions" class="bg-rose-50 rounded-[1.25rem] p-7 shadow-[0_1px_3px_rgba(0,0,0,.04)] hover:shadow-md transition-shadow group">
       <p class="text-[11px] font-semibold text-rose-400 uppercase tracking-widest">Flagged</p>
       <p class="mt-3 text-4xl font-extrabold text-rose-600">{{ (stats$ | async)?.flagged || 0 }}</p>
       <p class="mt-1 text-xs text-rose-400 group-hover:text-rose-600 transition-colors">View alerts &rarr;</p>
@@ -38,8 +38,8 @@
             <p class="text-sm font-medium text-slate-700 truncate">{{ transaction.ccNumber }}</p>
             <p class="text-xs text-slate-400 mt-0.5">{{ transaction.amount | currency }} &middot; {{ transaction.category }} &middot; {{ transaction.timestamp | date:'short' }}</p>
           </div>
-          <span class="ml-4 shrink-0 px-3 py-1 text-[11px] font-semibold rounded-full" [ngClass]="getRiskBadgeClass(transaction.riskScore)">
-            {{ getRiskLevel(transaction.riskScore) }}
+          <span class="ml-4 shrink-0 px-3 py-1 text-[11px] font-semibold rounded-full" [ngClass]="getStatusBadgeClass(transaction.status)">
+            {{ transaction.status }}
           </span>
         </a>
       }

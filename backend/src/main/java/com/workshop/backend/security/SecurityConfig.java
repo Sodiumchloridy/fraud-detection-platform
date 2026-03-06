@@ -39,12 +39,14 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/h2-console/**").permitAll()
 
-                // Admin-only: update transaction status, manage users
+                // Admin-only: update transaction status, manage users, update thresholds
                 .requestMatchers(HttpMethod.PATCH, "/api/transactions/*/status").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/api/thresholds").hasRole("ADMIN")
                 .requestMatchers("/api/users/**").hasRole("ADMIN")
 
                 // Authenticated endpoints (both ADMIN and ANALYST)
                 .requestMatchers("/api/transactions/**").hasAnyRole("ADMIN", "ANALYST")
+                .requestMatchers(HttpMethod.GET, "/api/thresholds").hasAnyRole("ADMIN", "ANALYST")
 
                 // Everything else requires authentication
                 .anyRequest().authenticated()

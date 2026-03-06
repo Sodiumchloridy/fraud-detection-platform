@@ -14,6 +14,7 @@ import java.util.*;
 import org.springframework.security.core.Authentication;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import com.workshop.backend.config.ThresholdConfig;
 import com.workshop.backend.dto.FraudPredictionResponse;
 import com.workshop.backend.dto.TransactionRequest;
 import com.workshop.backend.mapper.TransactionMapper;
@@ -30,6 +31,7 @@ public class TransactionController {
     private final RestTemplate restTemplate;
     private final TransactionMapper transactionMapper;
     private final ObjectMapper objectMapper;
+    private final ThresholdConfig thresholdConfig;
 
     @GetMapping
     public ResponseEntity<List<Transaction>> getAllTransactions() {
@@ -44,12 +46,12 @@ public class TransactionController {
     }
 
     /**
-     * GET high-risk transactions for alerts page
-     * Used by: HighRiskAlertsComponent
+     * GET flagged transactions (medium + high risk) for alerts page
+     * Used by: FlaggedTransactionsComponent
      */
-    @GetMapping("/high-risk")
-    public ResponseEntity<List<Transaction>> getHighRiskTransactions() {
-        return ResponseEntity.ok(transactionRepository.findByRiskScoreGreaterThanEqual(0.7));
+    @GetMapping("/flagged")
+    public ResponseEntity<List<Transaction>> getFlaggedTransactions() {
+        return ResponseEntity.ok(transactionRepository.findByRiskScoreGreaterThanEqual(thresholdConfig.getFlaggedThreshold()));
     }
 
     /**
@@ -58,20 +60,15 @@ public class TransactionController {
      */
     @GetMapping("/stats")
     public ResponseEntity<Map<String, Object>> getTransactionStats() {
-        // 3 queries aligned with frontend getRiskLevel thresholds (HIGH >= 0.7, MEDIUM >= 0.4)
-        long total        = transactionRepository.count();
-        long mediumAndUp  = transactionRepository.countByRiskScoreGreaterThanEqual(0.4);
-        long highAndUp    = transactionRepository.countByRiskScoreGreaterThanEqual(0.7);
-        long critical     = transactionRepository.countByRiskScoreGreaterThanEqual(0.9);
+        long total    = transactionRepository.count();
+        long flagged  = transactionRepository.countByRiskScoreGreaterThanEqual(thresholdConfig.getFlaggedThreshold());
+        long blocked  = transactionRepository.countByRiskScoreGreaterThanEqual(thresholdConfig.getBlockedThreshold());
 
         Map<String, Object> stats = Map.of(
-            "total",      total,
-            "lowRisk",    total - mediumAndUp,
-            "mediumRisk", mediumAndUp - highAndUp,
-            "highRisk",   highAndUp - critical,
-            "critical",   critical,
-            "flagged",    highAndUp,
-            "blocked",    critical
+            "total",    total,
+            "approved", total - flagged,
+            "flagged",  flagged - blocked,
+            "blocked",  blocked
         );
 
         return ResponseEntity.ok(stats);
@@ -136,7 +133,9 @@ public class TransactionController {
                 transactionMapper.applyFeatures(fraudResponse.getFeatures(), txn);
             }
             txn.setRiskScore(fraudProb);
-            txn.setStatus(fraudProb >= 0.80 ? TransactionStatus.BLOCKED : fraudProb >= 0.50 ? TransactionStatus.FLAGGED : TransactionStatus.APPROVED);
+            txn.setStatus(fraudProb >= thresholdConfig.getBlockedThreshold() ? TransactionStatus.BLOCKED
+                    : fraudProb >= thresholdConfig.getFlaggedThreshold() ? TransactionStatus.FLAGGED
+                    : TransactionStatus.APPROVED);
 
             return new ResponseEntity<>(transactionRepository.save(txn), HttpStatus.CREATED);
         } catch (Exception e) {

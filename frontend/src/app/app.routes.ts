@@ -6,6 +6,7 @@ import { TransactionDetailsComponent } from './features/dashboard/transaction-de
 import { PosSimulatorComponent } from './features/pos-simulator/pos-simulator.component';
 import { SettingsComponent } from './features/settings/settings/settings.component';
 import { UserManagementComponent } from './features/admin/user-management/user-management.component';
+import { ThresholdSettingsComponent } from './features/admin/threshold-settings/threshold-settings.component';
 import { NotFoundComponent } from './pages/not-found/not-found.component';
 import { authGuard, adminGuard } from './core/guards/auth.guard';
 
@@ -13,11 +14,12 @@ export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
   { path: 'login', component: LoginComponent },
   { path: 'dashboard', component: DashboardComponent, canActivate: [authGuard] },
-  { path: 'high-risk-alerts', component: HighRiskAlertsComponent, canActivate: [authGuard] },
+  { path: 'flagged-transactions', component: HighRiskAlertsComponent, canActivate: [authGuard] },
   { path: 'transaction/:id', component: TransactionDetailsComponent, canActivate: [authGuard] },
   { path: 'simulator', component: PosSimulatorComponent, canActivate: [authGuard] },
   { path: 'settings', component: SettingsComponent, canActivate: [authGuard] },
   { path: 'admin/users', component: UserManagementComponent, canActivate: [authGuard, adminGuard] },
+  { path: 'admin/thresholds', component: ThresholdSettingsComponent, canActivate: [authGuard, adminGuard] },
   { path: '**', component: NotFoundComponent }
 ];
 

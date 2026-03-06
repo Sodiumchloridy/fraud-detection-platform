@@ -4,7 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { MainLayoutComponent } from '../../../shared/layouts/main-layout/main-layout.component';
-import { TransactionService, Transaction, getRiskLevel, getRiskBadgeClass } from '../../../core/services';
+import { TransactionService, Transaction, getStatusBadgeClass } from '../../../core/services';
 import { LlmService } from '../../../core/services/llm.service';
 
 @Component({
@@ -18,8 +18,7 @@ export class TransactionDetailsComponent implements OnInit {
   transaction: Transaction | null = null;
   locationName: string | null = null;
   analysisReason: string | null = null;
-  getRiskLevel = getRiskLevel;
-  getRiskBadgeClass = getRiskBadgeClass;
+  getStatusBadgeClass = getStatusBadgeClass;
 
   constructor(
     private route: ActivatedRoute,
@@ -42,7 +41,7 @@ export class TransactionDetailsComponent implements OnInit {
         if (data.latitude && data.longitude) {
           this.fetchLocationName(data.latitude, data.longitude);
         }
-        this.analysisReason = (data.riskScore && this.getRiskLevel(data.riskScore) !== 'LOW')
+        this.analysisReason = (data.riskScore && data.status !== 'APPROVED')
           ? await this.getAnalysisReason()
           : null;
       },

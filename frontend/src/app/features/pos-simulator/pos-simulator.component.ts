@@ -5,7 +5,7 @@ import { RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { MainLayoutComponent } from '../../shared/layouts/main-layout/main-layout.component';
-import { Transaction, getRiskLevel, getRiskBadgeClass } from '../../core/services';
+import { Transaction, getStatusBadgeClass } from '../../core/services';
 
 interface TransactionRequestDto {
   cc_number: string;
@@ -76,8 +76,7 @@ export class PosSimulatorComponent {
   error: string | null = null;
   
   // Helper
-  getRiskLevel = getRiskLevel;
-  getRiskBadgeClass = getRiskBadgeClass;
+  getStatusBadgeClass = getStatusBadgeClass;
   
   constructor(private http: HttpClient) {}
   

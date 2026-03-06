@@ -44,8 +44,8 @@
     <!-- Risk badge card -->
     <div
       class="bg-white rounded-[1.25rem] shadow-[0_1px_3px_rgba(0,0,0,.04)] p-7 flex flex-col items-center justify-center text-center">
-      <span class="px-4 py-1.5 text-xs font-semibold rounded-full" [ngClass]="getRiskBadgeClass(transaction.riskScore)">
-        {{ getRiskLevel(transaction.riskScore) }} RISK
+      <span class="px-4 py-1.5 text-xs font-semibold rounded-full" [ngClass]="getStatusBadgeClass(transaction.status)">
+        {{ transaction.status }}
       </span>
       <p class="mt-3 text-3xl font-extrabold text-slate-800">{{ (transaction.riskScore * 100) | number:'1.0-1' }}%</p>
       <p class="text-xs text-slate-400 mt-1">risk score</p>
@@ -54,7 +54,7 @@
     <!-- AI Analysis card — full width -->
     <div class="md:col-span-2 bg-white rounded-[1.25rem] shadow-[0_1px_3px_rgba(0,0,0,.04)] p-7">
       <h2 class="text-sm font-semibold text-slate-800 mb-4">AI Fraud Analysis</h2>
-      @if (getRiskLevel(transaction.riskScore) !== 'LOW') {
+      @if (transaction.status !== 'APPROVED') {
       <p class="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap">{{ analysisReason || 'Loading analysis...'
         }}</p>
       } @else {

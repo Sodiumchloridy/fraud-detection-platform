@@ -2,7 +2,7 @@ import { Component, ChangeDetectionStrategy, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { MainLayoutComponent } from '../../../shared/layouts/main-layout/main-layout.component';
-import { TransactionService, getRiskLevel, getRiskBadgeClass } from '../../../core/services';
+import { TransactionService, getStatusBadgeClass } from '../../../core/services';
 import { timer } from 'rxjs';
 import { map, share, switchMap } from 'rxjs/operators';
 
@@ -15,8 +15,7 @@ import { map, share, switchMap } from 'rxjs/operators';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DashboardComponent implements OnDestroy {
-  getRiskLevel = getRiskLevel;
-  getRiskBadgeClass = getRiskBadgeClass;
+  getStatusBadgeClass = getStatusBadgeClass;
 
   private refresh$ = timer(0, 2000).pipe(share());
 

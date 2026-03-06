@@ -1,0 +1,111 @@
+<app-main-layout [pageTitle]="'Fraud Detection Thresholds'">
+  <a routerLink="/dashboard"
+    class="inline-flex items-center gap-1 text-xs font-medium text-slate-400 hover:text-indigo-600 transition mb-5">&larr;
+    Dashboard</a>
+
+  @if (loading) {
+  <div class="bg-white rounded-[1.25rem] shadow-[0_1px_3px_rgba(0,0,0,.04)] p-10 text-center max-w-2xl mx-auto">
+    <p class="text-sm text-slate-400">Loading threshold configuration&hellip;</p>
+  </div>
+  } @else {
+  <div class="max-w-2xl mx-auto space-y-5">
+
+    <!-- Explanation card -->
+    <div class="bg-white rounded-[1.25rem] shadow-[0_1px_3px_rgba(0,0,0,.04)] p-7">
+      <h2 class="text-sm font-semibold text-slate-800 mb-2">How Thresholds Work</h2>
+      <p class="text-sm text-slate-500 leading-relaxed">
+        Every transaction receives a risk score from 0% to 100%. The thresholds below determine how each transaction is classified:
+      </p>
+      <div class="mt-4 flex items-center gap-2 text-xs">
+        <span class="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 font-semibold">APPROVED</span>
+        <span class="text-slate-400">&rarr;</span>
+        <span class="px-2.5 py-1 rounded-full bg-amber-100 text-amber-700 font-semibold">FLAGGED</span>
+        <span class="text-slate-400">&rarr;</span>
+        <span class="px-2.5 py-1 rounded-full bg-rose-100 text-rose-700 font-semibold">BLOCKED</span>
+      </div>
+    </div>
+
+    <!-- Visual threshold bar -->
+    <div class="bg-white rounded-[1.25rem] shadow-[0_1px_3px_rgba(0,0,0,.04)] p-7">
+      <h2 class="text-sm font-semibold text-slate-800 mb-5 pb-4 border-b border-slate-100">Threshold Configuration</h2>
+
+      <!-- Visual bar -->
+      <div class="mb-8">
+        <div class="relative h-10 rounded-xl overflow-hidden flex">
+          <div class="bg-emerald-400/80 transition-all duration-300"
+               [style.width.%]="flaggedThreshold"></div>
+          <div class="bg-amber-400/80 transition-all duration-300"
+               [style.width.%]="blockedThreshold - flaggedThreshold"></div>
+          <div class="bg-rose-400/80 transition-all duration-300"
+               [style.width.%]="100 - blockedThreshold"></div>
+        </div>
+        <div class="flex justify-between mt-2 text-[11px] font-medium">
+          <span class="text-emerald-600">Approved (0–{{ flaggedThreshold }}%)</span>
+          <span class="text-amber-600">Flagged ({{ flaggedThreshold }}–{{ blockedThreshold }}%)</span>
+          <span class="text-rose-600">Blocked ({{ blockedThreshold }}–100%)</span>
+        </div>
+      </div>
+
+      <!-- Flagged Threshold Slider -->
+      <div class="mb-6">
+        <div class="flex items-center justify-between mb-2">
+          <label class="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Flagged Threshold</label>
+          <span class="text-sm font-bold text-amber-600">{{ flaggedThreshold }}%</span>
+        </div>
+        <p class="text-xs text-slate-400 mb-3">Transactions at or above this score are flagged for review.</p>
+        <input type="range" [min]="1" [max]="99" [ngModel]="flaggedThreshold"
+               (ngModelChange)="onFlaggedChange($event)"
+               class="w-full h-2 rounded-full appearance-none cursor-pointer bg-slate-200 accent-amber-500">
+      </div>
+
+      <!-- Blocked Threshold Slider -->
+      <div class="mb-6">
+        <div class="flex items-center justify-between mb-2">
+          <label class="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Blocked Threshold</label>
+          <span class="text-sm font-bold text-rose-600">{{ blockedThreshold }}%</span>
+        </div>
+        <p class="text-xs text-slate-400 mb-3">Transactions at or above this score are automatically blocked.</p>
+        <input type="range" [min]="2" [max]="100" [ngModel]="blockedThreshold"
+               (ngModelChange)="onBlockedChange($event)"
+               class="w-full h-2 rounded-full appearance-none cursor-pointer bg-slate-200 accent-rose-500">
+      </div>
+
+      <!-- Summary -->
+      <div class="rounded-xl bg-slate-50 p-4 mb-6">
+        <p class="text-xs text-slate-500 leading-relaxed">
+          <span class="font-semibold text-emerald-600">Approved:</span> Risk score &lt; {{ flaggedThreshold }}%
+          &nbsp;&middot;&nbsp;
+          <span class="font-semibold text-amber-600">Flagged:</span> {{ flaggedThreshold }}% – {{ blockedThreshold - 1 }}%
+          &nbsp;&middot;&nbsp;
+          <span class="font-semibold text-rose-600">Blocked:</span> &ge; {{ blockedThreshold }}%
+        </p>
+      </div>
+
+      <!-- Save -->
+      <button (click)="save()" [disabled]="saving"
+        class="w-full py-2.5 rounded-xl text-sm font-medium bg-[#2D8C8C] text-white hover:bg-[#267878] disabled:opacity-50 transition shadow-sm">
+        {{ saving ? 'Saving...' : 'Save Thresholds' }}
+      </button>
+
+      @if (saved) {
+        <div class="mt-3 px-4 py-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-700 text-sm text-center">
+          Thresholds updated successfully. New transactions will use these thresholds.
+        </div>
+      }
+      @if (error) {
+        <div class="mt-3 px-4 py-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-600 text-sm text-center">
+          {{ error }}
+        </div>
+      }
+    </div>
+
+    <!-- Note -->
+    <div class="bg-amber-50 rounded-[1.25rem] shadow-[0_1px_3px_rgba(0,0,0,.04)] p-7 border border-amber-100">
+      <p class="text-xs text-amber-700 leading-relaxed">
+        <span class="font-semibold">Note:</span> Changing thresholds affects how <em>new</em> transactions are classified.
+        Existing transactions retain their original status until manually reviewed.
+      </p>
+    </div>
+  </div>
+  }
+</app-main-layout>

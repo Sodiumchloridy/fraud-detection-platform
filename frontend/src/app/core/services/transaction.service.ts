@@ -38,27 +38,25 @@ export interface Transaction {
   reviewedAt: string;
 }
 
-export function getRiskLevel(riskScore: number): 'HIGH' | 'MEDIUM' | 'LOW' {
-  if (riskScore >= 0.8) return 'HIGH';
-  if (riskScore >= 0.5) return 'MEDIUM';
-  return 'LOW';
-}
-
-export function getRiskBadgeClass(riskScore: number): string {
-  const level = getRiskLevel(riskScore);
-  if (level === 'HIGH') return 'bg-rose-100 text-rose-700';
-  if (level === 'MEDIUM') return 'bg-amber-100 text-amber-700';
-  return 'bg-emerald-100 text-emerald-700';
+export function getStatusBadgeClass(status: string): string {
+  switch (status?.toUpperCase()) {
+    case 'BLOCKED':  return 'bg-rose-100 text-rose-700';
+    case 'FLAGGED':  return 'bg-amber-100 text-amber-700';
+    case 'APPROVED': return 'bg-emerald-100 text-emerald-700';
+    default:         return 'bg-slate-100 text-slate-700';
+  }
 }
 
 export interface TransactionStats {
   total: number;
-  highRisk: number;
-  mediumRisk: number;
-  lowRisk: number;
-  critical: number;
+  approved: number;
   flagged: number;
   blocked: number;
+}
+
+export interface ThresholdConfig {
+  blockedThreshold: number;
+  flaggedThreshold: number;
 }
 
 @Injectable({
@@ -69,8 +67,6 @@ export class TransactionService {
 
   constructor(private http: HttpClient, private zone: NgZone) { }
 
-  // ── REST endpoints ──
-
   getAllTransactions(): Observable<Transaction[]> {
     return this.http.get<Transaction[]>(this.apiUrl);
   }
@@ -79,8 +75,8 @@ export class TransactionService {
     return this.http.get<Transaction>(`${this.apiUrl}/${id}`);
   }
 
-  getHighRiskTransactions(): Observable<Transaction[]> {
-    return this.http.get<Transaction[]>(`${this.apiUrl}/high-risk`);
+  getFlaggedTransactions(): Observable<Transaction[]> {
+    return this.http.get<Transaction[]>(`${this.apiUrl}/flagged`);
   }
 
   getTransactionStats(): Observable<TransactionStats> {
@@ -89,5 +85,13 @@ export class TransactionService {
 
   updateTransactionStatus(id: string, status: string): Observable<Transaction> {
     return this.http.patch<Transaction>(`${this.apiUrl}/${id}/status?status=${status}`, {});
+  }
+
+  getThresholds(): Observable<ThresholdConfig> {
+    return this.http.get<ThresholdConfig>('http://localhost:8080/api/thresholds');
+  }
+
+  updateThresholds(config: ThresholdConfig): Observable<ThresholdConfig> {
+    return this.http.put<ThresholdConfig>('http://localhost:8080/api/thresholds', config);
   }
 }
