@@ -43,7 +43,7 @@ def _amount_features(amount, amounts):
 
 def _velocity_features(txn, last, timestamps, curr_time):
     if not (last and timestamps):
-        return 0.0, 0.0, 0.0
+        return 0.0, 99999999.0, 0.0
     dist = haversine(last.latitude, last.longitude, txn.latitude, txn.longitude)
     dt   = curr_time - timestamps[-1]
     vel  = dist * 3600 / dt if dt > 0.36 else 0.0
