@@ -24,7 +24,7 @@ DEFAULT_RULES = [
         "operator": ">",
         "threshold": 1500.0,
         "penalty": 1.0,
-        "override": True,
+        "override": False,
         "enabled": True,
     },
     {
