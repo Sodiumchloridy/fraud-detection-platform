@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "start": "concurrently --kill-others-on-fail -n \"Angular,FastAPI,Spring\" -c \"blue,green,yellow\" \"npm:start:angular\" \"npm:start:fastapi\" \"npm:start:spring\"",
+    "start": "concurrently -n \"Angular,FastAPI,Spring\" -c \"blue,green,yellow\" \"npm:start:angular\" \"npm:start:fastapi\" \"npm:start:spring\"",
     "start:angular": "cd frontend && npm start",
     "start:spring": "cd backend && mvnw.cmd spring-boot:run",
     "start:fastapi": "cd fraud-engine && uv run uvicorn main:app --reload"

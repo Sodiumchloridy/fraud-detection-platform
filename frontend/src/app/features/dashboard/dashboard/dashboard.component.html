@@ -38,11 +38,7 @@
             <p class="text-sm font-medium text-slate-700 truncate">{{ transaction.ccNumber }}</p>
             <p class="text-xs text-slate-400 mt-0.5">{{ transaction.amount | currency }} &middot; {{ transaction.category }} &middot; {{ transaction.timestamp | date:'short' }}</p>
           </div>
-          <span class="ml-4 shrink-0 px-3 py-1 text-[11px] font-semibold rounded-full" [ngClass]="{
-            'bg-rose-100 text-rose-700':   getRiskLevel(transaction.riskScore) === 'HIGH',
-            'bg-amber-100 text-amber-700': getRiskLevel(transaction.riskScore) === 'MEDIUM',
-            'bg-emerald-100 text-emerald-700': getRiskLevel(transaction.riskScore) === 'LOW'
-          }">
+          <span class="ml-4 shrink-0 px-3 py-1 text-[11px] font-semibold rounded-full" [ngClass]="getRiskBadgeClass(transaction.riskScore)">
             {{ getRiskLevel(transaction.riskScore) }}
           </span>
         </a>

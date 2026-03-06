@@ -44,11 +44,7 @@
     <!-- Risk badge card -->
     <div
       class="bg-white rounded-[1.25rem] shadow-[0_1px_3px_rgba(0,0,0,.04)] p-7 flex flex-col items-center justify-center text-center">
-      <span class="px-4 py-1.5 text-xs font-semibold rounded-full" [ngClass]="{
-          'bg-rose-100 text-rose-700':    getRiskLevel(transaction.riskScore) === 'HIGH',
-          'bg-amber-100 text-amber-700':  getRiskLevel(transaction.riskScore) === 'MEDIUM',
-          'bg-emerald-100 text-emerald-700': getRiskLevel(transaction.riskScore) === 'LOW'
-        }">
+      <span class="px-4 py-1.5 text-xs font-semibold rounded-full" [ngClass]="getRiskBadgeClass(transaction.riskScore)">
         {{ getRiskLevel(transaction.riskScore) }} RISK
       </span>
       <p class="mt-3 text-3xl font-extrabold text-slate-800">{{ (transaction.riskScore * 100) | number:'1.0-1' }}%</p>

@@ -4,7 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { MainLayoutComponent } from '../../../shared/layouts/main-layout/main-layout.component';
-import { TransactionService, Transaction, getRiskLevel } from '../../../core/services';
+import { TransactionService, Transaction, getRiskLevel, getRiskBadgeClass } from '../../../core/services';
 import { LlmService } from '../../../core/services/llm.service';
 
 @Component({
@@ -19,6 +19,7 @@ export class TransactionDetailsComponent implements OnInit {
   locationName: string | null = null;
   analysisReason: string | null = null;
   getRiskLevel = getRiskLevel;
+  getRiskBadgeClass = getRiskBadgeClass;
 
   constructor(
     private route: ActivatedRoute,
@@ -60,10 +61,7 @@ export class TransactionDetailsComponent implements OnInit {
   markAs(status: string) {
     if (!this.transaction) return;
     this.transactionService.updateTransactionStatus(this.transaction.id, status).subscribe({
-      next: () => {
-        alert(`Transaction marked as: ${status}. Thank you for your feedback.`);
-        this.loadTransaction(this.transaction!.id);
-      },
+      next: () => this.loadTransaction(this.transaction!.id),
       error: (err) => console.error('Error updating status:', err)
     });
   }

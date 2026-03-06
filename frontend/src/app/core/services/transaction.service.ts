@@ -44,6 +44,13 @@ export function getRiskLevel(riskScore: number): 'HIGH' | 'MEDIUM' | 'LOW' {
   return 'LOW';
 }
 
+export function getRiskBadgeClass(riskScore: number): string {
+  const level = getRiskLevel(riskScore);
+  if (level === 'HIGH') return 'bg-rose-100 text-rose-700';
+  if (level === 'MEDIUM') return 'bg-amber-100 text-amber-700';
+  return 'bg-emerald-100 text-emerald-700';
+}
+
 export interface TransactionStats {
   total: number;
   highRisk: number;

@@ -6,16 +6,25 @@
       <h2 class="text-sm font-semibold text-slate-800">Flagged Transactions</h2>
     </div>
     @for (transaction of highRiskTransactions$ | async; track transaction.id) {
-      <a [routerLink]="['/transaction', transaction.id]"
-         class="flex items-center justify-between px-7 py-4 border-b border-slate-50 last:border-b-0 hover:bg-slate-50/60 transition-colors">
-        <div class="min-w-0">
+      <div class="flex items-center gap-4 px-7 py-4 border-b border-slate-50 last:border-b-0 hover:bg-slate-50/60 transition-colors">
+        <a [routerLink]="['/transaction', transaction.id]" class="min-w-0 flex-1">
           <p class="text-sm font-medium text-slate-700 truncate">{{ transaction.ccNumber }}</p>
           <p class="text-xs text-slate-400 mt-0.5">{{ transaction.amount | currency }} &middot; {{ transaction.category }} &middot; {{ transaction.timestamp | date:'short' }}</p>
+        </a>
+        <div class="shrink-0 flex items-center gap-2">
+          <span class="px-3 py-1 text-[11px] font-semibold rounded-full" [ngClass]="getRiskBadgeClass(transaction.riskScore)">
+            {{ getRiskLevel(transaction.riskScore) }} &middot; {{ (transaction.riskScore * 100) | number:'1.0-1' }}%
+          </span>
+          <button (click)="markAs(transaction, 'APPROVED')"
+                  class="px-3.5 py-2 text-xs font-medium rounded-xl bg-[#2D8C8C] text-white hover:bg-[#267878] transition">
+            Legitimate
+          </button>
+          <button (click)="markAs(transaction, 'BLOCKED')"
+                  class="px-3.5 py-2 text-xs font-medium rounded-xl border border-[#2D8C8C] text-[#2D8C8C] bg-white hover:bg-[#2D8C8C]/5 transition">
+            Fraud
+          </button>
         </div>
-        <span class="ml-4 shrink-0 px-3 py-1 text-[11px] font-semibold rounded-full bg-rose-100 text-rose-700">
-          {{ getRiskLevel(transaction.riskScore) }} &middot; {{ (transaction.riskScore * 100) | number:'1.0-1' }}%
-        </span>
-      </a>
+      </div>
     }
   </div>
 </app-main-layout>

@@ -3,4 +3,4 @@
 
 // Re-export transaction types from the service
 export type { Transaction, TransactionStats } from '../../core/services/transaction.service';
-export { getRiskLevel } from '../../core/services/transaction.service';
+export { getRiskLevel, getRiskBadgeClass } from '../../core/services/transaction.service';
