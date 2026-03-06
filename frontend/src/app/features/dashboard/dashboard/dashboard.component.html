@@ -10,10 +10,10 @@
     </div>
 
     <!-- Flagged Alerts -->
-    <a routerLink="/flagged-transactions" class="bg-rose-50 rounded-[1.25rem] p-7 shadow-[0_1px_3px_rgba(0,0,0,.04)] hover:shadow-md transition-shadow group">
-      <p class="text-[11px] font-semibold text-rose-400 uppercase tracking-widest">Flagged</p>
-      <p class="mt-3 text-4xl font-extrabold text-rose-600">{{ (stats$ | async)?.flagged || 0 }}</p>
-      <p class="mt-1 text-xs text-rose-400 group-hover:text-rose-600 transition-colors">View alerts &rarr;</p>
+    <a routerLink="/flagged-transactions" class="bg-amber-50 rounded-[1.25rem] p-7 shadow-[0_1px_3px_rgba(0,0,0,.04)] hover:shadow-md transition-shadow group">
+      <p class="text-[11px] font-semibold text-amber-400 uppercase tracking-widest">Flagged</p>
+      <p class="mt-3 text-4xl font-extrabold text-amber-600">{{ (stats$ | async)?.flagged || 0 }}</p>
+      <p class="mt-1 text-xs text-amber-400 group-hover:text-amber-600 transition-colors">View alerts &rarr;</p>
     </a>
 
     <!-- POS Simulator -->

@@ -46,12 +46,13 @@ public class TransactionController {
     }
 
     /**
-     * GET flagged transactions (medium + high risk) for alerts page
+     * GET flagged transactions for alerts page
      * Used by: FlaggedTransactionsComponent
      */
     @GetMapping("/flagged")
     public ResponseEntity<List<Transaction>> getFlaggedTransactions() {
-        return ResponseEntity.ok(transactionRepository.findByRiskScoreGreaterThanEqual(thresholdConfig.getFlaggedThreshold()));
+        return ResponseEntity.ok(transactionRepository.findByRiskScoreGreaterThanEqualAndRiskScoreLessThan(
+            thresholdConfig.getFlaggedThreshold(), thresholdConfig.getBlockedThreshold()));
     }
 
     /**

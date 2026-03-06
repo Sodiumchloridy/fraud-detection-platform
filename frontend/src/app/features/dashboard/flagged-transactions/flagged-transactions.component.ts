@@ -6,13 +6,13 @@ import { MainLayoutComponent } from '../../../shared/layouts/main-layout/main-la
 import { TransactionService, Transaction, getStatusBadgeClass } from '../../../core/services';
 
 @Component({
-  selector: 'app-high-risk-alerts',
+  selector: 'app-flagged-transactions',
   standalone: true,
   imports: [CommonModule, RouterLink, MainLayoutComponent],
-  templateUrl: './high-risk-alerts.component.html',
+  templateUrl: './flagged-transactions.component.html',
   styleUrls: []
 })
-export class HighRiskAlertsComponent {
+export class FlaggedTransactionsComponent {
   getStatusBadgeClass = getStatusBadgeClass;
 
   private transactionService = inject(TransactionService);

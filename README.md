@@ -85,14 +85,14 @@ Frontend runs on: `http://localhost:4200`
 2. **Dashboard** shows:
    - Transaction statistics
    - Live transaction feed
-   - High-risk alerts count
+   - Flagged transactions count
 
-3. **High-Risk Alerts** page displays transactions flagged as HIGH or CRITICAL risk
+3. **Flagged Transactions** page displays transactions that require analyst review
 
 4. **Transaction Details** allows analysts to:
    - View complete transaction information
    - Mark transactions as legitimate or fraudulent
-   - See fraud scores and risk levels
+   - See fraud scores and status
 
 ## API Endpoints
 
@@ -100,7 +100,7 @@ Frontend runs on: `http://localhost:4200`
 |--------|----------|-------------|
 | GET | `/api/transactions` | Get all transactions |
 | GET | `/api/transactions/{id}` | Get transaction by ID |
-| GET | `/api/transactions/high-risk` | Get HIGH/CRITICAL risk transactions |
+| GET | `/api/transactions/flagged` | Get flagged transactions for review |
 | GET | `/api/transactions/stats` | Get transaction statistics |
 | POST | `/api/transactions` | Create new transaction |
 | PATCH | `/api/transactions/{id}/status` | Update transaction status |

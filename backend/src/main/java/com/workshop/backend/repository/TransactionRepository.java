@@ -18,6 +18,8 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID> 
 
     List<Transaction> findByRiskScoreGreaterThanEqual(Double threshold);
 
+    List<Transaction> findByRiskScoreGreaterThanEqualAndRiskScoreLessThan(Double lower, Double upper);
+
     List<Transaction> findByCcNumberOrderByTimestampAsc(String ccNumber);
 
     @Query("SELECT COUNT(t) FROM Transaction t WHERE t.riskScore >= :threshold")

@@ -11,7 +11,7 @@ Authentication and authorization features.
 ### 2. Dashboard (`dashboard/`)
 Main fraud detection dashboard and related views.
 - `dashboard/` - Main transaction feed and statistics
-- `high-risk-alerts/` - Filtered high-risk transactions view
+- `flagged-transactions/` - Filtered flagged transactions view
 - `transaction-details/` - Detailed transaction analysis
 
 ### 3. Settings (`settings/`)

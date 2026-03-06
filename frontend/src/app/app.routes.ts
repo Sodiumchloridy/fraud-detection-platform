@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
 import { LoginComponent } from './features/auth/login/login.component';
 import { DashboardComponent } from './features/dashboard/dashboard/dashboard.component';
-import { HighRiskAlertsComponent } from './features/dashboard/high-risk-alerts/high-risk-alerts.component';
+import { FlaggedTransactionsComponent } from './features/dashboard/flagged-transactions/flagged-transactions.component';
 import { TransactionDetailsComponent } from './features/dashboard/transaction-details/transaction-details.component';
 import { PosSimulatorComponent } from './features/pos-simulator/pos-simulator.component';
 import { SettingsComponent } from './features/settings/settings/settings.component';
@@ -14,7 +14,7 @@ export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
   { path: 'login', component: LoginComponent },
   { path: 'dashboard', component: DashboardComponent, canActivate: [authGuard] },
-  { path: 'flagged-transactions', component: HighRiskAlertsComponent, canActivate: [authGuard] },
+  { path: 'flagged-transactions', component: FlaggedTransactionsComponent, canActivate: [authGuard] },
   { path: 'transaction/:id', component: TransactionDetailsComponent, canActivate: [authGuard] },
   { path: 'simulator', component: PosSimulatorComponent, canActivate: [authGuard] },
   { path: 'settings', component: SettingsComponent, canActivate: [authGuard] },
