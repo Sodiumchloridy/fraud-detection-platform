@@ -2,6 +2,7 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 from litellm import completion
 import json
+import os
 
 router = APIRouter()
 
@@ -39,7 +40,7 @@ def chat(req: ChatRequest):
     messages.extend({"role": m.role, "content": m.content} for m in req.messages)
 
     response = completion(
-        model="cerebras/llama3.1-8b",
+        model=os.getenv("LLM_MODEL", "cerebras/llama3.1-8b"),
         messages=messages,
     )
 

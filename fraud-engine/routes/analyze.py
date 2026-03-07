@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Body
 from litellm import completion
 import json
+import os
 
 router = APIRouter()
 
@@ -11,7 +12,7 @@ def analyze_transaction(txn: dict = Body(...)):
         txn.pop(k, None)
     
     response = completion(
-        model="cerebras/llama3.1-8b",
+        model=os.getenv("LLM_MODEL", "cerebras/llama3.1-8b"),
         messages=[{"role": "user", "content": f"""Analyze the following transaction for potential reasons why it was flagged as fraudulent.
         Reply in a short concise paragraph.
         Transaction Details:

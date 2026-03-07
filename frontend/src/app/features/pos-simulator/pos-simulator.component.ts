@@ -32,15 +32,19 @@ interface SimulationResult {
 })
 export class PosSimulatorComponent {
   private apiUrl = 'http://localhost:8080/api/transactions';
-  
+
   // Form fields
   ccNumber = 'user_001';
   merchant = 'Gerbang Alaf Restaurants Sdn Bhd';
-  amount = 50;
+  amount = 25;
   category = 'grocery_pos';
-  latitude = 40.7128;
-  longitude = -74.006;
-  
+  latitude = 3.1390;
+  longitude = 101.6869;
+  selectedLocation: string | null = 'Kuala Lumpur, Malaysia';
+  results: SimulationResult[] = [];
+  isLoading = false;
+  error: string | null = null;
+
   // Preset locations for quick selection
   locations = [
     { name: 'New York, NY', lat: 40.7128, lon: -74.006 },
@@ -48,7 +52,7 @@ export class PosSimulatorComponent {
     { name: 'Tokyo, Japan', lat: 35.6762, lon: 139.6503 },
     { name: 'Kuala Lumpur, Malaysia', lat: 3.1390, lon: 101.6869 },
   ];
-  
+
   // Transaction categories matching the model
   categories = [
     'grocery_pos',
@@ -66,29 +70,21 @@ export class PosSimulatorComponent {
     'grocery_net',
     'travel'
   ];
-  
-  // Selected location preset
-  selectedLocation: string | null = null;
 
-  // Simulation results
-  results: SimulationResult[] = [];
-  isLoading = false;
-  error: string | null = null;
-  
   // Helper
   getStatusBadgeClass = getStatusBadgeClass;
-  
-  constructor(private http: HttpClient) {}
-  
+
+  constructor(private http: HttpClient) { }
+
   selectLocation({ name, lat, lon }: { name: string; lat: number; lon: number }) {
     this.selectedLocation = name;
     [this.latitude, this.longitude] = [lat, lon];
   }
-  
+
   submitTransaction() {
     this.isLoading = true;
     this.error = null;
-    
+
     const request: TransactionRequestDto = {
       cc_number: this.ccNumber,
       merchant: this.merchant,
@@ -99,7 +95,7 @@ export class PosSimulatorComponent {
       timestamp: new Date().toISOString(),
       device_id: "renovo_pos_sim_123456"
     };
-    
+
     this.http.post<Transaction>(`${this.apiUrl}/fraud-check`, request).pipe(
       finalize(() => this.isLoading = false)
     ).subscribe({
@@ -107,7 +103,7 @@ export class PosSimulatorComponent {
       error: (err) => this.error = err.error?.message || 'Failed to process transaction'
     });
   }
-  
+
   simulateRapidBurst() {
     // Simulate 5 rapid transactions (fraud pattern)
     for (let i = 0; i < 5; i++) {
@@ -117,7 +113,7 @@ export class PosSimulatorComponent {
       }, i * 500);
     }
   }
-  
+
   simulateVelocityAttack() {
     // Simulate transactions from different locations rapidly
     const farLocations = [
@@ -125,7 +121,7 @@ export class PosSimulatorComponent {
       { lat: 51.5074, lon: -0.1278 },   // London (impossible travel)
       { lat: 35.6762, lon: 139.6503 },  // Tokyo (impossible travel)
     ];
-    
+
     farLocations.forEach((loc, i) => {
       setTimeout(() => {
         this.latitude = loc.lat;
@@ -135,7 +131,7 @@ export class PosSimulatorComponent {
       }, i * 1000);
     });
   }
-  
+
   clearResults() {
     this.results = [];
   }
