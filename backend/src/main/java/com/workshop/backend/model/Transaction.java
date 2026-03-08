@@ -62,6 +62,9 @@ public class Transaction {
 
     /* System & Verdict */
     private Double riskScore;
+
+    @Column(length = 4000)
+    private String shapJson;
     
     @Enumerated(EnumType.STRING)
     private TransactionStatus status;

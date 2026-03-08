@@ -30,6 +30,7 @@ export interface Transaction {
 
   /* System & Verdict */
   riskScore: number;
+  shapJson: string | null;
   status: string;
 
   /* Human Review */
@@ -45,6 +46,19 @@ export function getStatusBadgeClass(status: string): string {
     case 'APPROVED': return 'bg-emerald-100 text-emerald-700';
     default:         return 'bg-slate-100 text-slate-700';
   }
+}
+
+export interface ShapFeature {
+  feature: string;
+  label: string;
+  shap_value: number;
+  feature_value: number | string;
+}
+
+export interface ShapExplanation {
+  base_value: number;
+  shap_values: Record<string, number>;
+  top_features: ShapFeature[];
 }
 
 export interface TransactionStats {

@@ -6,6 +6,7 @@ import time
 from models import PredictRequest, parse_ts
 from features import compute_features
 from rules import apply_rules
+from explainability import compute_shap_values
 
 router = APIRouter()
 
@@ -39,9 +40,12 @@ def predict_fraud(req: PredictRequest):
 
     fraud_prob, triggered_rules = apply_rules(features, ml_score)
 
+    shap_explanation = compute_shap_values(model, input_df, FEATURE_ORDER)
+
     return {
         "fraud_probability": fraud_prob,
         "is_fraud": fraud_prob > 0.5,
         "features": features,
         "triggered_rules": triggered_rules,
+        "shap": shap_explanation,
     }

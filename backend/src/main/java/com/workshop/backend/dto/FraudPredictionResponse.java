@@ -13,4 +13,7 @@ public class FraudPredictionResponse {
 
     @JsonProperty("features")
     private FraudFeaturesResponse features;
+
+    @JsonProperty("shap")
+    private ShapExplanationResponse shap;
 }

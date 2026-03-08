@@ -132,6 +132,9 @@ public class TransactionController {
             if (fraudResponse != null) {
                 fraudProb = fraudResponse.getFraudProbability();
                 transactionMapper.applyFeatures(fraudResponse.getFeatures(), txn);
+                if (fraudResponse.getShap() != null) {
+                    txn.setShapJson(objectMapper.writeValueAsString(fraudResponse.getShap()));
+                }
             }
             txn.setRiskScore(fraudProb);
             txn.setStatus(fraudProb >= thresholdConfig.getBlockedThreshold() ? TransactionStatus.BLOCKED

@@ -4,7 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { MainLayoutComponent } from '../../../shared/layouts/main-layout/main-layout.component';
-import { TransactionService, Transaction, getStatusBadgeClass } from '../../../core/services';
+import { TransactionService, Transaction, getStatusBadgeClass, ShapExplanation } from '../../../core/services';
 import { LlmService } from '../../../core/services/llm.service';
 
 @Component({
@@ -18,6 +18,7 @@ export class TransactionDetailsComponent implements OnInit {
   transaction: Transaction | null = null;
   locationName: string | null = null;
   analysisReason: string | null = null;
+  shapExplanation: ShapExplanation | null = null;
   getStatusBadgeClass = getStatusBadgeClass;
 
   constructor(
@@ -44,6 +45,7 @@ export class TransactionDetailsComponent implements OnInit {
         this.analysisReason = (data.riskScore && data.status !== 'APPROVED')
           ? await this.getAnalysisReason()
           : null;
+        this.shapExplanation = data.shapJson ? JSON.parse(data.shapJson) : null;
       },
       error: (err) => console.error('Error loading transaction:', err)
     });
@@ -70,6 +72,15 @@ export class TransactionDetailsComponent implements OnInit {
     return firstValueFrom(this.llmService.analyzeTransaction(this.transaction))
       .then(r => r?.reason?.trim() || 'No analysis available')
       .catch(() => 'Error loading analysis');
+  }
+
+  get maxShapAbsValue(): number {
+    if (!this.shapExplanation?.top_features?.length) return 1;
+    return Math.max(...this.shapExplanation.top_features.map(f => Math.abs(f.shap_value)));
+  }
+
+  shapBarWidth(value: number): number {
+    return this.maxShapAbsValue > 0 ? (Math.abs(value) / this.maxShapAbsValue) * 100 : 0;
   }
 }
 
