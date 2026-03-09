@@ -1,30 +1,45 @@
 <app-main-layout [pageTitle]="'Dashboard'">
-  <!-- Bento Grid -->
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-
-    <!-- Transactions Today -->
-    <div class="bg-white rounded-[1.25rem] p-7 shadow-[0_1px_3px_rgba(0,0,0,.04)]">
-      <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-widest">Transactions</p>
-      <p class="mt-3 text-4xl font-extrabold text-slate-800">{{ (stats$ | async)?.total || 0 }}</p>
-      <p class="mt-1 text-xs text-slate-400">today</p>
+  <!-- Key Metrics -->
+  <div class="grid grid-cols-3 gap-4 mb-5">
+    <div class="stat-card bg-white">
+      <p class="stat-label">Transactions</p>
+      <p class="stat-value text-slate-800">{{ (stats$ | async)?.total || 0 }}</p>
     </div>
-
-    <!-- Flagged Alerts -->
-    <a routerLink="/flagged-transactions" class="bg-amber-50 rounded-[1.25rem] p-7 shadow-[0_1px_3px_rgba(0,0,0,.04)] hover:shadow-md transition-shadow group">
-      <p class="text-[11px] font-semibold text-amber-400 uppercase tracking-widest">Flagged</p>
-      <p class="mt-3 text-4xl font-extrabold text-amber-600">{{ (stats$ | async)?.flagged || 0 }}</p>
-      <p class="mt-1 text-xs text-amber-400 group-hover:text-amber-600 transition-colors">View alerts &rarr;</p>
+    <div class="stat-card bg-rose-50">
+      <p class="stat-label text-rose-400">Fraud Rate</p>
+      <p class="stat-value text-rose-600">{{ (stats$ | async)?.fraudRate || 0 }}%</p>
+    </div>
+    <a routerLink="/flagged-transactions" class="stat-card bg-amber-50 hover:shadow-md transition-shadow group">
+      <p class="stat-label text-amber-400">Pending Review</p>
+      <p class="stat-value text-amber-600">{{ (stats$ | async)?.pendingReview || 0 }}</p>
+      <p class="text-xs text-amber-400 group-hover:text-amber-600 transition-colors">View alerts &rarr;</p>
     </a>
+  </div>
 
-    <!-- POS Simulator -->
-    <a routerLink="/simulator" class="bg-gradient-to-br from-indigo-500 to-violet-600 rounded-[1.25rem] p-7 shadow-[0_1px_3px_rgba(0,0,0,.04)] hover:shadow-md transition-shadow group">
-      <p class="text-[11px] font-semibold text-indigo-200/70 uppercase tracking-widest">Simulator</p>
+  <!-- Trend Chart -->
+  <div class="bg-white rounded-[1.25rem] p-7 shadow-[0_1px_3px_rgba(0,0,0,.04)] mb-5">
+    <div class="flex items-center justify-between mb-4">
+      <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-widest">Transaction Volume</p>
+      <div class="flex items-center gap-4">
+        <span class="flex items-center gap-2 text-[11px] font-semibold text-slate-500">
+          <span class="inline-block w-8 h-[3px] rounded-full bg-indigo-400"></span>Total
+        </span>
+        <span class="flex items-center gap-2 text-[11px] font-semibold text-slate-500">
+          <span class="inline-block w-8 h-[3px] rounded-full bg-rose-400"></span>Fraud
+        </span>
+      </div>
+    </div>
+    <div class="h-64"><canvas #trendCanvas></canvas></div>
+  </div>
+
+  <!-- POS Simulator + Live Feed -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+    <a routerLink="/simulator" class="bg-[#2D8C8C] rounded-[1.25rem] p-7 shadow-[0_1px_3px_rgba(0,0,0,.04)] hover:shadow-md transition-shadow group self-start">
+      <p class="text-[11px] font-semibold text-indigo-200/80 uppercase tracking-widest">Simulator</p>
       <p class="mt-3 text-lg font-bold text-white">Test Transactions</p>
-      <p class="mt-1 text-xs text-indigo-200/60 group-hover:text-white transition-colors">Open POS &rarr;</p>
+      <p class="mt-1 text-xs text-indigo-200/80 group-hover:text-white transition-colors">Open POS &rarr;</p>
     </a>
-
-    <!-- Live Transaction Feed -->
-    <div class="md:col-span-3 bg-white rounded-[1.25rem] shadow-[0_1px_3px_rgba(0,0,0,.04)] overflow-hidden">
+    <div class="md:col-span-2 bg-white rounded-[1.25rem] shadow-[0_1px_3px_rgba(0,0,0,.04)] overflow-hidden">
       <div class="px-7 py-5 border-b border-slate-100 flex items-center justify-between">
         <h2 class="text-sm font-semibold text-slate-800">Live Transaction Feed</h2>
         <span class="inline-flex items-center gap-1.5 text-[11px] text-slate-400">

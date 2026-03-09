@@ -1,1 +1,19 @@
-/* dashboard — animations handled by global styles.css */
+/* stat cards */
+.stat-card {
+  border-radius: 1.25rem;
+  padding: 1.5rem 1.75rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+.stat-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgb(148 163 184);
+}
+.stat-value {
+  margin-top: 0.5rem;
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1.2;
+}

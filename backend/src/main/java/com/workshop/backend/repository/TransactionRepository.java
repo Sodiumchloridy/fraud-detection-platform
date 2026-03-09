@@ -24,4 +24,16 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID> 
 
     @Query("SELECT COUNT(t) FROM Transaction t WHERE t.riskScore >= :threshold")
     Long countByRiskScoreGreaterThanEqual(@Param("threshold") Double threshold);
+
+    @Query("SELECT COALESCE(SUM(t.amount), 0) FROM Transaction t WHERE t.riskScore >= :threshold")
+    Double sumAmountByRiskScoreGreaterThanEqual(@Param("threshold") Double threshold);
+
+    @Query("SELECT COALESCE(AVG(t.amount), 0) FROM Transaction t")
+    Double avgAmount();
+
+    @Query("SELECT COALESCE(SUM(t.amount), 0) FROM Transaction t")
+    Double sumAmount();
+
+    @Query("SELECT COUNT(t) FROM Transaction t WHERE t.riskScore >= :lower AND t.riskScore < :upper AND t.reviewedBy IS NULL")
+    Long countPendingReview(@Param("lower") Double lower, @Param("upper") Double upper);
 }

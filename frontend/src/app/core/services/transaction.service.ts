@@ -66,6 +66,13 @@ export interface TransactionStats {
   approved: number;
   flagged: number;
   blocked: number;
+  fraudRate: number;
+  approvalRate: number;
+  totalVolume: number;
+  avgAmount: number;
+  amountAtRisk: number;
+  blockedAmount: number;
+  pendingReview: number;
 }
 
 export interface ThresholdConfig {

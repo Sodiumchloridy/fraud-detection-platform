@@ -64,13 +64,31 @@ public class TransactionController {
         long total    = transactionRepository.count();
         long flagged  = transactionRepository.countByRiskScoreGreaterThanEqual(thresholdConfig.getFlaggedThreshold());
         long blocked  = transactionRepository.countByRiskScoreGreaterThanEqual(thresholdConfig.getBlockedThreshold());
+        long approved = total - flagged;
+        long flaggedOnly = flagged - blocked;
 
-        Map<String, Object> stats = Map.of(
-            "total",    total,
-            "approved", total - flagged,
-            "flagged",  flagged - blocked,
-            "blocked",  blocked
-        );
+        double fraudRate    = total > 0 ? (double) blocked / total * 100 : 0;
+        double approvalRate = total > 0 ? (double) approved / total * 100 : 0;
+
+        double totalVolume     = transactionRepository.sumAmount();
+        double avgAmount       = transactionRepository.avgAmount();
+        double amountAtRisk    = transactionRepository.sumAmountByRiskScoreGreaterThanEqual(thresholdConfig.getFlaggedThreshold());
+        double blockedAmount   = transactionRepository.sumAmountByRiskScoreGreaterThanEqual(thresholdConfig.getBlockedThreshold());
+        long   pendingReview   = transactionRepository.countPendingReview(
+                thresholdConfig.getFlaggedThreshold(), thresholdConfig.getBlockedThreshold());
+
+        Map<String, Object> stats = new HashMap<>();
+        stats.put("total",          total);
+        stats.put("approved",       approved);
+        stats.put("flagged",        flaggedOnly);
+        stats.put("blocked",        blocked);
+        stats.put("fraudRate",      Math.round(fraudRate * 100.0) / 100.0);
+        stats.put("approvalRate",   Math.round(approvalRate * 100.0) / 100.0);
+        stats.put("totalVolume",    Math.round(totalVolume * 100.0) / 100.0);
+        stats.put("avgAmount",      Math.round(avgAmount * 100.0) / 100.0);
+        stats.put("amountAtRisk",   Math.round(amountAtRisk * 100.0) / 100.0);
+        stats.put("blockedAmount",  Math.round(blockedAmount * 100.0) / 100.0);
+        stats.put("pendingReview",  pendingReview);
 
         return ResponseEntity.ok(stats);
     }
