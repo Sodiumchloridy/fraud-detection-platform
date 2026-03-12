@@ -71,7 +71,7 @@ public class DataSeeder {
 
         for (int i = 0; i < seeds.size(); i++) {
             TransactionRequest dto = seeds.get(i);
-            long delay = 500 + rng.nextInt(1000);
+            long delay = 500 + rng.nextInt(1500);
             try { Thread.sleep(delay); } catch (InterruptedException e) { Thread.currentThread().interrupt(); break; }
             HttpEntity<TransactionRequest> entity = new HttpEntity<>(dto, headers);
             restTemplate.postForObject(endpoint, entity, Map.class);

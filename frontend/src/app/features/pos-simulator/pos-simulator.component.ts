@@ -1,11 +1,11 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { finalize } from 'rxjs';
+import { finalize, Subscription } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { MainLayoutComponent } from '../../shared/layouts/main-layout/main-layout.component';
-import { Transaction, getStatusBadgeClass } from '../../core/services';
+import { Transaction, TransactionService, getStatusBadgeClass } from '../../core/services';
 
 interface TransactionRequestDto {
   cardNumber: string;
@@ -32,6 +32,8 @@ interface SimulationResult {
 })
 export class PosSimulatorComponent {
   private apiUrl = 'http://localhost:8080/api/transactions';
+  transactionService = inject(TransactionService);
+  sseSub: Subscription | undefined = undefined;
 
   // Form fields
   cardNumber = 'user_001';
@@ -70,6 +72,23 @@ export class PosSimulatorComponent {
     'grocery_net',
     'travel'
   ];
+
+  ngOnInit() {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      this.error = 'Authentication token is missing';
+      return;
+    }
+
+    this.sseSub = this.transactionService.streamTransactions(token).subscribe(txn => {
+      const idx = this.results.findIndex(r => r.transaction.id === txn.id);
+      if (idx >= 0) this.results[idx] = { ...this.results[idx], transaction: txn };
+    });
+  }
+
+  ngOnDestroy() {
+    this.sseSub?.unsubscribe();
+  }
 
   // Helper
   getStatusBadgeClass = getStatusBadgeClass;

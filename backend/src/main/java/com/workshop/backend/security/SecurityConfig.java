@@ -48,6 +48,9 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.PUT, "/api/fraud-engine/rules").hasRole("ADMIN")
                 .requestMatchers("/api/fraud-engine/**").hasAnyRole("ADMIN", "ANALYST")
 
+                // SSE stream — allow with any role
+                .requestMatchers("/api/transactions/stream").hasAnyRole("ADMIN", "ANALYST")
+
                 // Authenticated endpoints (both ADMIN and ANALYST)
                 .requestMatchers("/api/transactions/**").hasAnyRole("ADMIN", "ANALYST")
                 .requestMatchers(HttpMethod.GET, "/api/thresholds").hasAnyRole("ADMIN", "ANALYST")

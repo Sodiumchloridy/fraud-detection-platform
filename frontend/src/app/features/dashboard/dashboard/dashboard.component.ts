@@ -1,10 +1,9 @@
-import { Component, ChangeDetectionStrategy, OnDestroy, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
+import { Component, ChangeDetectionStrategy, OnDestroy, ViewChild, ElementRef, AfterViewInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { MainLayoutComponent } from '../../../shared/layouts/main-layout/main-layout.component';
-import { TransactionService, Transaction, getStatusBadgeClass } from '../../../core/services';
-import { Subscription, timer } from 'rxjs';
-import { map, share, switchMap } from 'rxjs/operators';
+import { TransactionService, Transaction, TransactionStats, getStatusBadgeClass } from '../../../core/services';
+import { BehaviorSubject, Subscription } from 'rxjs';
 import { Chart, registerables } from 'chart.js';
 
 Chart.register(...registerables);
@@ -24,24 +23,43 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
   @ViewChild('trendCanvas') canvasRef!: ElementRef<HTMLCanvasElement>;
 
   private chart?: Chart;
-  private sub?: Subscription;
-  private refresh$ = timer(0, 2000).pipe(share());
+  private sseSub?: Subscription;
 
-  transactions$ = this.refresh$.pipe(
-    switchMap(() => this.transactionService.getAllTransactions()),
-    map(data => data
-      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-    )
-  );
+  private transactionsSubject = new BehaviorSubject<Transaction[]>([]);
+  transactions$ = this.transactionsSubject.asObservable();
 
-  stats$ = this.refresh$.pipe(
-    switchMap(() => this.transactionService.getTransactionStats()),
-    share()
-  );
+  private statsSubject = new BehaviorSubject<TransactionStats | null>(null);
+  stats$ = this.statsSubject.asObservable();
 
-  constructor(private transactionService: TransactionService) {}
+  constructor(
+    private transactionService: TransactionService,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   ngAfterViewInit(): void {
+    // 1. Initial load via HTTP
+    this.transactionService.getAllTransactions().subscribe(data => {
+      this.transactionsSubject.next(
+        data.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+      );
+      this.updateChart();
+    });
+    this.transactionService.getTransactionStats().subscribe(stats => {
+      this.statsSubject.next(stats);
+      this.cdr.markForCheck();
+    });
+
+    // 2. Connect to SSE for real-time updates
+    const token = localStorage.getItem('token') ?? '';
+    this.sseSub = this.transactionService.streamTransactions(token).subscribe(txn => {
+      const current = this.transactionsSubject.value;
+      const idx = current.findIndex(t => t.id === txn.id);
+      const updated = idx >= 0 ? current.map(t => t.id === txn.id ? txn : t) : [txn, ...current];
+      this.transactionsSubject.next(updated.sort((a, b) => +new Date(b.timestamp) - +new Date(a.timestamp)));
+      this.updateChart();
+      this.transactionService.getTransactionStats().subscribe(s => { this.statsSubject.next(s); this.cdr.markForCheck(); });
+    });
+
     this.chart = new Chart(this.canvasRef.nativeElement, {
       type: 'line',
       data: { labels: [], datasets: [
@@ -87,21 +105,20 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
         animation: { duration: 400 },
       }
     });
-
-    this.sub = this.transactions$.pipe(
-      map(txns => this.buildTrend(txns))
-    ).subscribe(trend => {
-      if (!this.chart) return;
-      this.chart.data.labels = trend.map(p => p.label);
-      this.chart.data.datasets[0].data = trend.map(p => p.total);
-      this.chart.data.datasets[1].data = trend.map(p => p.fraud);
-      this.chart.update();
-    });
   }
 
   ngOnDestroy(): void {
-    this.sub?.unsubscribe();
+    this.sseSub?.unsubscribe();
     this.chart?.destroy();
+  }
+
+  private updateChart(): void {
+    if (!this.chart) return;
+    const trend = this.buildTrend(this.transactionsSubject.value);
+    this.chart.data.labels = trend.map(p => p.label);
+    this.chart.data.datasets[0].data = trend.map(p => p.total);
+    this.chart.data.datasets[1].data = trend.map(p => p.fraud);
+    this.chart.update();
   }
 
   private buildTrend(txns: Transaction[]): { label: string; total: number; fraud: number }[] {

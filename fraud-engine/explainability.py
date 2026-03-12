@@ -27,8 +27,13 @@ def compute_shap_values(
     input_df: pd.DataFrame,
     feature_order: list[str],
 ) -> dict:
-    """Compute SHAP values for a single prediction and return a structured explanation."""
-    explainer = shap.TreeExplainer(model)
+    """Compute SHAP values for a single prediction and return a structured explanation.
+
+    Uses model_output='probability' so that SHAP values are in the same probability
+    space as the model's fraud_probability output.  base_value + sum(shap_values)
+    equals the raw XGBoost ml_score, making the numbers directly comparable.
+    """
+    explainer = shap.TreeExplainer(model, model_output="probability")
     shap_values = explainer.shap_values(input_df)
 
     # shap_values may be a single array for binary classification

@@ -44,6 +44,7 @@ export function getStatusBadgeClass(status: string): string {
     case 'BLOCKED':  return 'bg-rose-100 text-rose-700';
     case 'FLAGGED':  return 'bg-amber-100 text-amber-700';
     case 'APPROVED': return 'bg-emerald-100 text-emerald-700';
+    case 'PENDING':  return 'bg-blue-100 text-blue-700';
     default:         return 'bg-slate-100 text-slate-700';
   }
 }
@@ -114,5 +115,49 @@ export class TransactionService {
 
   updateThresholds(config: ThresholdConfig): Observable<ThresholdConfig> {
     return this.http.put<ThresholdConfig>('http://localhost:8080/api/thresholds', config);
+  }
+
+  streamTransactions(token: string): Observable<Transaction> {
+    return new Observable(observer => {
+      const url = `${this.apiUrl}/stream`;
+      let cancelled = false;
+
+      const connect = async () => {
+        while (!cancelled) {
+          try {
+            const res = await fetch(url, {
+              headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!res.ok || !res.body) { observer.error(new Error(`SSE ${res.status}`)); return; }
+
+            const reader = res.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = '';
+            let eventName = '';
+
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done || cancelled) break;
+              buffer += decoder.decode(value, { stream: true });
+
+              const lines = buffer.split('\n');
+              buffer = lines.pop()!;
+              for (const line of lines) {
+                if (line.startsWith('event:')) eventName = line.slice(6).trim();
+                else if (line.startsWith('data:') && eventName === 'transaction') {
+                  this.zone.run(() => observer.next(JSON.parse(line.slice(5))));
+                  eventName = '';
+                }
+              }
+            }
+          } catch {
+            if (!cancelled) await new Promise(r => setTimeout(r, 3000)); // reconnect after 3s
+          }
+        }
+      };
+      connect();
+
+      return () => { cancelled = true; };
+    });
   }
 }

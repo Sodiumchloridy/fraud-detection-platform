@@ -1,4 +1,7 @@
+import logging
 import os
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -7,9 +10,20 @@ from routes.predict import router as predict_router
 from routes.analyze import router as analyze_router
 from routes.rules import router as rules_router
 from routes.chat import router as chat_router
+from kafka_worker import start_kafka_worker
 
 load_dotenv()
-app = FastAPI()  # uv run uvicorn main:app --reload
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    start_kafka_worker()
+    yield
+
+
+app = FastAPI(lifespan=lifespan)  # uv run uvicorn main:app --reload
 
 API_KEY = os.getenv("FRAUD_ENGINE_API_KEY", "fd-internal-key-2026")
 
