@@ -8,12 +8,12 @@ import { MainLayoutComponent } from '../../shared/layouts/main-layout/main-layou
 import { Transaction, getStatusBadgeClass } from '../../core/services';
 
 interface TransactionRequestDto {
-  cc_number: string;
+  cardNumber: string;
   amount: number;
   category: string;
   latitude: number;
   longitude: number;
-  device_id: string;
+  deviceId: string;
   merchant: string;
   timestamp: string;
 }
@@ -34,7 +34,7 @@ export class PosSimulatorComponent {
   private apiUrl = 'http://localhost:8080/api/transactions';
 
   // Form fields
-  ccNumber = 'user_001';
+  cardNumber = 'user_001';
   merchant = 'Gerbang Alaf Restaurants Sdn Bhd';
   amount = 25;
   category = 'grocery_pos';
@@ -86,14 +86,14 @@ export class PosSimulatorComponent {
     this.error = null;
 
     const request: TransactionRequestDto = {
-      cc_number: this.ccNumber,
+      cardNumber: this.cardNumber,
       merchant: this.merchant,
       amount: this.amount,
       category: this.category,
       latitude: this.latitude,
       longitude: this.longitude,
       timestamp: new Date().toISOString(),
-      device_id: "renovo_pos_sim_123456"
+      deviceId: "renovo_pos_sim_123456"
     };
 
     this.http.post<Transaction>(`${this.apiUrl}/fraud-check`, request).pipe(

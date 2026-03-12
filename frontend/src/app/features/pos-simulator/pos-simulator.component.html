@@ -9,7 +9,7 @@
       <div class="space-y-4">
         <div>
           <label class="block text-[11px] font-medium text-slate-500 uppercase tracking-wide mb-1.5">Credit Card / User ID</label>
-          <input type="text" [(ngModel)]="ccNumber" class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 transition" placeholder="e.g., user_001">
+          <input type="text" [(ngModel)]="cardNumber" class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 transition" placeholder="e.g., user_001">
         </div>
         <div>
           <label class="block text-[11px] font-medium text-slate-500 uppercase tracking-wide mb-1.5">Merchant</label>
@@ -79,7 +79,7 @@
               'border-emerald-200 bg-emerald-50/50': result.transaction.status === 'APPROVED'
             }">
               <div class="flex items-start justify-between mb-1.5">
-                <p class="text-sm font-medium text-slate-700">{{ result.transaction.ccNumber }} &middot; {{ result.transaction.amount | currency }}</p>
+                <p class="text-sm font-medium text-slate-700">{{ result.transaction.cardNumber }} &middot; {{ result.transaction.amount | currency }}</p>
                 <span class="ml-3 shrink-0 px-2.5 py-1 text-[11px] font-semibold rounded-full" [ngClass]="getStatusBadgeClass(result.transaction.status)">{{ result.transaction.status }} {{ (result.transaction.riskScore * 100) | number:'1.0-1' }}%</span>
               </div>
               <p class="text-xs text-slate-400">{{ result.transaction.category }} &middot; {{ result.transaction.status }} &middot; {{ result.timestamp | date:'short' }}</p>

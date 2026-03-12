@@ -1,5 +1,5 @@
 import numpy as np
-from models import Transaction, HistoricalTxn, parse_ts
+from schemas import Transaction, HistoricalTransaction, parse_ts
 
 
 CATEGORIES = [
@@ -55,7 +55,7 @@ def _txn_counts(timestamps, curr_time):
 
 # Public APIs
 
-def compute_features(txn: Transaction, curr_time: float, history: list[HistoricalTxn]) -> dict:
+def compute_features(txn: Transaction, curr_time: float, history: list[HistoricalTransaction]) -> dict:
     amounts, timestamps, last, merchants, devices = _parse_history(history)
     zscore, ratio  = _amount_features(txn.amount, amounts)
     dist, dt, vel  = _velocity_features(txn, last, timestamps, curr_time)

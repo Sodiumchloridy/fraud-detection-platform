@@ -1,5 +1,6 @@
 package com.workshop.backend.dto;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import java.util.List;
@@ -8,13 +9,16 @@ import java.util.Map;
 @Data
 public class ShapExplanationResponse {
 
-    @JsonProperty("base_value")
+    @JsonProperty("baseValue")
+    @JsonAlias("base_value")
     private Double baseValue;
 
-    @JsonProperty("shap_values")
+    @JsonProperty("shapValues")
+    @JsonAlias("shap_values")
     private Map<String, Double> shapValues;
 
-    @JsonProperty("top_features")
+    @JsonProperty("topFeatures")
+    @JsonAlias("top_features")
     private List<ShapFeature> topFeatures;
 
     @Data
@@ -22,10 +26,12 @@ public class ShapExplanationResponse {
         private String feature;
         private String label;
 
-        @JsonProperty("shap_value")
+        @JsonProperty("shapValue")
+        @JsonAlias("shap_value")
         private Double shapValue;
 
-        @JsonProperty("feature_value")
+        @JsonProperty("featureValue")
+        @JsonAlias("feature_value")
         private Object featureValue;
     }
 }

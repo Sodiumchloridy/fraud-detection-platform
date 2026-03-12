@@ -18,7 +18,7 @@ export interface FraudRule {
   providedIn: 'root'
 })
 export class RulesService {
-  private apiUrl = 'http://localhost:8000/rules';
+  private apiUrl = 'http://localhost:8080/api/fraud-engine/rules';
 
   constructor(private http: HttpClient) {}
 

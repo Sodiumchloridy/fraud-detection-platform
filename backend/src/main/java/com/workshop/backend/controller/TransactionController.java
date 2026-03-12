@@ -1,6 +1,9 @@
 package com.workshop.backend.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -32,6 +35,12 @@ public class TransactionController {
     private final TransactionMapper transactionMapper;
     private final ObjectMapper objectMapper;
     private final ThresholdConfig thresholdConfig;
+
+    @Value("${fraud-engine.base-url}")
+    private String fraudEngineBaseUrl;
+
+    @Value("${fraud-engine.api-key}")
+    private String fraudEngineApiKey;
 
     @GetMapping
     public ResponseEntity<List<Transaction>> getAllTransactions() {
@@ -123,7 +132,7 @@ public class TransactionController {
     public ResponseEntity<Transaction> createTransactionWithFraudCheck(@RequestBody TransactionRequest dto) {
         try {
             // Fetch user's historical transactions from DB
-            List<Transaction> history = transactionRepository.findByCcNumberOrderByTimestampAsc(dto.getCcNumber());
+            List<Transaction> history = transactionRepository.findByCardNumberOrderByTimestampAsc(dto.getCardNumber());
 
             // Serialize full entities — new fields automatically flow through
             List<Map<String, Object>> historyList = history.stream()
@@ -134,8 +143,13 @@ public class TransactionController {
             payload.put("transaction", dto);
             payload.put("history", historyList);
 
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.set("X-API-Key", fraudEngineApiKey);
+            HttpEntity<Map<String, Object>> request = new HttpEntity<>(payload, headers);
+
             FraudPredictionResponse fraudResponse = restTemplate.postForObject(
-                "http://localhost:8000/predict", payload, FraudPredictionResponse.class);
+                fraudEngineBaseUrl + "/predict", request, FraudPredictionResponse.class);
 
             // Create transaction from DTO fields
             Transaction txn = transactionMapper.toTransaction(dto);

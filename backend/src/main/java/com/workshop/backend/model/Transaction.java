@@ -1,6 +1,5 @@
 package com.workshop.backend.model;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;
@@ -19,7 +18,7 @@ public class Transaction {
 
     /* Core Transaction Data */
     @Column(nullable = false)
-    private String ccNumber;
+    private String cardNumber;
 
     @Column(nullable = false)
     private Double amount;
@@ -36,7 +35,6 @@ public class Transaction {
     @Column(nullable = false)
     private String channel;
 
-    @JsonProperty("device_id")
     private String deviceId;
 
     /* Location Data */
@@ -44,21 +42,21 @@ public class Transaction {
     private Double longitude;
 
     /* Fraud Features */
-    private Double f_amount_zscore;
-    private Double f_amount_to_avg_ratio;
+    private Double fAmountZscore;
+    private Double fAmountToAvgRatio;
 
-    private Double f_travel_velocity_kmh;
-    private Double f_travel_distance_km;
+    private Double fTravelVelocityKmh;
+    private Double fTravelDistanceKm;
 
-    private Integer f_txn_count_1h;
-    private Integer f_txn_count_24h;
-    private Integer f_txn_count_7d;
+    private Integer fTxnCount1h;
+    private Integer fTxnCount24h;
+    private Integer fTxnCount7d;
 
-    private Double f_seconds_since_last_txn;
-    private Integer f_hour_of_day;
+    private Double fSecondsSinceLastTxn;
+    private Integer fHourOfDay;
 
-    private Integer f_is_new_device;
-    private Integer f_is_new_merchant;
+    private Integer fIsNewDevice;
+    private Integer fIsNewMerchant;
 
     /* System & Verdict */
     private Double riskScore;

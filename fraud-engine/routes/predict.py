@@ -3,7 +3,7 @@ import pandas as pd
 from xgboost import XGBClassifier, DMatrix
 import time
 
-from models import PredictRequest, parse_ts
+from schemas import PredictRequest, parse_ts
 from features import compute_features
 from rules import apply_rules
 from explainability import compute_shap_values

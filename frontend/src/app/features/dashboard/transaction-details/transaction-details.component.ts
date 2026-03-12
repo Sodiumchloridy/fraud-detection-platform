@@ -75,8 +75,8 @@ export class TransactionDetailsComponent implements OnInit {
   }
 
   get maxShapAbsValue(): number {
-    if (!this.shapExplanation?.top_features?.length) return 1;
-    return Math.max(...this.shapExplanation.top_features.map(f => Math.abs(f.shap_value)));
+    if (!this.shapExplanation?.topFeatures?.length) return 1;
+    return Math.max(...this.shapExplanation.topFeatures.map(f => Math.abs(f.shapValue)));
   }
 
   shapBarWidth(value: number): number {

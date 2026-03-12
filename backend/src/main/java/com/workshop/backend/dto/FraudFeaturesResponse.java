@@ -1,41 +1,53 @@
 package com.workshop.backend.dto;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 @Data
 public class FraudFeaturesResponse {
 
-    @JsonProperty("f_amount_zscore")
-    private Double f_amount_zscore;
+    @JsonProperty("fAmountZscore")
+    @JsonAlias("f_amount_zscore")
+    private Double fAmountZscore;
 
-    @JsonProperty("f_amount_to_avg_ratio")
-    private Double f_amount_to_avg_ratio;
+    @JsonProperty("fAmountToAvgRatio")
+    @JsonAlias("f_amount_to_avg_ratio")
+    private Double fAmountToAvgRatio;
 
-    @JsonProperty("f_travel_velocity_kmh")
-    private Double f_travel_velocity_kmh;
+    @JsonProperty("fTravelVelocityKmh")
+    @JsonAlias("f_travel_velocity_kmh")
+    private Double fTravelVelocityKmh;
 
-    @JsonProperty("f_travel_distance_km")
-    private Double f_travel_distance_km;
+    @JsonProperty("fTravelDistanceKm")
+    @JsonAlias("f_travel_distance_km")
+    private Double fTravelDistanceKm;
 
-    @JsonProperty("f_txn_count_1h")
-    private Integer f_txn_count_1h;
+    @JsonProperty("fTxnCount1h")
+    @JsonAlias("f_txn_count_1h")
+    private Integer fTxnCount1h;
 
-    @JsonProperty("f_txn_count_24h")
-    private Integer f_txn_count_24h;
+    @JsonProperty("fTxnCount24h")
+    @JsonAlias("f_txn_count_24h")
+    private Integer fTxnCount24h;
 
-    @JsonProperty("f_txn_count_7d")
-    private Integer f_txn_count_7d;
+    @JsonProperty("fTxnCount7d")
+    @JsonAlias("f_txn_count_7d")
+    private Integer fTxnCount7d;
 
-    @JsonProperty("f_seconds_since_last_txn")
-    private Double f_seconds_since_last_txn;
+    @JsonProperty("fSecondsSinceLastTxn")
+    @JsonAlias("f_seconds_since_last_txn")
+    private Double fSecondsSinceLastTxn;
 
-    @JsonProperty("f_hour_of_day")
-    private Integer f_hour_of_day;
+    @JsonProperty("fHourOfDay")
+    @JsonAlias("f_hour_of_day")
+    private Integer fHourOfDay;
 
-    @JsonProperty("f_is_new_device")
-    private Integer f_is_new_device;
+    @JsonProperty("fIsNewDevice")
+    @JsonAlias("f_is_new_device")
+    private Integer fIsNewDevice;
 
-    @JsonProperty("f_is_new_merchant")
-    private Integer f_is_new_merchant;
+    @JsonProperty("fIsNewMerchant")
+    @JsonAlias("f_is_new_merchant")
+    private Integer fIsNewMerchant;
 }

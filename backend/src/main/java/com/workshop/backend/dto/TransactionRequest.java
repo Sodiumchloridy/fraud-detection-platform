@@ -8,10 +8,10 @@ import lombok.Data;
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class TransactionRequest {
-    
-    @JsonProperty("cc_number")
-    @JsonAlias("ccNumber")
-    private String ccNumber;
+
+    @JsonProperty("cardNumber")
+    @JsonAlias({"cc_number", "ccNumber"})
+    private String cardNumber;
 
     private Double amount;
     private String category;
@@ -21,9 +21,9 @@ public class TransactionRequest {
     private String channel;
     private String merchant;
 
-    @JsonProperty("device_id")
-    @JsonAlias("deviceId")
+    @JsonProperty("deviceId")
+    @JsonAlias("device_id")
     private String deviceId;
-    
+
     private String timestamp;
 }

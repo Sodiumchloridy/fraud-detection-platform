@@ -50,7 +50,7 @@
         <a [routerLink]="['/transaction', transaction.id]"
            class="animate-bento flex items-center justify-between px-7 py-4 border-b border-slate-50 last:border-b-0 hover:bg-slate-50/60 transition-colors">
           <div class="min-w-0">
-            <p class="text-sm font-medium text-slate-700 truncate">{{ transaction.ccNumber }}</p>
+            <p class="text-sm font-medium text-slate-700 truncate">{{ transaction.cardNumber }}</p>
             <p class="text-xs text-slate-400 mt-0.5">{{ transaction.amount | currency }} &middot; {{ transaction.category }} &middot; {{ transaction.timestamp | date:'short' }}</p>
           </div>
           <span class="ml-4 shrink-0 px-3 py-1 text-[11px] font-semibold rounded-full" [ngClass]="getStatusBadgeClass(transaction.status)">

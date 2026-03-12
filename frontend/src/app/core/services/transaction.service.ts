@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 
 export interface Transaction {
   id: string;
-  ccNumber: string;
+  cardNumber: string;
   amount: number;
   category: string;
   timestamp: string;
@@ -16,17 +16,17 @@ export interface Transaction {
   longitude: number;
 
   /* Fraud Features */
-  f_amount_zscore: number;
-  f_amount_to_avg_ratio: number;
-  f_travel_velocity_kmh: number;
-  f_travel_distance_km: number;
-  f_txn_count_1h: number;
-  f_txn_count_24h: number;
-  f_txn_count_7d: number;
-  f_seconds_since_last_txn: number;
-  f_hour_of_day: number;
-  f_is_new_device: number;
-  f_is_new_merchant: number;
+  fAmountZscore: number;
+  fAmountToAvgRatio: number;
+  fTravelVelocityKmh: number;
+  fTravelDistanceKm: number;
+  fTxnCount1h: number;
+  fTxnCount24h: number;
+  fTxnCount7d: number;
+  fSecondsSinceLastTxn: number;
+  fHourOfDay: number;
+  fIsNewDevice: number;
+  fIsNewMerchant: number;
 
   /* System & Verdict */
   riskScore: number;
@@ -51,14 +51,14 @@ export function getStatusBadgeClass(status: string): string {
 export interface ShapFeature {
   feature: string;
   label: string;
-  shap_value: number;
-  feature_value: number | string;
+  shapValue: number;
+  featureValue: number | string;
 }
 
 export interface ShapExplanation {
-  base_value: number;
-  shap_values: Record<string, number>;
-  top_features: ShapFeature[];
+  baseValue: number;
+  shapValues: Record<string, number>;
+  topFeatures: ShapFeature[];
 }
 
 export interface TransactionStats {

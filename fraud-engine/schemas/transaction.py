@@ -1,16 +1,13 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import ConfigDict
 from typing import Optional
-from datetime import datetime
 import time
 
-
-def parse_ts(ts: str) -> datetime:
-    """Parse an ISO timestamp, treating 'Z' as UTC."""
-    return datetime.fromisoformat(ts.replace('Z', '+00:00'))
+from .base import BaseSchema
+from .utils import parse_ts
 
 
-class Transaction(BaseModel):
-    cc_number: str
+class Transaction(BaseSchema):
+    card_number: str
     amount: float
     category: str
     channel: str = 'in_store'
@@ -29,16 +26,12 @@ class Transaction(BaseModel):
         return int((time.time() % 86400) // 3600)
 
 
-class HistoricalTxn(BaseModel):
+class HistoricalTransaction(BaseSchema):
     model_config = ConfigDict(extra='allow')
+
     amount: float
     timestamp: str
     latitude: float = 0.0
     longitude: float = 0.0
     merchant: str = ''
     device_id: str = ''
-
-
-class PredictRequest(BaseModel):
-    transaction: Transaction
-    history: list[HistoricalTxn] = []
