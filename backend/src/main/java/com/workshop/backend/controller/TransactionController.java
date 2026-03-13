@@ -1,10 +1,14 @@
 package com.workshop.backend.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import java.time.Instant;
@@ -15,8 +19,8 @@ import org.springframework.security.core.Authentication;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.workshop.backend.config.ThresholdConfig;
+import com.workshop.backend.dto.FraudPredictionResponse;
 import com.workshop.backend.dto.TransactionRequest;
-import com.workshop.backend.kafka.KafkaProducerService;
 import com.workshop.backend.mapper.TransactionMapper;
 import com.workshop.backend.model.Transaction;
 import com.workshop.backend.repository.TransactionRepository;
@@ -32,8 +36,14 @@ public class TransactionController {
     private final TransactionMapper transactionMapper;
     private final ObjectMapper objectMapper;
     private final ThresholdConfig thresholdConfig;
-    private final KafkaProducerService kafkaProducerService;
+    private final RestTemplate restTemplate;
     private final SseEmitterService sseEmitterService;
+
+    @Value("${fraud-engine.base-url}")
+    private String fraudEngineBaseUrl;
+
+    @Value("${fraud-engine.api-key}")
+    private String fraudEngineApiKey;
 
     @GetMapping
     public ResponseEntity<List<Transaction>> getAllTransactions() {
@@ -124,8 +134,8 @@ public class TransactionController {
     }
 
     /**
-     * Saves as PENDING, publishes to Kafka. Fraud-engine scores async,
-     * result flows back via Kafka → FraudResultConsumer → SSE push.
+     * Saves the transaction, calls fraud-engine synchronously via HTTP,
+     * applies the scored result, and broadcasts via SSE.
      */
     @PostMapping("/fraud-check")
     public ResponseEntity<Transaction> createTransactionWithFraudCheck(@RequestBody TransactionRequest dto) {
@@ -133,32 +143,46 @@ public class TransactionController {
             // Fetch user's historical transactions from DB
             List<Transaction> history = transactionRepository.findByCardNumberOrderByTimestampAsc(dto.getCardNumber());
 
-            // Build the transaction entity immediately with PENDING status
+            // Build the transaction entity
             Transaction txn = transactionMapper.toTransaction(dto);
             txn.setTimestamp(dto.getTimestamp() != null
                     ? LocalDateTime.ofInstant(Instant.parse(dto.getTimestamp()), ZoneId.systemDefault())
                     : LocalDateTime.now());
             txn.setMerchant(dto.getMerchant() != null ? dto.getMerchant() : "");
             txn.setChannel(dto.getChannel() != null ? dto.getChannel() : "in_store");
-            txn.setRiskScore(0.0);
-            txn.setStatus(TransactionStatus.PENDING);
 
-            Transaction saved = transactionRepository.save(txn);
-
-            // Serialize history for the Kafka message
+            // Serialize history for the fraud-engine request
             List<Map<String, Object>> historyList = history.stream()
                 .map(t -> objectMapper.convertValue(t, new com.fasterxml.jackson.core.type.TypeReference<Map<String, Object>>() {}))
                 .toList();
 
             Map<String, Object> payload = new HashMap<>();
-            payload.put("transactionId", saved.getId().toString());
             payload.put("transaction", dto);
             payload.put("history", historyList);
 
-            kafkaProducerService.sendFraudCheckRequest(saved.getId().toString(), payload);
+            // Call fraud-engine /predict synchronously
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.set("X-API-Key", fraudEngineApiKey);
+            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(payload, headers);
+
+            FraudPredictionResponse resp = restTemplate.postForObject(
+                    fraudEngineBaseUrl + "/predict", entity, FraudPredictionResponse.class);
+
+            // Apply scored features to the transaction
+            double prob = resp.getFraudProbability();
+            transactionMapper.applyFeatures(resp.getFeatures(), txn);
+            if (resp.getShap() != null) txn.setShapJson(objectMapper.writeValueAsString(resp.getShap()));
+
+            txn.setRiskScore(prob);
+            txn.setStatus(prob >= thresholdConfig.getBlockedThreshold() ? TransactionStatus.BLOCKED
+                    : prob >= thresholdConfig.getFlaggedThreshold() ? TransactionStatus.FLAGGED
+                    : TransactionStatus.APPROVED);
+
+            Transaction saved = transactionRepository.save(txn);
             sseEmitterService.broadcastTransaction(saved);
 
-            return new ResponseEntity<>(saved, HttpStatus.ACCEPTED);
+            return ResponseEntity.ok(saved);
         } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Transaction submission failed: " + e.getMessage());
         }

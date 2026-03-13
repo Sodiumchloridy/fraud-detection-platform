@@ -44,7 +44,6 @@ export function getStatusBadgeClass(status: string): string {
     case 'BLOCKED':  return 'bg-rose-100 text-rose-700';
     case 'FLAGGED':  return 'bg-amber-100 text-amber-700';
     case 'APPROVED': return 'bg-emerald-100 text-emerald-700';
-    case 'PENDING':  return 'bg-blue-100 text-blue-700';
     default:         return 'bg-slate-100 text-slate-700';
   }
 }

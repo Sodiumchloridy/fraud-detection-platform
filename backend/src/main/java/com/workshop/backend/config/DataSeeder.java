@@ -74,8 +74,12 @@ public class DataSeeder {
             long delay = 500 + rng.nextInt(1500);
             try { Thread.sleep(delay); } catch (InterruptedException e) { Thread.currentThread().interrupt(); break; }
             HttpEntity<TransactionRequest> entity = new HttpEntity<>(dto, headers);
-            restTemplate.postForObject(endpoint, entity, Map.class);
-            log.info("[{}/{}] Sent {} ${}", i + 1, seeds.size(), dto.getCategory(), dto.getAmount());
+            try {
+                restTemplate.postForObject(endpoint, entity, Map.class);
+                log.info("[{}/{}] Sent {} ${}", i + 1, seeds.size(), dto.getCategory(), dto.getAmount());
+            } catch (Exception e) {
+                log.warn("[{}/{}] Failed {} ${}: {}", i + 1, seeds.size(), dto.getCategory(), dto.getAmount(), e.getMessage());
+            }
         }
         log.info("Seeding complete — {} transactions in database.", transactionRepository.count());
     }
