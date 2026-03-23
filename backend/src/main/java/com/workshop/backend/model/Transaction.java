@@ -37,26 +37,33 @@ public class Transaction {
 
     private String deviceId;
 
+    /* Kaggle-mapped Entity Data */
+    private String cardNetwork;
+    private String cardType;
+    private String billingCountry;
+    private String emailDomain;
+    private String deviceType;
+
     /* Location Data */
     private Double latitude;
     private Double longitude;
 
     /* Fraud Features */
-    private Double fAmountZscore;
-    private Double fAmountToAvgRatio;
+    private Double amountZscore;
+    private Double amountToAvgRatio;
 
-    private Double fTravelVelocityKmh;
-    private Double fTravelDistanceKm;
+    private Double travelVelocityKmh;
+    private Double travelDistanceKm;
 
-    private Integer fTxnCount1h;
-    private Integer fTxnCount24h;
-    private Integer fTxnCount7d;
+    private Integer txnCount1h;
+    private Integer txnCount24h;
+    private Integer txnCount7d;
 
-    private Double fSecondsSinceLastTxn;
-    private Integer fHourOfDay;
+    private Double secondsSinceLastTxn;
+    private Integer hourOfDay;
 
-    private Integer fIsNewDevice;
-    private Integer fIsNewMerchant;
+    private Integer isNewDevice;
+    private Integer isNewMerchant;
 
     /* System & Verdict */
     private Double riskScore;

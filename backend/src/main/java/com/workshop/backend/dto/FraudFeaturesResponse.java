@@ -7,47 +7,47 @@ import lombok.Data;
 @Data
 public class FraudFeaturesResponse {
 
-    @JsonProperty("fAmountZscore")
-    @JsonAlias("f_amount_zscore")
-    private Double fAmountZscore;
+    @JsonProperty("amountZscore")
+    @JsonAlias("amount_zscore")
+    private Double amountZscore;
 
-    @JsonProperty("fAmountToAvgRatio")
-    @JsonAlias("f_amount_to_avg_ratio")
-    private Double fAmountToAvgRatio;
+    @JsonProperty("amountToAvgRatio")
+    @JsonAlias("amount_to_avg_ratio")
+    private Double amountToAvgRatio;
 
-    @JsonProperty("fTravelVelocityKmh")
-    @JsonAlias("f_travel_velocity_kmh")
-    private Double fTravelVelocityKmh;
+    @JsonProperty("travelVelocityKmh")
+    @JsonAlias("travel_velocity_kmh")
+    private Double travelVelocityKmh;
 
-    @JsonProperty("fTravelDistanceKm")
-    @JsonAlias("f_travel_distance_km")
-    private Double fTravelDistanceKm;
+    @JsonProperty("travelDistanceKm")
+    @JsonAlias("travel_distance_km")
+    private Double travelDistanceKm;
 
-    @JsonProperty("fTxnCount1h")
-    @JsonAlias("f_txn_count_1h")
-    private Integer fTxnCount1h;
+    @JsonProperty("txnCount1h")
+    @JsonAlias("txn_count_1h")
+    private Integer txnCount1h;
 
-    @JsonProperty("fTxnCount24h")
-    @JsonAlias("f_txn_count_24h")
-    private Integer fTxnCount24h;
+    @JsonProperty("txnCount24h")
+    @JsonAlias("txn_count_24h")
+    private Integer txnCount24h;
 
-    @JsonProperty("fTxnCount7d")
-    @JsonAlias("f_txn_count_7d")
-    private Integer fTxnCount7d;
+    @JsonProperty("txnCount7d")
+    @JsonAlias("txn_count_7d")
+    private Integer txnCount7d;
 
-    @JsonProperty("fSecondsSinceLastTxn")
-    @JsonAlias("f_seconds_since_last_txn")
-    private Double fSecondsSinceLastTxn;
+    @JsonProperty("secondsSinceLastTxn")
+    @JsonAlias("seconds_since_last_txn")
+    private Double secondsSinceLastTxn;
 
-    @JsonProperty("fHourOfDay")
-    @JsonAlias("f_hour_of_day")
-    private Integer fHourOfDay;
+    @JsonProperty("hourOfDay")
+    @JsonAlias("hour_of_day")
+    private Integer hourOfDay;
 
-    @JsonProperty("fIsNewDevice")
-    @JsonAlias("f_is_new_device")
-    private Integer fIsNewDevice;
+    @JsonProperty("isNewDevice")
+    @JsonAlias("is_new_device")
+    private Integer isNewDevice;
 
-    @JsonProperty("fIsNewMerchant")
-    @JsonAlias("f_is_new_merchant")
-    private Integer fIsNewMerchant;
+    @JsonProperty("isNewMerchant")
+    @JsonAlias("is_new_merchant")
+    private Integer isNewMerchant;
 }

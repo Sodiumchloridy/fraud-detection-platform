@@ -16,17 +16,17 @@ export interface Transaction {
   longitude: number;
 
   /* Fraud Features */
-  fAmountZscore: number;
-  fAmountToAvgRatio: number;
-  fTravelVelocityKmh: number;
-  fTravelDistanceKm: number;
-  fTxnCount1h: number;
-  fTxnCount24h: number;
-  fTxnCount7d: number;
-  fSecondsSinceLastTxn: number;
-  fHourOfDay: number;
-  fIsNewDevice: number;
-  fIsNewMerchant: number;
+  amountZscore: number;
+  amountToAvgRatio: number;
+  travelVelocityKmh: number;
+  travelDistanceKm: number;
+  txnCount1h: number;
+  txnCount24h: number;
+  txnCount7d: number;
+  secondsSinceLastTxn: number;
+  hourOfDay: number;
+  isNewDevice: number;
+  isNewMerchant: number;
 
   /* System & Verdict */
   riskScore: number;

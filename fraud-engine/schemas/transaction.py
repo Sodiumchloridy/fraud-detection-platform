@@ -15,6 +15,14 @@ class Transaction(BaseSchema):
     longitude: Optional[float] = None
     merchant: Optional[str] = ''
     device_id: Optional[str] = ''
+    
+    # New Kaggle-style data passed from Spring Boot
+    cardNetwork: Optional[str] = ''
+    cardType: Optional[str] = ''
+    billingCountry: Optional[str] = ''
+    emailDomain: Optional[str] = ''
+    deviceType: Optional[str] = ''
+    
     timestamp: Optional[str] = None
 
     @property

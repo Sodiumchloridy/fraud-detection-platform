@@ -86,7 +86,7 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
             beginAtZero: true,
             border: { display: false },
             grid: { color: '#f1f5f9' },
-            ticks: { callback: v => '$' + Number(v).toLocaleString(), font: { size: 11 }, padding: 8 },
+            ticks: { callback: (v: number | string) => '$' + Number(v).toLocaleString(), font: { size: 11 }, padding: 8 },
           },
           x: {
             border: { display: false },
@@ -99,7 +99,7 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
           tooltip: {
             backgroundColor: '#1e293b', titleColor: '#e2e8f0', bodyColor: '#e2e8f0',
             padding: 10, cornerRadius: 8, titleFont: { size: 11 }, bodyFont: { size: 12 },
-            callbacks: { label: ctx => ` ${ctx.dataset.label}: $${Number(ctx.raw).toLocaleString(undefined, { minimumFractionDigits: 2 })}` },
+            callbacks: { label: (ctx: any) => ` ${ctx.dataset.label}: $${Number(ctx.raw).toLocaleString(undefined, { minimumFractionDigits: 2 })}` },
           },
         },
         animation: { duration: 400 },
