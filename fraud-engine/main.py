@@ -5,6 +5,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
+
 from routes.predict import router as predict_router
 from routes.analyze import router as analyze_router
 from routes.rules import router as rules_router

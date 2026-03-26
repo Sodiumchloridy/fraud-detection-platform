@@ -90,4 +90,53 @@
       }
     </div>
   </div>
+
+  <!-- Notification stack (top-right) -->
+  @if (flaggedTransaction || blockedNotifications.length) {
+    <div class="fixed top-5 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-3 w-[26rem]">
+
+      <!-- FLAGGED notification with approve / decline -->
+      @if (flaggedTransaction) {
+        <div class="bg-white border border-amber-200 rounded-2xl shadow-lg p-5 animate-[slideIn_.2s_ease-out]">
+          <div class="flex items-start gap-3 mb-3">
+            <span class="flex items-center justify-center w-9 h-9 rounded-full bg-amber-100 text-amber-600 shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4.5 h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M10.29 3.86l-8.05 14A2 2 0 004.24 21h15.52a2 2 0 001.99-3.14l-8.05-14a2 2 0 00-3.42 0z"/></svg>
+            </span>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-semibold text-amber-700">Transaction Flagged</p>
+              <p class="text-xs text-slate-500 mt-0.5 truncate">{{ flaggedTransaction.cardNumber }} &middot; {{ flaggedTransaction.amount | currency }} &middot; {{ flaggedTransaction.merchant }}</p>
+              <p class="text-[11px] text-slate-400 mt-0.5">{{ flaggedTransaction.category }} &middot; Risk: <span class="font-semibold text-amber-600">{{ (flaggedTransaction.riskScore * 100) | number:'1.0-1' }}%</span></p>
+            </div>
+            <button (click)="dismissFlagged()" class="text-slate-300 hover:text-slate-500 transition shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+          </div>
+          <div class="flex gap-2 ml-12">
+            <button (click)="reviewFlagged('BLOCKED')" class="flex-1 py-1.5 rounded-lg text-xs font-medium bg-rose-600 text-white hover:bg-rose-700 transition">Decline</button>
+            <button (click)="reviewFlagged('APPROVED')" class="flex-1 py-1.5 rounded-lg text-xs font-medium bg-emerald-600 text-white hover:bg-emerald-700 transition">Approve</button>
+          </div>
+        </div>
+      }
+
+      <!-- BLOCKED toast notifications -->
+      @for (note of blockedNotifications; track note.id) {
+        <div class="bg-white border border-rose-200 rounded-2xl shadow-lg p-4 animate-[slideIn_.2s_ease-out]">
+          <div class="flex items-start gap-3">
+            <span class="flex items-center justify-center w-8 h-8 rounded-full bg-rose-100 text-rose-600 shrink-0 mt-0.5">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+            </span>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-semibold text-rose-700">Transaction Blocked</p>
+              <p class="text-xs text-slate-500 mt-0.5 truncate">{{ note.transaction.cardNumber }} &middot; {{ note.transaction.amount | currency }} &middot; {{ note.transaction.merchant }}</p>
+              <p class="text-[11px] text-slate-400 mt-1">Risk: {{ (note.transaction.riskScore * 100) | number:'1.0-1' }}% — automatically blocked</p>
+            </div>
+            <button (click)="dismissBlockedNotification(note.id)" class="text-slate-300 hover:text-slate-500 transition shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+          </div>
+        </div>
+      }
+
+    </div>
+  }
 </app-main-layout>

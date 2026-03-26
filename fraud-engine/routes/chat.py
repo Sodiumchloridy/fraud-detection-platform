@@ -1,4 +1,5 @@
 from fastapi import APIRouter
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from litellm import completion
 import json
@@ -42,6 +43,18 @@ def chat(req: ChatRequest):
     response = completion(
         model=os.getenv("LLM_MODEL", "cerebras/llama3.1-8b"),
         messages=messages,
+        stream=True,
     )
 
-    return {"reply": response.choices[0].message.content}  # type: ignore
+    def generate():
+        for chunk in response:
+            content = chunk.choices[0].delta.content  # type: ignore
+            if content:
+                yield f"data: {json.dumps({'token': content})}\n\n"
+        yield "data: [DONE]\n\n"
+
+    return StreamingResponse(
+        generate(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )

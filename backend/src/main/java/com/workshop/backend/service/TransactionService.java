@@ -1,0 +1,151 @@
+package com.workshop.backend.service;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.workshop.backend.config.ThresholdConfig;
+import com.workshop.backend.dto.FraudPredictionResponse;
+import com.workshop.backend.dto.TransactionEvent;
+import com.workshop.backend.dto.TransactionRequest;
+import com.workshop.backend.enums.TransactionStatus;
+import com.workshop.backend.mapper.TransactionMapper;
+import com.workshop.backend.model.Transaction;
+import com.workshop.backend.repository.TransactionRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.*;
+
+@Service
+@RequiredArgsConstructor
+public class TransactionService {
+
+    private final TransactionRepository transactionRepository;
+    private final TransactionMapper transactionMapper;
+    private final ObjectMapper objectMapper;
+    private final ThresholdConfig thresholdConfig;
+    private final RestTemplate restTemplate;
+    private final SseEmitterService sseEmitterService;
+    private final TransactionProducer transactionProducer;
+
+    @Value("${fraud-engine.base-url}")
+    private String fraudEngineBaseUrl;
+
+    @Value("${fraud-engine.api-key}")
+    private String fraudEngineApiKey;
+
+    public List<Transaction> findAll() {
+        return transactionRepository.findAll();
+    }
+
+    public Transaction findById(UUID id) {
+        return transactionRepository.findById(id)
+            .orElseThrow(() -> new NoSuchElementException("Transaction not found with id: " + id));
+    }
+
+    public List<Transaction> findFlagged() {
+        return transactionRepository.findByRiskScoreGreaterThanEqualAndRiskScoreLessThan(
+            thresholdConfig.getFlaggedThreshold(), thresholdConfig.getBlockedThreshold());
+    }
+
+    public Map<String, Object> getStats() {
+        long total    = transactionRepository.count();
+        long flagged  = transactionRepository.countByRiskScoreGreaterThanEqual(thresholdConfig.getFlaggedThreshold());
+        long blocked  = transactionRepository.countByRiskScoreGreaterThanEqual(thresholdConfig.getBlockedThreshold());
+        long approved = total - flagged;
+        long flaggedOnly = flagged - blocked;
+
+        double fraudRate    = total > 0 ? (double) blocked / total * 100 : 0;
+        double approvalRate = total > 0 ? (double) approved / total * 100 : 0;
+
+        double totalVolume     = transactionRepository.sumAmount();
+        double avgAmount       = transactionRepository.avgAmount();
+        double amountAtRisk    = transactionRepository.sumAmountByRiskScoreGreaterThanEqual(thresholdConfig.getFlaggedThreshold());
+        double blockedAmount   = transactionRepository.sumAmountByRiskScoreGreaterThanEqual(thresholdConfig.getBlockedThreshold());
+        long   pendingReview   = transactionRepository.countPendingReview(
+                thresholdConfig.getFlaggedThreshold(), thresholdConfig.getBlockedThreshold());
+
+        Map<String, Object> stats = new HashMap<>();
+        stats.put("total",          total);
+        stats.put("approved",       approved);
+        stats.put("flagged",        flaggedOnly);
+        stats.put("blocked",        blocked);
+        stats.put("fraudRate",      Math.round(fraudRate * 100.0) / 100.0);
+        stats.put("approvalRate",   Math.round(approvalRate * 100.0) / 100.0);
+        stats.put("totalVolume",    Math.round(totalVolume * 100.0) / 100.0);
+        stats.put("avgAmount",      Math.round(avgAmount * 100.0) / 100.0);
+        stats.put("amountAtRisk",   Math.round(amountAtRisk * 100.0) / 100.0);
+        stats.put("blockedAmount",  Math.round(blockedAmount * 100.0) / 100.0);
+        stats.put("pendingReview",  pendingReview);
+
+        return stats;
+    }
+
+    public Transaction updateStatus(UUID id, String status, String reviewerUsername) {
+        Transaction transaction = transactionRepository.findById(id)
+            .orElseThrow(() -> new NoSuchElementException("Transaction not found with id: " + id));
+
+        TransactionStatus txnStatus = TransactionStatus.valueOf(status.toUpperCase());
+        transaction.setStatus(txnStatus);
+        transaction.setIsFraud(TransactionStatus.APPROVED.equals(txnStatus) ? 0 : 1);
+        transaction.setReviewedBy(reviewerUsername);
+        transaction.setReviewedAt(LocalDateTime.now());
+
+        return transactionRepository.save(transaction);
+    }
+
+    public Transaction submitWithFraudCheck(TransactionRequest dto) {
+        try {
+            List<Transaction> history = transactionRepository.findByCardNumberOrderByTimestampAsc(dto.getCardNumber());
+
+            Transaction txn = transactionMapper.toTransaction(dto);
+            txn.setTimestamp(dto.getTimestamp() != null
+                    ? LocalDateTime.ofInstant(Instant.parse(dto.getTimestamp()), ZoneId.systemDefault())
+                    : LocalDateTime.now());
+            txn.setMerchant(dto.getMerchant() != null ? dto.getMerchant() : "");
+            txn.setChannel(dto.getChannel() != null ? dto.getChannel() : "in_store");
+
+            List<Map<String, Object>> historyList = history.stream()
+                .map(t -> objectMapper.convertValue(t, new TypeReference<Map<String, Object>>() {}))
+                .toList();
+
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("transaction", dto);
+            payload.put("history", historyList);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.set("X-API-Key", fraudEngineApiKey);
+            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(payload, headers);
+
+            FraudPredictionResponse resp = restTemplate.postForObject(
+                    fraudEngineBaseUrl + "/predict", entity, FraudPredictionResponse.class);
+
+            double prob = resp.getFraudProbability();
+            transactionMapper.applyFeatures(resp.getFeatures(), txn);
+
+            txn.setRiskScore(prob);
+            txn.setStatus(prob >= thresholdConfig.getBlockedThreshold() ? TransactionStatus.BLOCKED
+                    : prob >= thresholdConfig.getFlaggedThreshold() ? TransactionStatus.FLAGGED
+                    : TransactionStatus.APPROVED);
+
+            Transaction saved = transactionRepository.save(txn);
+            sseEmitterService.broadcastTransaction(saved);
+
+            // Publish to Kafka for async SHAP computation
+            TransactionEvent event = transactionMapper.toEvent(saved);
+            transactionProducer.send(event);
+
+            return saved;
+        } catch (Exception e) {
+            throw new RuntimeException("Transaction submission failed: " + e.getMessage(), e);
+        }
+    }
+}

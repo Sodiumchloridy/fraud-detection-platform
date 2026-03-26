@@ -9,28 +9,33 @@ from .utils import parse_ts
 class Transaction(BaseSchema):
     card_number: str
     amount: float
-    category: str
+    category: str = ''
     channel: str = 'in_store'
     latitude: Optional[float] = None
     longitude: Optional[float] = None
     merchant: Optional[str] = ''
     device_id: Optional[str] = ''
-    
-    # New Kaggle-style data passed from Spring Boot
-    cardNetwork: Optional[str] = ''
-    cardType: Optional[str] = ''
-    billingCountry: Optional[str] = ''
-    emailDomain: Optional[str] = ''
-    deviceType: Optional[str] = ''
-    
+
+    # Kaggle-style fields from IEEE-CIS data
+    card_network: Optional[str] = ''
+    card_type: Optional[str] = ''
+    card_issuing_country: Optional[int] = None
+    billing_country_code: Optional[int] = None
+    billing_zip_code: Optional[int] = None
+    purchaser_email_domain: Optional[str] = ''
+    recipient_email_domain: Optional[str] = ''
+    device_type: Optional[str] = ''
+    device_info: Optional[str] = ''
+
     timestamp: Optional[str] = None
 
     @property
     def local_hour_of_day(self) -> int:
-        """Calculate hour in user's timezone based on longitude (rough estimate)"""
-        if self.timestamp and self.longitude is not None:
+        if self.timestamp:
             utc_dt = parse_ts(self.timestamp)
-            return (utc_dt.hour + round(self.longitude / 15)) % 24
+            if self.longitude is not None:
+                return (utc_dt.hour + round(self.longitude / 15)) % 24
+            return utc_dt.hour
         return int((time.time() % 86400) // 3600)
 
 
@@ -39,7 +44,8 @@ class HistoricalTransaction(BaseSchema):
 
     amount: float
     timestamp: str
-    latitude: float = 0.0
-    longitude: float = 0.0
-    merchant: str = ''
-    device_id: str = ''
+    latitude: Optional[float] = 0.0
+    longitude: Optional[float] = 0.0
+    merchant: Optional[str] = ''
+    device_id: Optional[str] = ''
+    purchaser_email_domain: Optional[str] = ''

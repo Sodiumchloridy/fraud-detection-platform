@@ -1,4 +1,4 @@
-import { Component, ElementRef, Input, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, Input, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LlmService, ChatMessage } from '../../../core/services/llm.service';
@@ -20,7 +20,7 @@ export class FraudCopilotComponent {
 
   @ViewChild('messagesContainer') private messagesContainer!: ElementRef<HTMLDivElement>;
 
-  constructor(private llmService: LlmService) {}
+  constructor(private llmService: LlmService, private cdr: ChangeDetectorRef) {}
 
   toggle() {
     this.isOpen = !this.isOpen;
@@ -35,15 +35,24 @@ export class FraudCopilotComponent {
     this.isLoading = true;
     this.scrollToBottom();
 
-    this.llmService.chat(this.messages, this.transaction).subscribe({
-      next: (res) => {
-        this.messages.push({ role: 'assistant', content: res.reply });
-        this.isLoading = false;
+    const assistantMsg: ChatMessage = { role: 'assistant', content: '' };
+    this.messages.push(assistantMsg);
+
+    this.llmService.chatStream(this.messages.slice(0, -1), this.transaction).subscribe({
+      next: (token) => {
+        assistantMsg.content += token;
+        this.cdr.detectChanges();
         this.scrollToBottom();
       },
       error: () => {
-        this.messages.push({ role: 'assistant', content: 'Sorry, something went wrong. Please try again.' });
+        assistantMsg.content = assistantMsg.content || 'Sorry, something went wrong. Please try again.';
         this.isLoading = false;
+        this.cdr.detectChanges();
+        this.scrollToBottom();
+      },
+      complete: () => {
+        this.isLoading = false;
+        this.cdr.detectChanges();
         this.scrollToBottom();
       }
     });

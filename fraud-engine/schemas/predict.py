@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Optional
 
 from .base import BaseSchema
 from .transaction import Transaction, HistoricalTransaction
@@ -27,11 +27,10 @@ class ShapExplanation(BaseSchema):
     shap_values: dict[str, float]
     top_features: list[ShapFeature]
 
-
 class PredictResponse(BaseSchema):
     fraud_probability: float
     is_fraud: bool
     features: dict[str, Any]
     triggered_rules: list[str]
-    shap: ShapExplanation
+    shap: Optional[ShapExplanation] = None
     model_scores: list[ModelScore] = []

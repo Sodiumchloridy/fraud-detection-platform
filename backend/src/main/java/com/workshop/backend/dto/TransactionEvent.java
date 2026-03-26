@@ -1,20 +1,20 @@
 package com.workshop.backend.dto;
 
-import com.fasterxml.jackson.annotation.JsonAlias;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.workshop.backend.enums.TransactionStatus;
 import lombok.Data;
 
+import java.time.LocalDateTime;
+import java.util.UUID;
+
 @Data
-@JsonInclude(JsonInclude.Include.NON_NULL)
-public class TransactionRequest {
+public class TransactionEvent {
+    private UUID id;
     private String cardNumber;
     private Double amount;
     private String category;
-    private Double latitude;
-    private Double longitude;
-    private String channel;
     private String merchant;
+    private String channel;
     private String cardNetwork;
     private String cardType;
     private Integer cardIssuingCountry;
@@ -24,5 +24,8 @@ public class TransactionRequest {
     private String recipientEmailDomain;
     private String deviceType;
     private String deviceInfo;
-    private String timestamp;
+    private Double latitude;
+    private Double longitude;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    private LocalDateTime timestamp;
 }

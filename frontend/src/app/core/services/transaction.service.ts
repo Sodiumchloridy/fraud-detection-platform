@@ -15,16 +15,29 @@ export interface Transaction {
   latitude: number;
   longitude: number;
 
+  /* Entity Data */
+  cardNetwork: string;
+  cardType: string;
+  cardIssuingCountry: number;
+  billingCountryCode: number;
+  billingZipCode: number;
+  purchaserEmailDomain: string;
+  recipientEmailDomain: string;
+  deviceType: string;
+  deviceInfo: string;
+
   /* Fraud Features */
   amountZscore: number;
   amountToAvgRatio: number;
-  travelVelocityKmh: number;
-  travelDistanceKm: number;
   txnCount1h: number;
   txnCount24h: number;
   txnCount7d: number;
   secondsSinceLastTxn: number;
   hourOfDay: number;
+  billingCountryMismatch: number;
+  isRiskyEmail: number;
+  emailDomainMismatch: number;
+  isNewEmail: number;
   isNewDevice: number;
   isNewMerchant: number;
 

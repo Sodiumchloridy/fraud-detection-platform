@@ -16,7 +16,6 @@ public class Transaction {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    /* Core Transaction Data */
     @Column(nullable = false)
     private String cardNumber;
 
@@ -24,25 +23,20 @@ public class Transaction {
     private Double amount;
 
     @Column(nullable = false)
-    private String category;
-
-    @Column(nullable = false)
     private LocalDateTime timestamp;
 
-    @Column(nullable = false)
+    private String category;
     private String merchant;
-
-    @Column(nullable = false)
     private String channel;
-
-    private String deviceId;
-
-    /* Kaggle-mapped Entity Data */
     private String cardNetwork;
     private String cardType;
-    private String billingCountry;
-    private String emailDomain;
+    private Integer cardIssuingCountry;
+    private Integer billingCountryCode;
+    private Integer billingZipCode;
+    private String purchaserEmailDomain;
+    private String recipientEmailDomain;
     private String deviceType;
+    private String deviceInfo;
 
     /* Location Data */
     private Double latitude;
@@ -51,19 +45,17 @@ public class Transaction {
     /* Fraud Features */
     private Double amountZscore;
     private Double amountToAvgRatio;
-
-    private Double travelVelocityKmh;
-    private Double travelDistanceKm;
-
     private Integer txnCount1h;
     private Integer txnCount24h;
     private Integer txnCount7d;
-
     private Double secondsSinceLastTxn;
     private Integer hourOfDay;
-
-    private Integer isNewDevice;
-    private Integer isNewMerchant;
+    private Double billingCountryMismatch;
+    private Double isRiskyEmail;
+    private Double emailDomainMismatch;
+    private Double isNewEmail;
+    private Double isNewDevice;
+    private Double isNewMerchant;
 
     /* System & Verdict */
     private Double riskScore;

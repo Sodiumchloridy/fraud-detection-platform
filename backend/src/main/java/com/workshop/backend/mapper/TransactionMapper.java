@@ -1,7 +1,8 @@
 package com.workshop.backend.mapper;
 
+import com.workshop.backend.dto.TransactionEvent;
 import com.workshop.backend.dto.TransactionRequest;
-import com.workshop.backend.dto.FraudFeaturesResponse;
+import com.workshop.backend.dto.TransactionFeatures;
 import com.workshop.backend.model.Transaction;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -14,5 +15,7 @@ public interface TransactionMapper {
     @Mapping(target = "timestamp", ignore = true)
     Transaction toTransaction(TransactionRequest transactionRequest);
 
-    void applyFeatures(FraudFeaturesResponse features, @MappingTarget Transaction transaction);
+    void applyFeatures(TransactionFeatures features, @MappingTarget Transaction transaction);
+
+    TransactionEvent toEvent(Transaction transaction);
 }

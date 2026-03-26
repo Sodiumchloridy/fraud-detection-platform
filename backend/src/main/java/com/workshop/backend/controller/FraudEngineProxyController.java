@@ -1,14 +1,20 @@
 package com.workshop.backend.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
@@ -23,6 +29,7 @@ import java.util.Map;
 public class FraudEngineProxyController {
 
     private final RestTemplate restTemplate;
+    private final ObjectMapper objectMapper;
 
     @Value("${fraud-engine.base-url}")
     private String fraudEngineBaseUrl;
@@ -36,8 +43,34 @@ public class FraudEngineProxyController {
     }
 
     @PostMapping("/chat")
-    public Map<?, ?> chat(@RequestBody Map<String, Object> body) {
-        return forward("/chat", HttpMethod.POST, body, Map.class);
+    public ResponseEntity<StreamingResponseBody> chat(@RequestBody Map<String, Object> body) {
+        StreamingResponseBody stream = outputStream -> {
+            HttpURLConnection conn = (HttpURLConnection) URI.create(fraudEngineBaseUrl + "/chat")
+                    .toURL().openConnection();
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Content-Type", "application/json");
+            conn.setRequestProperty("X-API-Key", fraudEngineApiKey);
+            conn.setDoOutput(true);
+
+            objectMapper.writeValue(conn.getOutputStream(), body);
+
+            try (InputStream is = conn.getInputStream()) {
+                byte[] buffer = new byte[256];
+                int n;
+                while ((n = is.read(buffer)) != -1) {
+                    outputStream.write(buffer, 0, n);
+                    outputStream.flush();
+                }
+            } finally {
+                conn.disconnect();
+            }
+        };
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.TEXT_EVENT_STREAM)
+                .header("Cache-Control", "no-cache")
+                .header("X-Accel-Buffering", "no")
+                .body(stream);
     }
 
     @GetMapping("/rules")

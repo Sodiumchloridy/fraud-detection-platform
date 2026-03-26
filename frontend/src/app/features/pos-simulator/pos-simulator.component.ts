@@ -13,14 +13,27 @@ interface TransactionRequestDto {
   category: string;
   latitude: number;
   longitude: number;
-  deviceId: string;
   merchant: string;
   timestamp: string;
+  cardNetwork: string;
+  cardType: string;
+  cardIssuingCountry: number;
+  billingCountryCode: number;
+  billingZipCode: number;
+  purchaserEmailDomain: string | null;
+  recipientEmailDomain: string | null;
+  deviceType: string | null;
+  deviceInfo: string;
 }
 
 interface SimulationResult {
   transaction: Transaction;
   timestamp: Date;
+}
+
+interface BlockedNotification {
+  transaction: Transaction;
+  id: number;
 }
 
 @Component({
@@ -46,6 +59,11 @@ export class PosSimulatorComponent {
   results: SimulationResult[] = [];
   isLoading = false;
   error: string | null = null;
+
+  // Notification state
+  flaggedTransaction: Transaction | null = null;
+  blockedNotifications: BlockedNotification[] = [];
+  private notificationCounter = 0;
 
   // Preset locations for quick selection
   locations = [
@@ -82,7 +100,12 @@ export class PosSimulatorComponent {
 
     this.sseSub = this.transactionService.streamTransactions(token).subscribe(txn => {
       const idx = this.results.findIndex(r => r.transaction.id === txn.id);
-      if (idx >= 0) this.results[idx] = { ...this.results[idx], transaction: txn };
+      if (idx >= 0) {
+        const prev = this.results[idx].transaction;
+        this.results[idx] = { ...this.results[idx], transaction: txn };
+        // Show notification if status changed via SSE
+        if (prev.status !== txn.status) this.showNotificationForStatus(txn);
+      }
     });
   }
 
@@ -112,13 +135,24 @@ export class PosSimulatorComponent {
       latitude: this.latitude,
       longitude: this.longitude,
       timestamp: new Date().toISOString(),
-      deviceId: "renovo_pos_sim_123456"
+      cardNetwork: 'visa',
+      cardType: 'debit',
+      cardIssuingCountry: 458,
+      billingCountryCode: 458,
+      billingZipCode: 52000,
+      purchaserEmailDomain: '',
+      recipientEmailDomain: '',
+      deviceType: null,
+      deviceInfo: 'POS Simulator v1.0',
     };
 
     this.http.post<Transaction>(`${this.apiUrl}/fraud-check`, request).pipe(
       finalize(() => this.isLoading = false)
     ).subscribe({
-      next: (transaction) => this.results.unshift({ transaction, timestamp: new Date() }),
+      next: (transaction) => {
+        this.results.unshift({ transaction, timestamp: new Date() });
+        this.showNotificationForStatus(transaction);
+      },
       error: (err) => this.error = err.error?.message || 'Failed to process transaction'
     });
   }
@@ -153,5 +187,43 @@ export class PosSimulatorComponent {
 
   clearResults() {
     this.results = [];
+  }
+
+  // --- Notification helpers ---
+
+  private showNotificationForStatus(txn: Transaction) {
+    const status = txn.status?.toUpperCase();
+    if (status === 'FLAGGED') {
+      this.flaggedTransaction = txn;
+    } else if (status === 'BLOCKED') {
+      this.addBlockedNotification(txn);
+    }
+  }
+
+  private addBlockedNotification(txn: Transaction) {
+    const note: BlockedNotification = { transaction: txn, id: ++this.notificationCounter };
+    this.blockedNotifications.push(note);
+    setTimeout(() => this.dismissBlockedNotification(note.id), 6000);
+  }
+
+  dismissBlockedNotification(id: number) {
+    this.blockedNotifications = this.blockedNotifications.filter(n => n.id !== id);
+  }
+
+  reviewFlagged(status: 'APPROVED' | 'BLOCKED') {
+    if (!this.flaggedTransaction) return;
+    const txn = this.flaggedTransaction;
+    this.flaggedTransaction = null;
+    this.transactionService.updateTransactionStatus(txn.id, status).subscribe({
+      next: (updated) => {
+        const idx = this.results.findIndex(r => r.transaction.id === updated.id);
+        if (idx >= 0) this.results[idx] = { ...this.results[idx], transaction: updated };
+      },
+      error: () => this.error = `Failed to ${status.toLowerCase()} transaction`
+    });
+  }
+
+  dismissFlagged() {
+    this.flaggedTransaction = null;
   }
 }

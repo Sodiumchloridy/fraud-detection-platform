@@ -1,131 +1,54 @@
 package com.workshop.backend.controller;
 
+import com.workshop.backend.dto.TransactionRequest;
+import com.workshop.backend.model.Transaction;
+import com.workshop.backend.service.SseEmitterService;
+import com.workshop.backend.service.TransactionService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.*;
-import org.springframework.security.core.Authentication;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
-import com.workshop.backend.config.ThresholdConfig;
-import com.workshop.backend.dto.FraudPredictionResponse;
-import com.workshop.backend.dto.TransactionRequest;
-import com.workshop.backend.mapper.TransactionMapper;
-import com.workshop.backend.model.Transaction;
-import com.workshop.backend.repository.TransactionRepository;
-import com.workshop.backend.service.SseEmitterService;
-import com.workshop.backend.enums.TransactionStatus;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api/transactions")
 @RequiredArgsConstructor
 public class TransactionController {
 
-    private final TransactionRepository transactionRepository;
-    private final TransactionMapper transactionMapper;
-    private final ObjectMapper objectMapper;
-    private final ThresholdConfig thresholdConfig;
-    private final RestTemplate restTemplate;
+    private final TransactionService transactionService;
     private final SseEmitterService sseEmitterService;
-
-    @Value("${fraud-engine.base-url}")
-    private String fraudEngineBaseUrl;
-
-    @Value("${fraud-engine.api-key}")
-    private String fraudEngineApiKey;
 
     @GetMapping
     public ResponseEntity<List<Transaction>> getAllTransactions() {
-        return ResponseEntity.ok(transactionRepository.findAll());
+        return ResponseEntity.ok(transactionService.findAll());
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Transaction> getTransactionById(@PathVariable UUID id) {
-        Transaction transaction = transactionRepository.findById(id)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Transaction not found with id: " + id));
-        return ResponseEntity.ok(transaction);
+        return ResponseEntity.ok(transactionService.findById(id));
     }
 
-    /**
-     * GET flagged transactions for alerts page
-     * Used by: FlaggedTransactionsComponent
-     */
     @GetMapping("/flagged")
     public ResponseEntity<List<Transaction>> getFlaggedTransactions() {
-        return ResponseEntity.ok(transactionRepository.findByRiskScoreGreaterThanEqualAndRiskScoreLessThan(
-            thresholdConfig.getFlaggedThreshold(), thresholdConfig.getBlockedThreshold()));
+        return ResponseEntity.ok(transactionService.findFlagged());
     }
 
-    /**
-     * GET dashboard statistics
-     * Used by: DashboardComponent stats cards
-     */
     @GetMapping("/stats")
     public ResponseEntity<Map<String, Object>> getTransactionStats() {
-        long total    = transactionRepository.count();
-        long flagged  = transactionRepository.countByRiskScoreGreaterThanEqual(thresholdConfig.getFlaggedThreshold());
-        long blocked  = transactionRepository.countByRiskScoreGreaterThanEqual(thresholdConfig.getBlockedThreshold());
-        long approved = total - flagged;
-        long flaggedOnly = flagged - blocked;
-
-        double fraudRate    = total > 0 ? (double) blocked / total * 100 : 0;
-        double approvalRate = total > 0 ? (double) approved / total * 100 : 0;
-
-        double totalVolume     = transactionRepository.sumAmount();
-        double avgAmount       = transactionRepository.avgAmount();
-        double amountAtRisk    = transactionRepository.sumAmountByRiskScoreGreaterThanEqual(thresholdConfig.getFlaggedThreshold());
-        double blockedAmount   = transactionRepository.sumAmountByRiskScoreGreaterThanEqual(thresholdConfig.getBlockedThreshold());
-        long   pendingReview   = transactionRepository.countPendingReview(
-                thresholdConfig.getFlaggedThreshold(), thresholdConfig.getBlockedThreshold());
-
-        Map<String, Object> stats = new HashMap<>();
-        stats.put("total",          total);
-        stats.put("approved",       approved);
-        stats.put("flagged",        flaggedOnly);
-        stats.put("blocked",        blocked);
-        stats.put("fraudRate",      Math.round(fraudRate * 100.0) / 100.0);
-        stats.put("approvalRate",   Math.round(approvalRate * 100.0) / 100.0);
-        stats.put("totalVolume",    Math.round(totalVolume * 100.0) / 100.0);
-        stats.put("avgAmount",      Math.round(avgAmount * 100.0) / 100.0);
-        stats.put("amountAtRisk",   Math.round(amountAtRisk * 100.0) / 100.0);
-        stats.put("blockedAmount",  Math.round(blockedAmount * 100.0) / 100.0);
-        stats.put("pendingReview",  pendingReview);
-
-        return ResponseEntity.ok(stats);
+        return ResponseEntity.ok(transactionService.getStats());
     }
 
-    /**
-     * PATCH to update transaction status
-     */
     @PatchMapping("/{id}/status")
     public ResponseEntity<Transaction> updateTransactionStatus(
             @PathVariable UUID id,
             @RequestParam String status,
             Authentication authentication) {
-        
-        // CRUD - Read and Update
-        Transaction transaction = transactionRepository.findById(id)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Transaction not found with id: " + id));
-        
-        TransactionStatus txnStatus = TransactionStatus.valueOf(status.toUpperCase());
-        transaction.setStatus(txnStatus);
-        transaction.setIsFraud(TransactionStatus.APPROVED.equals(txnStatus) ? 0 : 1);
-        transaction.setReviewedBy(authentication.getName());
-        transaction.setReviewedAt(LocalDateTime.now());
-        Transaction updated = transactionRepository.save(transaction);
-        
-        return ResponseEntity.ok(updated);
+        return ResponseEntity.ok(transactionService.updateStatus(id, status, authentication.getName()));
     }
 
     @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
@@ -133,58 +56,12 @@ public class TransactionController {
         return sseEmitterService.createEmitter();
     }
 
-    /**
-     * Saves the transaction, calls fraud-engine synchronously via HTTP,
-     * applies the scored result, and broadcasts via SSE.
-     */
     @PostMapping("/fraud-check")
     public ResponseEntity<Transaction> createTransactionWithFraudCheck(@RequestBody TransactionRequest dto) {
         try {
-            // Fetch user's historical transactions from DB
-            List<Transaction> history = transactionRepository.findByCardNumberOrderByTimestampAsc(dto.getCardNumber());
-
-            // Build the transaction entity
-            Transaction txn = transactionMapper.toTransaction(dto);
-            txn.setTimestamp(dto.getTimestamp() != null
-                    ? LocalDateTime.ofInstant(Instant.parse(dto.getTimestamp()), ZoneId.systemDefault())
-                    : LocalDateTime.now());
-            txn.setMerchant(dto.getMerchant() != null ? dto.getMerchant() : "");
-            txn.setChannel(dto.getChannel() != null ? dto.getChannel() : "in_store");
-
-            // Serialize history for the fraud-engine request
-            List<Map<String, Object>> historyList = history.stream()
-                .map(t -> objectMapper.convertValue(t, new com.fasterxml.jackson.core.type.TypeReference<Map<String, Object>>() {}))
-                .toList();
-
-            Map<String, Object> payload = new HashMap<>();
-            payload.put("transaction", dto);
-            payload.put("history", historyList);
-
-            // Call fraud-engine /predict synchronously
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.set("X-API-Key", fraudEngineApiKey);
-            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(payload, headers);
-
-            FraudPredictionResponse resp = restTemplate.postForObject(
-                    fraudEngineBaseUrl + "/predict", entity, FraudPredictionResponse.class);
-
-            // Apply scored features to the transaction
-            double prob = resp.getFraudProbability();
-            transactionMapper.applyFeatures(resp.getFeatures(), txn);
-            if (resp.getShap() != null) txn.setShapJson(objectMapper.writeValueAsString(resp.getShap()));
-
-            txn.setRiskScore(prob);
-            txn.setStatus(prob >= thresholdConfig.getBlockedThreshold() ? TransactionStatus.BLOCKED
-                    : prob >= thresholdConfig.getFlaggedThreshold() ? TransactionStatus.FLAGGED
-                    : TransactionStatus.APPROVED);
-
-            Transaction saved = transactionRepository.save(txn);
-            sseEmitterService.broadcastTransaction(saved);
-
-            return ResponseEntity.ok(saved);
-        } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Transaction submission failed: " + e.getMessage());
+            return ResponseEntity.ok(transactionService.submitWithFraudCheck(dto));
+        } catch (RuntimeException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
     }
 }

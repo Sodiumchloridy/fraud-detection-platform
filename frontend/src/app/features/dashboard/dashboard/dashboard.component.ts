@@ -77,6 +77,13 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
           pointHoverBackgroundColor: '#f43f5e', pointHoverBorderColor: '#fff', pointHoverBorderWidth: 2,
           borderWidth: 2,
         },
+        {
+          label: 'Flagged $', data: [],
+          borderColor: '#f59e0b', backgroundColor: 'rgba(245,158,11,.06)',
+          fill: true, tension: 0.4, pointRadius: 0, pointHoverRadius: 5,
+          pointHoverBackgroundColor: '#f59e0b', pointHoverBorderColor: '#fff', pointHoverBorderWidth: 2,
+          borderWidth: 2,
+        },
       ]},
       options: {
         responsive: true, maintainAspectRatio: false,
@@ -118,16 +125,18 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
     this.chart.data.labels = trend.map(p => p.label);
     this.chart.data.datasets[0].data = trend.map(p => p.total);
     this.chart.data.datasets[1].data = trend.map(p => p.fraud);
+    this.chart.data.datasets[2].data = trend.map(p => p.flagged);
     this.chart.update();
   }
 
-  private buildTrend(txns: Transaction[]): { label: string; total: number; fraud: number }[] {
-    const grouped = new Map<string, { total: number; fraud: number }>();
+  private buildTrend(txns: Transaction[]): { label: string; total: number; fraud: number; flagged: number }[] {
+    const grouped = new Map<string, { total: number; fraud: number; flagged: number }>();
     for (const t of txns) {
       const min = t.timestamp?.slice(0, 16) ?? 'unknown';
-      const entry = grouped.get(min) ?? { total: 0, fraud: 0 };
+      const entry = grouped.get(min) ?? { total: 0, fraud: 0, flagged: 0 };
       entry.total += t.amount ?? 0;
-      if (t.status === 'BLOCKED' || t.status === 'FLAGGED') entry.fraud += t.amount ?? 0;
+      if (t.status === 'BLOCKED') entry.fraud += t.amount ?? 0;
+      if (t.status === 'FLAGGED') entry.flagged += t.amount ?? 0;
       grouped.set(min, entry);
     }
     return [...grouped.entries()]
