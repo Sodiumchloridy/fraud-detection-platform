@@ -51,8 +51,7 @@ public class TransactionService {
     }
 
     public List<Transaction> findFlagged() {
-        return transactionRepository.findByRiskScoreGreaterThanEqualAndRiskScoreLessThan(
-            thresholdConfig.getFlaggedThreshold(), thresholdConfig.getBlockedThreshold());
+        return transactionRepository.findByStatus(TransactionStatus.FLAGGED);
     }
 
     public Map<String, Object> getStats() {
@@ -69,8 +68,7 @@ public class TransactionService {
         double avgAmount       = transactionRepository.avgAmount();
         double amountAtRisk    = transactionRepository.sumAmountByRiskScoreGreaterThanEqual(thresholdConfig.getFlaggedThreshold());
         double blockedAmount   = transactionRepository.sumAmountByRiskScoreGreaterThanEqual(thresholdConfig.getBlockedThreshold());
-        long   pendingReview   = transactionRepository.countPendingReview(
-                thresholdConfig.getFlaggedThreshold(), thresholdConfig.getBlockedThreshold());
+        long   pendingReview   = transactionRepository.countPendingReview();
 
         Map<String, Object> stats = new HashMap<>();
         stats.put("total",          total);

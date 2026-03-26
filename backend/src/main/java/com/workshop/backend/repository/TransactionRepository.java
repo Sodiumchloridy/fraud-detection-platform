@@ -1,5 +1,6 @@
 package com.workshop.backend.repository;
 
+import com.workshop.backend.enums.TransactionStatus;
 import com.workshop.backend.model.Transaction;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -18,7 +19,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID> 
 
     List<Transaction> findByRiskScoreGreaterThanEqual(Double threshold);
 
-    List<Transaction> findByRiskScoreGreaterThanEqualAndRiskScoreLessThan(Double lower, Double upper);
+    List<Transaction> findByStatus(TransactionStatus status);
 
     List<Transaction> findByCardNumberOrderByTimestampAsc(String cardNumber);
 
@@ -34,6 +35,6 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID> 
     @Query("SELECT COALESCE(SUM(t.amount), 0) FROM Transaction t")
     Double sumAmount();
 
-    @Query("SELECT COUNT(t) FROM Transaction t WHERE t.riskScore >= :lower AND t.riskScore < :upper AND t.reviewedBy IS NULL")
-    Long countPendingReview(@Param("lower") Double lower, @Param("upper") Double upper);
+    @Query("SELECT COUNT(t) FROM Transaction t WHERE t.status = 'FLAGGED' AND t.reviewedBy IS NULL")
+    Long countPendingReview();
 }

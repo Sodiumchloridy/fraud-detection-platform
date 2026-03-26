@@ -23,7 +23,7 @@ DEFAULT_RULES = [
         "feature": "travel_velocity_kmh",
         "operator": ">",
         "threshold": 1500.0,
-        "penalty": 1.00,
+        "penalty": 0.40,
         "override": False,
         "enabled": True,
     },
