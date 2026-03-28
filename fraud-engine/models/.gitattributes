@@ -1,0 +1,3 @@
+# Enforce Unix line endings (LF) for LightGBM model text files
+lightgbm_model.txt eol=lf
+*.txt eol=lf
