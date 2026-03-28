@@ -8,6 +8,8 @@ import com.workshop.backend.dto.TransactionEvent;
 import com.workshop.backend.dto.TransactionRequest;
 import com.workshop.backend.enums.TransactionStatus;
 import com.workshop.backend.mapper.TransactionMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.workshop.backend.model.Transaction;
 import com.workshop.backend.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +28,8 @@ import java.util.*;
 @Service
 @RequiredArgsConstructor
 public class TransactionService {
+
+    private static final Logger log = LoggerFactory.getLogger(TransactionService.class);
 
     private final TransactionRepository transactionRepository;
     private final TransactionMapper transactionMapper;
@@ -137,7 +141,7 @@ public class TransactionService {
             Transaction saved = transactionRepository.save(txn);
             sseEmitterService.broadcastTransaction(saved);
 
-            // Publish to Kafka for async SHAP computation
+            // Fire-and-forget: async Kafka publish for SHAP computation
             TransactionEvent event = transactionMapper.toEvent(saved);
             transactionProducer.send(event);
 
