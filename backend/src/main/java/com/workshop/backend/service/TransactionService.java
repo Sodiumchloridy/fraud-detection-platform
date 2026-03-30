@@ -39,11 +39,11 @@ public class TransactionService {
     private final SseEmitterService sseEmitterService;
     private final TransactionProducer transactionProducer;
 
-    @Value("${fraud-engine.base-url}")
-    private String fraudEngineBaseUrl;
+    @Value("${fraud-service.base-url}")
+    private String fraudServiceBaseUrl;
 
-    @Value("${fraud-engine.api-key}")
-    private String fraudEngineApiKey;
+    @Value("${fraud-service.api-key}")
+    private String fraudServiceApiKey;
 
     public List<Transaction> findAll() {
         return transactionRepository.findAll();
@@ -124,11 +124,11 @@ public class TransactionService {
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.set("X-API-Key", fraudEngineApiKey);
+            headers.set("X-API-Key", fraudServiceApiKey);
             HttpEntity<Map<String, Object>> entity = new HttpEntity<>(payload, headers);
 
             FraudPredictionResponse resp = restTemplate.postForObject(
-                    fraudEngineBaseUrl + "/predict", entity, FraudPredictionResponse.class);
+                    fraudServiceBaseUrl + "/predict", entity, FraudPredictionResponse.class);
 
             double prob = resp.getFraudProbability();
             transactionMapper.applyFeatures(resp.getFeatures(), txn);

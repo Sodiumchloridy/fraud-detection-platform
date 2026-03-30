@@ -24,22 +24,22 @@ public class TransactionConsumer {
         log.info("Received SHAP result for transaction: {}", event.getTransactionId());
 
         Transaction txn = transactionRepository.findById(event.getTransactionId())
-            .orElseThrow(() -> {
-                log.error("Transaction not found: {}", event.getTransactionId());
-                return new IllegalStateException("Transaction not found: " + event.getTransactionId());
-            });
+            .orElse(null);
+
+        if (txn == null) {
+            log.warn("Skipping SHAP result — transaction not found (stale message?): {}", event.getTransactionId());
+            return;
+        }
 
         try {
             if (event.getShap() != null) {
                 txn.setShapJson(objectMapper.writeValueAsString(event.getShap()));
             }
+            Transaction saved = transactionRepository.save(txn);
+            sseEmitterService.broadcastTransaction(saved);
+            log.info("SHAP data updated for transaction {}", saved.getId());
         } catch (Exception e) {
-            log.warn("Failed to serialize SHAP data for transaction {}: {}", event.getTransactionId(), e.getMessage());
+            log.warn("Failed to persist SHAP data for transaction {}: {}", event.getTransactionId(), e.getMessage());
         }
-
-        Transaction saved = transactionRepository.save(txn);
-        sseEmitterService.broadcastTransaction(saved);
-
-        log.info("SHAP data updated for transaction {}", saved.getId());
     }
 }

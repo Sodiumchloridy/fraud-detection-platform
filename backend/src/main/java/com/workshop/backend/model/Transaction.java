@@ -48,6 +48,8 @@ public class Transaction {
     private Integer txnCount1h;
     private Integer txnCount24h;
     private Integer txnCount7d;
+    private Double travelVelocityKmh;
+    private Double travelDistanceKm;
     private Double secondsSinceLastTxn;
     private Integer hourOfDay;
     private Double billingCountryMismatch;
@@ -60,7 +62,7 @@ public class Transaction {
     /* System & Verdict */
     private Double riskScore;
 
-    @Column(length = 4000)
+    @Column(columnDefinition = "TEXT")
     private String shapJson;
     
     @Enumerated(EnumType.STRING)

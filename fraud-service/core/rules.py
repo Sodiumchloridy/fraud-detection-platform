@@ -23,7 +23,7 @@ DEFAULT_RULES = [
         "feature": "travel_velocity_kmh",
         "operator": ">",
         "threshold": 1500.0,
-        "penalty": 1.00,
+        "penalty": 0.40,
         "override": False,
         "enabled": True,
     },
@@ -82,6 +82,17 @@ DEFAULT_RULES = [
         "override": False,
         "enabled": False,
     },
+    {
+        "id": "seconds_since_last_txn",
+        "name": "Seconds Since Last Transaction",
+        "description": "Flag if the time since the last transaction is very short, indicating a possible card test or burst attack",
+        "feature": "seconds_since_last_txn",
+        "operator": "<=",
+        "threshold": 1,
+        "penalty": 0.3,
+        "override": False,
+        "enabled": True,
+    }
 ]
 
 _rules: list[Rule] = [Rule(**r) for r in DEFAULT_RULES]

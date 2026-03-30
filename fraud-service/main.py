@@ -18,7 +18,7 @@ logging.basicConfig(level=logging.INFO)
 
 app = FastAPI()  # uv run uvicorn main:app --reload
 
-API_KEY = os.getenv("FRAUD_ENGINE_API_KEY", "fd-internal-key-2026")
+API_KEY = os.getenv("FRAUD_SERVICE_API_KEY")
 
 
 @app.middleware("http")

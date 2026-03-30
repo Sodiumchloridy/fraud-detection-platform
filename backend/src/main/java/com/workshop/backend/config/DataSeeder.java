@@ -27,14 +27,13 @@ import java.util.*;
  * Seeds sample transactions after the server is fully ready by POSTing
  * each one to /api/transactions/fraud-check, which calls the fraud-engine
  * and persists the result. Transactions arrive with a random delay so
- * the fraud-engine's velocity / frequency features behave realistically.
+ * the fraud-service's velocity / frequency features behave realistically.
  */
 @Component
 @RequiredArgsConstructor
 public class DataSeeder {
 
     private static final Logger log = LoggerFactory.getLogger(DataSeeder.class);
-
     private final TransactionRepository transactionRepository;
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;

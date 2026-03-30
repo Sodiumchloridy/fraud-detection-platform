@@ -31,6 +31,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+            .csrf(csrf -> csrf.disable())
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
@@ -42,9 +43,9 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.PUT, "/api/thresholds").hasRole("ADMIN")
                 .requestMatchers("/api/users/**").hasRole("ADMIN")
 
-                // Fraud-engine proxy: rules management is admin-only
-                .requestMatchers(HttpMethod.PUT, "/api/fraud-engine/rules").hasRole("ADMIN")
-                .requestMatchers("/api/fraud-engine/**").hasAnyRole("ADMIN", "ANALYST")
+                // Fraud-service proxy: rules management is admin-only
+                .requestMatchers(HttpMethod.PUT, "/api/fraud-service/rules").hasRole("ADMIN")
+                .requestMatchers("/api/fraud-service/**").hasAnyRole("ADMIN", "ANALYST")
 
                 // SSE stream — allow with any role
                 .requestMatchers("/api/transactions/stream").hasAnyRole("ADMIN", "ANALYST")

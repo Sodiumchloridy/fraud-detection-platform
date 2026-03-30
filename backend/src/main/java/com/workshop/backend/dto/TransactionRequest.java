@@ -20,7 +20,9 @@ public class TransactionRequest {
     private Integer cardIssuingCountry;
     private Integer billingCountryCode;
     private Integer billingZipCode;
+    @JsonAlias("purchaser_email_domain")
     private String purchaserEmailDomain;
+    @JsonAlias("recipient_email_domain")
     private String recipientEmailDomain;
     private String deviceType;
     private String deviceInfo;

@@ -45,7 +45,7 @@ export class RulesSettingsComponent implements OnInit {
         this.loading = false;
       },
       error: () => {
-        this.error = 'Failed to load rules. Is the fraud engine running?';
+        this.error = 'Failed to load rules. Is the fraud service running?';
         this.loading = false;
       },
     });

@@ -12,8 +12,8 @@ export interface ChatMessage {
   providedIn: 'root'
 })
 export class LlmService {
-    private apiUrl = 'http://localhost:8080/api/fraud-engine/analyze';
-    private chatUrl = 'http://localhost:8080/api/fraud-engine/chat';
+    private apiUrl = 'http://localhost:8080/api/fraud-service/analyze';
+    private chatUrl = 'http://localhost:8080/api/fraud-service/chat';
 
     constructor(private http: HttpClient, private ngZone: NgZone) {}
 

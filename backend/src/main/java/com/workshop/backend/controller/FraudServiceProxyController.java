@@ -19,23 +19,23 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Proxies requests to the Python fraud-engine so the frontend never
- * talks to the fraud-engine directly.  Every call goes through Spring
+ * Proxies requests to the Python fraud-service so the frontend never
+ * talks to the fraud-service directly.  Every call goes through Spring
  * Security (JWT) first, then is forwarded with an internal API key.
  */
 @RestController
-@RequestMapping("/api/fraud-engine")
+@RequestMapping("/api/fraud-service")
 @RequiredArgsConstructor
-public class FraudEngineProxyController {
+public class FraudServiceProxyController {
 
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
 
-    @Value("${fraud-engine.base-url}")
-    private String fraudEngineBaseUrl;
+    @Value("${fraud-service.base-url}")
+    private String fraudServiceBaseUrl;
 
-    @Value("${fraud-engine.api-key}")
-    private String fraudEngineApiKey;
+    @Value("${fraud-service.api-key}")
+    private String fraudServiceApiKey;
 
     @PostMapping("/analyze")
     public Map<?, ?> analyzeTransaction(@RequestBody Map<String, Object> body) {
@@ -45,11 +45,11 @@ public class FraudEngineProxyController {
     @PostMapping("/chat")
     public ResponseEntity<StreamingResponseBody> chat(@RequestBody Map<String, Object> body) {
         StreamingResponseBody stream = outputStream -> {
-            HttpURLConnection conn = (HttpURLConnection) URI.create(fraudEngineBaseUrl + "/chat")
+            HttpURLConnection conn = (HttpURLConnection) URI.create(fraudServiceBaseUrl + "/chat")
                     .toURL().openConnection();
             conn.setRequestMethod("POST");
             conn.setRequestProperty("Content-Type", "application/json");
-            conn.setRequestProperty("X-API-Key", fraudEngineApiKey);
+            conn.setRequestProperty("X-API-Key", fraudServiceApiKey);
             conn.setDoOutput(true);
 
             objectMapper.writeValue(conn.getOutputStream(), body);
@@ -86,7 +86,7 @@ public class FraudEngineProxyController {
     private <T> T forward(String path, HttpMethod method, Object body, Class<T> type) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.set("X-API-Key", fraudEngineApiKey);
-        return restTemplate.exchange(fraudEngineBaseUrl + path, method, new HttpEntity<>(body, headers), type).getBody();
+        headers.set("X-API-Key", fraudServiceApiKey);
+        return restTemplate.exchange(fraudServiceBaseUrl + path, method, new HttpEntity<>(body, headers), type).getBody();
     }
 }

@@ -52,6 +52,7 @@ def _process_message(event: dict, producer: Producer):
                 ],
             },
         }
+        
         producer.produce(COMPLETED_TOPIC, key=str(transaction_id), value=json.dumps(result).encode())
         producer.flush()
         logger.info("SHAP completed for transaction %s", transaction_id)
@@ -62,7 +63,7 @@ def _process_message(event: dict, producer: Producer):
 def _consumer_loop():
     consumer = Consumer({
         "bootstrap.servers": KAFKA_BOOTSTRAP,
-        "group.id": "fraud-engine-shap",
+        "group.id": "fraud-service-shap",
         "auto.offset.reset": "earliest",
     })
     producer = Producer({"bootstrap.servers": KAFKA_BOOTSTRAP})
