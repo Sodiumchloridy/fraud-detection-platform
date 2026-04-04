@@ -21,6 +21,14 @@ export interface LoginResponse {
   username: string;
   role: string;
   email: string;
+  twoFactorRequired?: boolean;
+  preAuthToken?: string;
+  twoFactorEnabled?: boolean;
+}
+
+export interface TwoFactorSetup {
+  secret: string;
+  otpauthUri: string;
 }
 
 export interface CreateUserRequest {
@@ -55,11 +63,46 @@ export class UserService {
   login(credentials: LoginRequest): Observable<LoginResponse> {
     return this.http.post<LoginResponse>(`${this.apiUrl}/auth/login`, credentials).pipe(
       tap(response => {
-        localStorage.setItem('token', response.token);
-        localStorage.setItem('currentUser', JSON.stringify(response));
-        this.currentUser$.next(response);
+        if (!response.twoFactorRequired) this.storeSession(response);
       })
     );
+  }
+
+  verify2fa(token: string, code: string): Observable<LoginResponse> {
+    return this.http.post<LoginResponse>(`${this.apiUrl}/auth/verify-2fa`, { token, code }).pipe(
+      tap(response => this.storeSession(response))
+    );
+  }
+
+  setup2fa(): Observable<TwoFactorSetup> {
+    return this.http.get<TwoFactorSetup>(`${this.apiUrl}/auth/2fa/setup`);
+  }
+
+  confirm2fa(code: string): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/auth/2fa/confirm`, { code }).pipe(
+      tap(() => this.updateStoredUser({ twoFactorEnabled: true }))
+    );
+  }
+
+  disable2fa(): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/auth/2fa`).pipe(
+      tap(() => this.updateStoredUser({ twoFactorEnabled: false }))
+    );
+  }
+
+  private storeSession(response: LoginResponse): void {
+    localStorage.setItem('token', response.token);
+    localStorage.setItem('currentUser', JSON.stringify(response));
+    this.currentUser$.next(response);
+  }
+
+  private updateStoredUser(patch: Partial<LoginResponse>): void {
+    const user = this.getCurrentUser();
+    if (user) {
+      const updated = { ...user, ...patch };
+      localStorage.setItem('currentUser', JSON.stringify(updated));
+      this.currentUser$.next(updated);
+    }
   }
 
   logout(): void {

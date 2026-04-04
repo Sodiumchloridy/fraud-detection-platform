@@ -33,7 +33,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             token = authHeader.substring(7);
         }
 
-        if (token != null && jwtUtil.isTokenValid(token)) {
+        if (token != null && jwtUtil.isTokenValid(token) && !jwtUtil.isPreAuthToken(token)) {
             String username = jwtUtil.extractUsername(token);
             String role = jwtUtil.extractRole(token);
 
