@@ -35,6 +35,8 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
+                // 2FA management requires authentication
+                .requestMatchers("/api/auth/2fa", "/api/auth/2fa/**").authenticated()
                 // Public endpoints
                 .requestMatchers("/api/auth/**").permitAll()
 

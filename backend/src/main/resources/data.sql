@@ -1,3 +1,3 @@
-INSERT INTO users (username, password, email, role, enabled) VALUES
-('admin', '{noop}admin123', 'admin@fraudguard.com', 'ADMIN', true),
-('analyst', '{noop}analyst123', 'analyst@fraudguard.com', 'ANALYST', true);
+INSERT INTO users (username, password, email, role, enabled, two_factor_enabled) VALUES
+('admin', '{noop}admin123', 'admin@fraudcopilot.com', 'ADMIN', true, false),
+('analyst', '{noop}analyst123', 'analyst@fraudcopilot.com', 'ANALYST', true, false);

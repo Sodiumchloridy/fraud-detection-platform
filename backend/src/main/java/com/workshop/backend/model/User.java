@@ -26,4 +26,9 @@ public class User {
     private Role role;
 
     private boolean enabled = true;
+
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    private String twoFactorSecret;
+
+    private boolean twoFactorEnabled = false;
 }

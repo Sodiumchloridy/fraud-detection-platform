@@ -33,6 +33,24 @@ public class JwtUtil {
             .compact();
     }
 
+    public String generatePreAuthToken(String username) {
+        return Jwts.builder()
+            .subject(username)
+            .claim("pre2fa", true)
+            .issuedAt(new Date())
+            .expiration(new Date(System.currentTimeMillis() + 300_000))
+            .signWith(key)
+            .compact();
+    }
+
+    public boolean isPreAuthToken(String token) {
+        try {
+            return Boolean.TRUE.equals(extractClaims(token).get("pre2fa", Boolean.class));
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
     public String extractUsername(String token) {
         return extractClaims(token).getSubject();
     }

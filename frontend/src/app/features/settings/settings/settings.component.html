@@ -6,17 +6,64 @@
     <!-- MFA card — spans 2 -->
     <div class="md:col-span-2 bg-white rounded-[1.25rem] shadow-[0_1px_3px_rgba(0,0,0,.04)] p-7">
       <h2 class="text-sm font-semibold text-slate-800 mb-5 pb-4 border-b border-slate-100">Multi-Factor Authentication</h2>
-      <div class="flex items-center justify-between py-4 border-b border-slate-100">
-        <div><p class="text-sm font-medium text-slate-700">Enable MFA</p><p class="text-xs text-slate-400 mt-0.5">Require a second authentication factor.</p></div>
-        <label class="relative inline-flex items-center cursor-pointer">
-          <input type="checkbox" [(ngModel)]="mfaEnabled" class="sr-only peer">
-          <div class="w-11 h-6 bg-slate-200 rounded-full peer peer-checked:bg-indigo-500 after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
-        </label>
-      </div>
-      <div class="flex items-center justify-between py-4 border-b border-slate-100">
-        <div><p class="text-sm font-medium text-slate-700">Authenticator App</p><p class="text-xs text-slate-400 mt-0.5">Google Authenticator</p></div>
-        <button class="text-xs font-medium text-[#2D8C8C] border border-[#2D8C8C] bg-white px-3.5 py-2 rounded-xl hover:bg-[#2D8C8C]/5 transition">Remove</button>
-      </div>
+
+      @if (message) {
+        <div class="mb-4 px-4 py-3 rounded-xl text-sm"
+          [class]="messageType === 'success' ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'">
+          {{ message }}
+        </div>
+      }
+
+      @if (showSetup) {
+        <!-- Setup flow -->
+        <div class="py-4 space-y-4">
+          <p class="text-sm text-slate-600">Scan this QR code with your authenticator app:</p>
+          <div class="flex justify-center py-2">
+            <qrcode [qrdata]="otpauthUri" [width]="200" errorCorrectionLevel="M"></qrcode>
+          </div>
+          <details class="text-xs text-slate-400">
+            <summary class="cursor-pointer hover:text-slate-600 transition">Can't scan? Enter manually</summary>
+            <code class="mt-2 block bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-mono text-slate-700 tracking-wider select-all text-center">{{ setupSecret }}</code>
+          </details>
+          <div>
+            <label class="block text-xs font-medium text-slate-500 mb-1.5">Verification Code</label>
+            <input type="text" [(ngModel)]="confirmCode" maxlength="6" autocomplete="one-time-code"
+              class="w-full max-w-xs px-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 transition text-center tracking-[0.3em] font-mono"
+              placeholder="000000">
+          </div>
+          <div class="flex gap-3">
+            <button (click)="confirmSetup()"
+              class="text-xs font-medium text-white bg-[#2D8C8C] px-4 py-2 rounded-xl hover:bg-[#267878] transition">Confirm</button>
+            <button (click)="showSetup = false"
+              class="text-xs font-medium text-slate-500 border border-slate-200 px-4 py-2 rounded-xl hover:bg-slate-50 transition">Cancel</button>
+          </div>
+        </div>
+      } @else {
+        <div class="flex items-center justify-between py-4 border-b border-slate-100">
+          <div>
+            <p class="text-sm font-medium text-slate-700">Enable MFA</p>
+            <p class="text-xs text-slate-400 mt-0.5">Require a second authentication factor.</p>
+          </div>
+          @if (mfaEnabled) {
+            <span class="text-xs font-medium text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full">Active</span>
+          } @else {
+            <span class="text-xs text-slate-400">Disabled</span>
+          }
+        </div>
+        <div class="flex items-center justify-between py-4 border-b border-slate-100">
+          <div>
+            <p class="text-sm font-medium text-slate-700">Authenticator App</p>
+            <p class="text-xs text-slate-400 mt-0.5">Google Authenticator / Authy</p>
+          </div>
+          @if (mfaEnabled) {
+            <button (click)="disableMfa()"
+              class="text-xs font-medium text-rose-500 border border-rose-300 bg-white px-3.5 py-2 rounded-xl hover:bg-rose-50 transition">Remove</button>
+          } @else {
+            <button (click)="startSetup()"
+              class="text-xs font-medium text-[#2D8C8C] border border-[#2D8C8C] bg-white px-3.5 py-2 rounded-xl hover:bg-[#2D8C8C]/5 transition">Set Up</button>
+          }
+        </div>
+      }
     </div>
   </div>
 </app-main-layout>
