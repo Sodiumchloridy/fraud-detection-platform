@@ -42,22 +42,10 @@ public class Transaction {
     private Double latitude;
     private Double longitude;
 
-    /* Fraud Features */
-    private Double amountZscore;
-    private Double amountToAvgRatio;
-    private Integer txnCount1h;
-    private Integer txnCount24h;
-    private Integer txnCount7d;
-    private Double travelVelocityKmh;
-    private Double travelDistanceKm;
-    private Double secondsSinceLastTxn;
-    private Integer hourOfDay;
-    private Double billingCountryMismatch;
-    private Double isRiskyEmail;
-    private Double emailDomainMismatch;
-    private Double isNewEmail;
-    private Double isNewDevice;
-    private Double isNewMerchant;
+    /* Features Mapping */
+    @OneToOne(mappedBy = "transaction", cascade = CascadeType.ALL)
+    @com.fasterxml.jackson.annotation.JsonUnwrapped
+    private TransactionFeature features;
 
     /* System & Verdict */
     private Double riskScore;

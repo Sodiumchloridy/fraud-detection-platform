@@ -17,6 +17,14 @@ public class TransactionFeatures {
     private Integer txnCount24h;
     @JsonProperty("txn_count_7d")
     private Integer txnCount7d;
+    private Double amtCents;
+    private Double dayOfWeek;
+    @JsonProperty("amt_sum_1h")
+    private Double amtSum1h;
+    @JsonProperty("amt_sum_24h")
+    private Double amtSum24h;
+    @JsonProperty("amt_sum_7d")
+    private Double amtSum7d;
     private Double travelVelocityKmh;
     private Double travelDistanceKm;
     private Double secondsSinceLastTxn;

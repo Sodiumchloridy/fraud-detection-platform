@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 import os
 import numpy as np
-import lightgbm as lgb
+from autogluon.tabular import TabularPredictor
 import time
 
 from schemas import (
@@ -14,9 +14,9 @@ from core.rules import apply_rules
 router = APIRouter()
 
 _dir = os.path.dirname(__file__)
-_model_path = os.path.join(_dir, '..', 'models', 'lightgbm_model.txt')
+_model_path = os.path.join(_dir, '..', 'models', 'ag_deployment_model')
 
-model = lgb.Booster(model_file=_model_path)
+model = TabularPredictor.load(path=_model_path)
 
 
 @router.post("/predict", response_model=PredictResponse)
@@ -26,17 +26,16 @@ def predict_fraud(req: PredictRequest):
                  if txn.timestamp else time.time())
 
     t0 = time.perf_counter()
-    features = compute_features(txn, curr_time, req.history)
+    features = compute_features(txn, curr_time, req.history, req.precalculatedFeatures)
     t1 = time.perf_counter()
 
     input_df = prepare_model_input(features)
-    raw_pred = model.predict(input_df)
-    pred_array = np.asarray(raw_pred).flatten()
+    y_prob = model.predict_proba(input_df).iloc[:, 1]
+    pred_array = np.asarray(y_prob).flatten()
     ml_score = float(pred_array[0])
-    # LightGBM Booster.predict returns raw score; clip to [0, 1]
     ml_score = max(0.0, min(1.0, ml_score))
 
-    model_scores = [ModelScore(model_name="lightgbm", score=ml_score)]
+    model_scores = [ModelScore(model_name="autogluon", score=ml_score)]
 
     fraud_prob, triggered_rules = apply_rules(features, ml_score)
     t2 = time.perf_counter()

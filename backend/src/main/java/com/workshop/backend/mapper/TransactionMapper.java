@@ -4,6 +4,7 @@ import com.workshop.backend.dto.TransactionEvent;
 import com.workshop.backend.dto.TransactionRequest;
 import com.workshop.backend.dto.TransactionFeatures;
 import com.workshop.backend.model.Transaction;
+import com.workshop.backend.model.TransactionFeature;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
@@ -15,7 +16,16 @@ public interface TransactionMapper {
     @Mapping(target = "timestamp", ignore = true)
     Transaction toTransaction(TransactionRequest transactionRequest);
 
-    void applyFeatures(TransactionFeatures features, @MappingTarget Transaction transaction);
+    TransactionFeature toTransactionFeature(TransactionFeatures features);
+
+    default void applyFeatures(TransactionFeatures featuresDto, @MappingTarget Transaction transaction) {
+        if (featuresDto == null) {
+            return;
+        }
+        TransactionFeature feature = toTransactionFeature(featuresDto);
+        feature.setTransaction(transaction);
+        transaction.setFeatures(feature);
+    }
 
     TransactionEvent toEvent(Transaction transaction);
 }

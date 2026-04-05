@@ -28,4 +28,19 @@ public class TransactionEvent {
     private Double longitude;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime timestamp;
+
+    /* Features Mapping */
+    @com.fasterxml.jackson.annotation.JsonUnwrapped
+    private com.workshop.backend.model.TransactionFeature features;
+
+    /* System & Verdict */
+    private Double riskScore;
+    private String shapJson;
+    private TransactionStatus status;
+
+    /* Human Review */
+    private Integer isFraud;
+    private String reviewedBy;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    private LocalDateTime reviewedAt;
 }

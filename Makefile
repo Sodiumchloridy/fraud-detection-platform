@@ -10,7 +10,7 @@ start-angular: ## Start Angular Frontend
 	cd frontend && npm.cmd start
 
 start-spring: ## Start Spring Boot Backend
-	cd backend && ./mvnw spring-boot:run
+	cd backend && mvnw.cmd spring-boot:run
 
 start-fastapi: ## Start FastAPI Service
 	cd fraud-service && uv run uvicorn main:app --reload

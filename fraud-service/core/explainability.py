@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
-import lightgbm as lgb
+import shap
+from autogluon.tabular import TabularPredictor
 
 # Human-readable feature labels
 FEATURE_LABELS = {
@@ -21,7 +22,12 @@ FEATURE_LABELS = {
     'amount_zscore': 'Amount Z-Score',
     'txn_count_1h': 'Transactions in Last Hour',
     'txn_count_24h': 'Transactions in Last 24h',
-    'txn_count_7d': 'Transactions in Last 7 Days',
+    'txn_count_7d': 'Transactions in Last 7 Days',    
+    'amt_cents': 'Amount Cents',
+    'day_of_week': 'Day of Week',
+    'amt_sum_1h': 'Transaction Amount Sum in 1 Hour',
+    'amt_sum_24h': 'Transaction Amount Sum in 24 Hours',
+    'amt_sum_7d': 'Transaction Amount Sum in 7 Days',    
     'billing_country_mismatch': 'Billing Country Mismatch',
     'is_risky_email': 'Risky Email Domain',
     'email_domain_mismatch': 'Email Domain Mismatch',
@@ -34,20 +40,44 @@ FEATURE_LABELS = {
 
 
 def compute_shap_values(
-    model: lgb.Booster,
+    model: TabularPredictor,
     input_df: pd.DataFrame,
-    feature_order: list[str],
+    feature_order: list[str] = None,
 ) -> dict:
-    """Compute SHAP values using LightGBM's native pred_contrib (C++, much faster than SHAP lib)."""
-    # pred_contrib returns [feature_contribs..., base_value] per row
-    contribs = np.asarray(model.predict(input_df, pred_contrib=True)).flatten()
-    # Last element is the base value (bias)
-    base_value = float(contribs[-1])
-    sv = contribs[:-1]
+    """Compute local feature attributions using SHAP KernelExplainer."""
+    cols = input_df.columns.tolist() if feature_order is None else feature_order
+    
+    # KernelExplainer needs a background dataset. We'll use a dummy row (e.g. median/zeros)
+    # matching the input schema and data types.
+    background = input_df.copy()
+    for c in background.columns:
+        background[c] = 0
+        
+    def predict_fn(x):
+        df = pd.DataFrame(x, columns=cols)
+        # Using class 1 probabilities
+        return model.predict_proba(df).iloc[:, 1].values
+        
+    explainer = shap.KernelExplainer(predict_fn, background)
+    # Compute SHAP values for the single input row
+    shap_values_raw = explainer.shap_values(input_df, silent=True)
+    
+    if isinstance(shap_values_raw, list):
+        sv = shap_values_raw[1][0] if len(shap_values_raw) > 1 else shap_values_raw[0][0]
+    elif hasattr(shap_values_raw, 'shape') and len(shap_values_raw.shape) == 3:
+        sv = shap_values_raw[0, :, 1]
+    elif hasattr(shap_values_raw, 'shape') and len(shap_values_raw.shape) == 2:
+        sv = shap_values_raw[0, :]
+    else:
+        sv = shap_values_raw[0]
 
-    contributions = {}
-    for feat, val in zip(feature_order, sv):
-        contributions[feat] = round(float(val), 6)
+    # Handle the expected value
+    if isinstance(explainer.expected_value, (list, np.ndarray)) and len(explainer.expected_value) > 1:
+        base_value = float(explainer.expected_value[1])
+    else:
+        base_value = float(explainer.expected_value)
+
+    contributions = {feat: round(float(val), 6) for feat, val in zip(cols, sv)}
 
     sorted_features = sorted(
         contributions.items(), key=lambda x: abs(x[1]), reverse=True

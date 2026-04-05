@@ -7,6 +7,7 @@ from .transaction import Transaction, HistoricalTransaction
 class PredictRequest(BaseSchema):
     transaction: Transaction
     history: list[HistoricalTransaction] = []
+    precalculatedFeatures: dict[str, Any] | None = None
 
 class ModelScore(BaseSchema):
     """Score produced by a single ML model (useful for ensembles)."""

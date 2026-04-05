@@ -32,6 +32,11 @@ export interface Transaction {
   txnCount1h: number;
   txnCount24h: number;
   txnCount7d: number;
+  amtCents?: number;
+  dayOfWeek?: number;
+  amtSum1h?: number;
+  amtSum24h?: number;
+  amtSum7d?: number;
   secondsSinceLastTxn: number;
   hourOfDay: number;
   billingCountryMismatch: number;

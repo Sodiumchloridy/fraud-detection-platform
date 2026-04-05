@@ -8,7 +8,7 @@ RISKY_EMAIL_DOMAINS = {
     'naver.com', 'anonymous', 'tempmail', 'anonymous.com', 'tempmail.com'
 }
 
-# ── Feature lists matching the trained LightGBM model ──
+# ── Feature lists matching the trained AutoGluon model ──
 CORE_FEATURES = [
     'amt', 'card_id', 'card_network', 'card_type',
     'card_issuing_country', 'billing_zip_code', 'billing_country_code',
@@ -23,22 +23,12 @@ DERIVED_FEATURES = [
     'billing_country_mismatch',
     'is_risky_email', 'email_domain_mismatch', 'is_new_email',
     'is_new_device', 'is_new_merchant',
+    'amt_cents', 'day_of_week', 
+    'amt_sum_1h', 'amt_sum_24h', 'amt_sum_7d'
 ]
 
-TE_COLS = ['card_id', 'purchaser_email_domain']
-
-# Features used by the LightGBM model (order must match training)
-MODEL_FEATURE_ORDER = CORE_FEATURES + DERIVED_FEATURES + [c + '_TE' for c in TE_COLS]
-
-# Categorical columns that need integer encoding (were string/category in training)
-CAT_COLS = [
-    'card_network', 'card_type', 'device_type', 'device_info',
-    'purchaser_email_domain', 'recipient_email_domain',
-]
-
-# Default target-encoding value (≈ global fraud rate from IEEE-CIS training set)
-DEFAULT_TE_VALUE = 0.035
-
+# Features used by the AutoGluon model
+MODEL_FEATURE_ORDER = CORE_FEATURES + DERIVED_FEATURES
 
 # ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -55,10 +45,10 @@ def _parse_history(history):
         return [], [], None, set(), set(), set()
     amounts    = [h.amount for h in history][-100:]
     timestamps = [parse_ts(h.timestamp).timestamp() for h in history]
-    merchants  = {h.merchant for h in history if h.merchant}
-    devices    = {h.device_id for h in history if h.device_id}
-    emails     = {h.purchaser_email_domain for h in history if h.purchaser_email_domain}
-    return amounts, timestamps, history[-1], merchants, devices, emails
+    billing_zips = {getattr(h, 'billing_zip_code', None) for h in history if getattr(h, 'billing_zip_code', None)}
+    device_infos = {getattr(h, "device_info", getattr(h, "device_id", None)) for h in history if getattr(h, "device_info", getattr(h, "device_id", None))}
+    emails     = {getattr(h, 'purchaser_email_domain', None) for h in history if getattr(h, 'purchaser_email_domain', None)}
+    return amounts, timestamps, history[-1], billing_zips, device_infos, emails
 
 
 def _amount_features(amount, amounts):
@@ -88,26 +78,23 @@ def _velocity_features(txn, last, timestamps, curr_time):
     return dist, dt, vel
 
 
-def _txn_counts(timestamps, curr_time):
-    return {w: sum(1 for t in timestamps if curr_time - t <= w) + 1
-            for w in (3600, 86400, 604800)}
-
-
-def _encode_categorical(value: str | None) -> int:
-    """Hash-based integer encoding for categorical string features."""
-    if not value or value == 'nan':
-        return 0
-    return (hash(value) % 2**31) + 1
-
+def _txn_stats(timestamps, amounts, curr_time):
+    stats = {}
+    for w in (3600, 86400, 604800):
+        in_window = [a for t, a in zip(timestamps, amounts) if curr_time - t <= w]
+        stats[f'count_{w}'] = len(in_window) + 1 # +1 for current txn
+        stats[f'sum_{w}'] = sum(in_window) # current txn amt not included closely matching logic
+    return stats
 
 # ── Public API ───────────────────────────────────────────────────────────
 
-def compute_features(txn: Transaction, curr_time: float, history: list[HistoricalTransaction]) -> dict:
+def compute_features(txn: Transaction, curr_time: float, history: list[HistoricalTransaction], precalc: dict = None) -> dict:
     """Compute all features for both model prediction and rule evaluation."""
-    amounts, timestamps, last, merchants, devices, emails = _parse_history(history)
+    precalc = precalc or {}
+    amounts, timestamps, last, billing_zips, device_infos, emails = _parse_history(history)
     zscore, ratio  = _amount_features(txn.amount, amounts)
     dist, dt, vel  = _velocity_features(txn, last, timestamps, curr_time)
-    counts         = _txn_counts(timestamps, curr_time)
+    stats         = _txn_stats(timestamps, amounts, curr_time)
 
     p_email = txn.purchaser_email_domain or ''
     r_email = txn.recipient_email_domain or ''
@@ -131,20 +118,23 @@ def compute_features(txn: Transaction, curr_time: float, history: list[Historica
         'seconds_since_last_txn':   dt,
         'amount_to_avg_ratio':      ratio,
         'amount_zscore':            zscore,
-        'txn_count_1h':             counts[3600],
-        'txn_count_24h':            counts[86400],
-        'txn_count_7d':             counts[604800],
+        'txn_count_1h':             precalc.get('txn_count_1h') if 'txn_count_1h' in precalc else stats['count_3600'],
+        'txn_count_24h':            precalc.get('txn_count_24h') if 'txn_count_24h' in precalc else stats['count_86400'],
+        'txn_count_7d':             precalc.get('txn_count_7d') if 'txn_count_7d' in precalc else stats['count_604800'],
         'billing_country_mismatch': float(txn.card_issuing_country != txn.billing_country_code)
                                     if txn.card_issuing_country and txn.billing_country_code else 0.0,
         'is_risky_email':           float(p_email in RISKY_EMAIL_DOMAINS),
         'email_domain_mismatch':    float(p_email != r_email) if (p_email and r_email) else 0.0,
-        'is_new_email':             float(p_email not in emails) if p_email else 0.0,
-        'is_new_device':            float(txn.device_id not in devices) if txn.device_id else 0.0,
-        'is_new_merchant':          float(txn.merchant not in merchants) if txn.merchant else 0.0,
-
-        # ── Target-encoding proxies (no label data at inference) ──
-        'card_id_TE':               DEFAULT_TE_VALUE,
-        'purchaser_email_domain_TE': DEFAULT_TE_VALUE,
+        'is_new_email':             precalc.get('is_new_email') if 'is_new_email' in precalc else (float(p_email not in emails) if p_email else np.nan),
+        'is_new_device':            float(txn.device_info not in device_infos) if txn.device_info else np.nan,
+        'is_new_merchant':          float(txn.billing_zip_code not in billing_zips) if txn.billing_zip_code else np.nan,
+        
+        # New features
+        'amt_cents':                float(txn.amount % 1),
+        'day_of_week':              float((curr_time // 86400) % 7),
+        'amt_sum_1h':               precalc.get('amt_sum_1h') if 'amt_sum_1h' in precalc else stats['sum_3600'],
+        'amt_sum_24h':              precalc.get('amt_sum_24h') if 'amt_sum_24h' in precalc else stats['sum_86400'],
+        'amt_sum_7d':               precalc.get('amt_sum_7d') if 'amt_sum_7d' in precalc else stats['sum_604800'],
 
         # ── Rule-only features (not used by the model) ──
         'travel_velocity_kmh':      vel,
@@ -153,17 +143,14 @@ def compute_features(txn: Transaction, curr_time: float, history: list[Historica
 
 
 def prepare_model_input(features: dict) -> pd.DataFrame:
-    """Build a single-row DataFrame matching training-time encoding."""
-    ZERO_FEATURES = {'card_id'}
+    """Build a single-row DataFrame matching training-time AutoGluon inputs."""
     row = {}
     for f in MODEL_FEATURE_ORDER:
-        if f in ZERO_FEATURES:
-            row[f] = np.int32(0)
-        elif f in CAT_COLS:
-            row[f] = np.int32(_encode_categorical(features.get(f)))
-        elif isinstance(features.get(f), str):
-            row[f] = np.int32(_encode_categorical(features.get(f)))
+        val = features.get(f)
+        if isinstance(val, str):
+            # AutoGluon natively handles strings, no hashing required.
+            row[f] = val if val else "nan"
         else:
-            row[f] = np.float32(features.get(f) if features.get(f) is not None else 0.0)
+            row[f] = np.float32(val if val is not None else np.nan)
     return pd.DataFrame([row])
 

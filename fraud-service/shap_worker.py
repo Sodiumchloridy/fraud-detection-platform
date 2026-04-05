@@ -12,17 +12,17 @@ import logging
 import os
 import time
 
-import lightgbm as lgb
+from autogluon.tabular import TabularPredictor
 from confluent_kafka import Consumer, Producer
 
 from schemas import Transaction, parse_ts
-from core.features import compute_features, prepare_model_input, MODEL_FEATURE_ORDER
+from core.features import compute_features, prepare_model_input
 from core.explainability import compute_shap_values
 
 logger = logging.getLogger(__name__)
 
 _dir = os.path.dirname(__file__)
-model = lgb.Booster(model_file=os.path.join(_dir, "models", "lightgbm_model.txt"))
+model = TabularPredictor.load(os.path.join(_dir, "models", "ag_deployment_model"))
 
 KAFKA_BOOTSTRAP = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "localhost:9094")
 PENDING_TOPIC = "transactions.pending-shap"
@@ -37,7 +37,7 @@ def _process_message(event: dict, producer: Producer):
         input_df = prepare_model_input(compute_features(txn, curr_time, []))
 
         t0 = time.perf_counter()
-        shap_dict = compute_shap_values(model, input_df, MODEL_FEATURE_ORDER)
+        shap_dict = compute_shap_values(model, input_df, list(input_df.columns))
         logger.info("SHAP for %s took %.2f ms", transaction_id, (time.perf_counter() - t0) * 1000)
 
         result = {

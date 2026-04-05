@@ -25,7 +25,7 @@ import java.util.*;
 
 /**
  * Seeds sample transactions after the server is fully ready by POSTing
- * each one to /api/transactions/fraud-check, which calls the fraud-engine
+ * each one to /api/transactions/fraud-check, which calls the fraud-service
  * and persists the result. Transactions arrive with a random delay so
  * the fraud-service's velocity / frequency features behave realistically.
  */
