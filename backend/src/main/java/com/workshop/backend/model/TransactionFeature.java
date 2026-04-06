@@ -17,6 +17,7 @@ public class TransactionFeature {
     @OneToOne
     @JoinColumn(name = "transaction_id", referencedColumnName = "id")
     @JsonIgnore
+    @lombok.ToString.Exclude
     private Transaction transaction;
 
     /* Fraud Features */

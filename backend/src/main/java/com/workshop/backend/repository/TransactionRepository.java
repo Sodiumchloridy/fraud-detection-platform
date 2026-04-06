@@ -10,6 +10,8 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.UUID;
 
+import java.time.LocalDateTime;
+
 /**
  * Repository for Transaction CRUD operations
  * Custom queries (derived, JPQL, native SQL)
@@ -22,6 +24,15 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID> 
     List<Transaction> findByStatus(TransactionStatus status);
 
     List<Transaction> findByCardNumberOrderByTimestampAsc(String cardNumber);
+
+    @Query("SELECT COUNT(t) FROM Transaction t WHERE t.cardNumber = :cardNumber AND t.timestamp >= :startDate AND t.timestamp <= :endDate")
+    Long countByCardNumberAndTimestampBetween(@Param("cardNumber") String cardNumber, @Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
+
+    @Query("SELECT COALESCE(SUM(t.amount), 0.0) FROM Transaction t WHERE t.cardNumber = :cardNumber AND t.timestamp >= :startDate AND t.timestamp <= :endDate")
+    Double sumAmountByCardNumberAndTimestampBetween(@Param("cardNumber") String cardNumber, @Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
+
+    @Query("SELECT COUNT(t) FROM Transaction t WHERE t.purchaserEmailDomain = :emailDomain AND t.timestamp <= :currentTime")
+    Long countByPurchaserEmailDomainAndTimestampBefore(@Param("emailDomain") String emailDomain, @Param("currentTime") LocalDateTime currentTime);
 
     @Query("SELECT COUNT(t) FROM Transaction t WHERE t.riskScore >= :threshold")
     Long countByRiskScoreGreaterThanEqual(@Param("threshold") Double threshold);
