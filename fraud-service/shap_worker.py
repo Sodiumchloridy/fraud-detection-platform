@@ -9,6 +9,7 @@ Run:  uv run python shap_worker.py
 
 import json
 import logging
+import math
 import os
 import time
 
@@ -27,6 +28,17 @@ model = TabularPredictor.load(os.path.join(_dir, "models", "ag_deployment_model"
 KAFKA_BOOTSTRAP = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "localhost:9094")
 PENDING_TOPIC = "transactions.pending-shap"
 COMPLETED_TOPIC = "transactions.shap-completed"
+
+
+def _sanitize(obj):
+    """Replace NaN/Inf with None so json.dumps produces valid JSON."""
+    if isinstance(obj, float) and not math.isfinite(obj):
+        return None
+    if isinstance(obj, dict):
+        return {k: _sanitize(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_sanitize(v) for v in obj]
+    return obj
 
 
 def _process_message(event: dict, producer: Producer):
@@ -53,7 +65,7 @@ def _process_message(event: dict, producer: Producer):
             },
         }
         
-        producer.produce(COMPLETED_TOPIC, key=str(transaction_id), value=json.dumps(result).encode())
+        producer.produce(COMPLETED_TOPIC, key=str(transaction_id), value=json.dumps(_sanitize(result)).encode())
         producer.flush()
         logger.info("SHAP completed for transaction %s", transaction_id)
     except Exception:

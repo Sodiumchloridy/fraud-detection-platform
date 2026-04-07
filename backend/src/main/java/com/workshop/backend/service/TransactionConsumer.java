@@ -21,6 +21,10 @@ public class TransactionConsumer {
     @KafkaListener(topics = "transactions.shap-completed", groupId = "fraud-detection-backend",
             properties = "spring.json.value.default.type=com.workshop.backend.dto.TransactionShapEvent")
     public void onShapCompleted(TransactionShapEvent event) {
+        if (event == null) {
+            log.warn("Received undeserializable SHAP message — skipping");
+            return;
+        }
         log.info("Received SHAP result for transaction: {}", event.getTransactionId());
 
         Transaction txn = transactionRepository.findById(event.getTransactionId())

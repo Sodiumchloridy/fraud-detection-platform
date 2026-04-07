@@ -46,21 +46,32 @@ def compute_shap_values(
 ) -> dict:
     """Compute local feature attributions using SHAP KernelExplainer."""
     cols = input_df.columns.tolist() if feature_order is None else feature_order
-    
-    # KernelExplainer needs a background dataset. We'll use a dummy row (e.g. median/zeros)
-    # matching the input schema and data types.
-    background = input_df.copy()
-    for c in background.columns:
-        background[c] = 0
-        
+
+    # KernelExplainer requires a fully numeric array.
+    # Encode categorical (string) columns to integer codes and store the reverse mapping
+    # so predict_fn can decode them back before calling AutoGluon.
+    cat_encoders: dict[str, np.ndarray] = {}
+    encoded_df = input_df[cols].copy()
+    for col in encoded_df.select_dtypes(include=["object", "category"]).columns:
+        codes, uniques = pd.factorize(encoded_df[col])
+        cat_encoders[col] = uniques
+        encoded_df[col] = codes.astype(float)
+
+    # All-zero numeric background (one row)
+    background = pd.DataFrame(np.zeros((1, len(cols))), columns=cols)
+
     def predict_fn(x):
         df = pd.DataFrame(x, columns=cols)
+        # Decode integer codes back to the original category strings
+        for col, uniques in cat_encoders.items():
+            idx = df[col].round().astype(int).clip(0, len(uniques) - 1)
+            df[col] = uniques[idx]
         # Using class 1 probabilities
         return model.predict_proba(df).iloc[:, 1].values
-        
+
     explainer = shap.KernelExplainer(predict_fn, background)
-    # Compute SHAP values for the single input row
-    shap_values_raw = explainer.shap_values(input_df, silent=True)
+    # Compute SHAP values for the single (encoded) input row
+    shap_values_raw = explainer.shap_values(encoded_df, silent=True)
     
     if isinstance(shap_values_raw, list):
         sv = shap_values_raw[1][0] if len(shap_values_raw) > 1 else shap_values_raw[0][0]
