@@ -12,6 +12,7 @@ public class TransactionFeature {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private UUID id;
 
     @OneToOne
