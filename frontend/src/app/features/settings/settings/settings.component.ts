@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ViewChildren, QueryList, ElementRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { MainLayoutComponent } from '../../../shared/layouts/main-layout/main-layout.component';
@@ -17,9 +17,53 @@ export class SettingsComponent {
   showSetup = false;
   setupSecret = '';
   otpauthUri = '';
-  confirmCode = '';
+  confirmDigits = ['', '', '', '', '', ''];
   message = '';
   messageType: 'error' | 'success' = 'error';
+
+  @ViewChildren('digitInput') digitInputs!: QueryList<ElementRef<HTMLInputElement>>;
+
+  get confirmCode(): string {
+    return this.confirmDigits.join('');
+  }
+
+  onDigitInput(index: number, event: Event) {
+    const input = event.target as HTMLInputElement;
+    const numeric = input.value.replace(/\D/g, '');
+    const digit = numeric.slice(-1);
+    this.confirmDigits[index] = digit;
+    input.value = digit;
+    if (digit && index < 5) {
+      this.digitInputs.toArray()[index + 1].nativeElement.focus();
+    }
+  }
+
+  onDigitKeyDown(index: number, event: KeyboardEvent) {
+    if (event.key === 'Backspace') {
+      if (this.confirmDigits[index]) {
+        this.confirmDigits[index] = '';
+        (event.target as HTMLInputElement).value = '';
+      } else if (index > 0) {
+        this.digitInputs.toArray()[index - 1].nativeElement.focus();
+      }
+    } else if (event.key === 'ArrowLeft' && index > 0) {
+      this.digitInputs.toArray()[index - 1].nativeElement.focus();
+    } else if (event.key === 'ArrowRight' && index < 5) {
+      this.digitInputs.toArray()[index + 1].nativeElement.focus();
+    }
+  }
+
+  onDigitPaste(event: ClipboardEvent) {
+    const pasted = event.clipboardData?.getData('text') ?? '';
+    const nums = pasted.replace(/\D/g, '').slice(0, 6);
+    if (!nums) return;
+    event.preventDefault();
+    nums.split('').forEach((d, i) => this.confirmDigits[i] = d);
+    for (let i = nums.length; i < 6; i++) this.confirmDigits[i] = '';
+    const inputs = this.digitInputs.toArray();
+    inputs.forEach((el, i) => el.nativeElement.value = this.confirmDigits[i]);
+    inputs[Math.min(nums.length, 5)].nativeElement.focus();
+  }
 
   constructor(private userService: UserService) {
     this.mfaEnabled = this.userService.getCurrentUser()?.twoFactorEnabled ?? false;
@@ -43,7 +87,7 @@ export class SettingsComponent {
       next: () => {
         this.mfaEnabled = true;
         this.showSetup = false;
-        this.confirmCode = '';
+        this.confirmDigits = ['', '', '', '', '', ''];
         this.showMessage('2FA enabled successfully', 'success');
       },
       error: () => this.showMessage('Invalid verification code', 'error')

@@ -50,8 +50,7 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
     });
 
     // 2. Connect to SSE for real-time updates
-    const token = localStorage.getItem('token') ?? '';
-    this.sseSub = this.transactionService.streamTransactions(token).subscribe(txn => {
+    this.sseSub = this.transactionService.streamTransactions().subscribe(txn => {
       const current = this.transactionsSubject.value;
       const idx = current.findIndex(t => t.id === txn.id);
       const updated = idx >= 0 ? current.map(t => t.id === txn.id ? txn : t) : [txn, ...current];

@@ -66,14 +66,15 @@ def _velocity_features(txn, last, timestamps, curr_time):
     """Travel velocity — used only by rules, not by the model."""
     if not (last and timestamps):
         return 0.0, 99999999.0, 0.0
+    # Always compute the real time delta when we have history
+    dt = curr_time - timestamps[-1]
     lat1 = getattr(last, 'latitude', None) or 0.0
     lon1 = getattr(last, 'longitude', None) or 0.0
     lat2 = txn.latitude or 0.0
     lon2 = txn.longitude or 0.0
     if not (lat1 and lon1 and lat2 and lon2):
-        return 0.0, 99999999.0, 0.0
+        return 0.0, dt, 0.0
     dist = haversine(lat1, lon1, lat2, lon2)
-    dt   = curr_time - timestamps[-1]
     vel  = dist * 3600 / dt if dt > 0.36 else 0.0
     return dist, dt, vel
 

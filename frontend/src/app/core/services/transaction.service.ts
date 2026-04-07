@@ -1,6 +1,6 @@
 import { Injectable, NgZone } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, share } from 'rxjs';
 
 export interface Transaction {
   id: string;
@@ -103,6 +103,7 @@ export interface ThresholdConfig {
 })
 export class TransactionService {
   private apiUrl = 'http://localhost:8080/api/transactions';
+  private stream$: Observable<Transaction> | null = null;
 
   constructor(private http: HttpClient, private zone: NgZone) { }
 
@@ -134,16 +135,28 @@ export class TransactionService {
     return this.http.put<ThresholdConfig>('http://localhost:8080/api/thresholds', config);
   }
 
-  streamTransactions(token: string): Observable<Transaction> {
-    return new Observable(observer => {
+  streamTransactions(): Observable<Transaction> {
+    if (!this.stream$) {
+      this.stream$ = this.createSseObservable().pipe(
+        share({ resetOnRefCountZero: true })
+      );
+    }
+    return this.stream$;
+  }
+
+  private createSseObservable(): Observable<Transaction> {
+    return new Observable<Transaction>(observer => {
       const url = `${this.apiUrl}/stream`;
-      let cancelled = false;
+      let controller = new AbortController();
 
       const connect = async () => {
-        while (!cancelled) {
+        while (true) {
+          controller = new AbortController();
           try {
+            const token = localStorage.getItem('token') ?? '';
             const res = await fetch(url, {
-              headers: { 'Authorization': `Bearer ${token}` }
+              headers: { 'Authorization': `Bearer ${token}` },
+              signal: controller.signal,
             });
             if (!res.ok || !res.body) { observer.error(new Error(`SSE ${res.status}`)); return; }
 
@@ -154,9 +167,8 @@ export class TransactionService {
 
             while (true) {
               const { done, value } = await reader.read();
-              if (done || cancelled) break;
+              if (done) break;
               buffer += decoder.decode(value, { stream: true });
-
               const lines = buffer.split('\n');
               buffer = lines.pop()!;
               for (const line of lines) {
@@ -167,14 +179,16 @@ export class TransactionService {
                 }
               }
             }
-          } catch {
-            if (!cancelled) await new Promise(r => setTimeout(r, 3000)); // reconnect after 3s
+          } catch (e: any) {
+            if (e?.name === 'AbortError') return; // intentional teardown — stop the loop
           }
+          // Delay before reconnecting on both clean close and network errors
+          await new Promise(r => setTimeout(r, 3000));
         }
       };
-      connect();
 
-      return () => { cancelled = true; };
+      connect();
+      return () => controller.abort();
     });
   }
 }

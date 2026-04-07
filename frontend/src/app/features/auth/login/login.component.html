@@ -15,10 +15,23 @@
             <div class="mb-5 px-4 py-3 bg-rose-50 text-rose-600 rounded-xl text-sm">{{ errorMessage }}</div>
           }
           <div class="mb-6">
-            <label for="code" class="block text-xs font-medium text-slate-500 mb-1.5">Verification Code</label>
-            <input type="text" id="code" [(ngModel)]="code" name="code" maxlength="6" autocomplete="one-time-code"
-              class="w-full px-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 transition text-center tracking-[0.3em] text-lg font-mono"
-              required>
+            <label class="block text-xs font-medium text-slate-500 mb-3 text-center">Verification Code</label>
+            <div class="flex gap-2 justify-center">
+              @for (digit of digits; track $index) {
+                <input
+                  #digitInput
+                  type="text"
+                  inputmode="numeric"
+                  maxlength="1"
+                  [value]="digit"
+                  (input)="onDigitInput($index, $event)"
+                  (keydown)="onDigitKeyDown($index, $event)"
+                  (paste)="$index === 0 && onDigitPaste($event)"
+                  autocomplete="one-time-code"
+                  class="w-11 h-13 text-center text-xl font-semibold font-mono bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 transition caret-transparent select-none"
+                >
+              }
+            </div>
           </div>
           <button type="submit"
             class="w-full bg-[#2D8C8C] text-white py-2.5 rounded-xl font-medium text-sm hover:bg-[#267878] transition shadow-sm">

@@ -89,7 +89,7 @@ DEFAULT_RULES = [
         "feature": "seconds_since_last_txn",
         "operator": "<=",
         "threshold": 1,
-        "penalty": 0.3,
+        "penalty": 0.5,
         "override": False,
         "enabled": True,
     }

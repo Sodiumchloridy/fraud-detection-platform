@@ -92,13 +92,7 @@ export class PosSimulatorComponent {
   ];
 
   ngOnInit() {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      this.error = 'Authentication token is missing';
-      return;
-    }
-
-    this.sseSub = this.transactionService.streamTransactions(token).subscribe(txn => {
+    this.sseSub = this.transactionService.streamTransactions().subscribe(txn => {
       const idx = this.results.findIndex(r => r.transaction.id === txn.id);
       if (idx >= 0) {
         const prev = this.results[idx].transaction;

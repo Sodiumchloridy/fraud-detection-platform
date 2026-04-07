@@ -26,10 +26,23 @@
             <code class="mt-2 block bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-mono text-slate-700 tracking-wider select-all text-center">{{ setupSecret }}</code>
           </details>
           <div>
-            <label class="block text-xs font-medium text-slate-500 mb-1.5">Verification Code</label>
-            <input type="text" [(ngModel)]="confirmCode" maxlength="6" autocomplete="one-time-code"
-              class="w-full max-w-xs px-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 transition text-center tracking-[0.3em] font-mono"
-              placeholder="000000">
+            <label class="block text-xs font-medium text-slate-500 mb-3">Verification Code</label>
+            <div class="flex gap-2">
+              @for (digit of confirmDigits; track $index) {
+                <input
+                  #digitInput
+                  type="text"
+                  inputmode="numeric"
+                  maxlength="1"
+                  [value]="digit"
+                  (input)="onDigitInput($index, $event)"
+                  (keydown)="onDigitKeyDown($index, $event)"
+                  (paste)="$index === 0 && onDigitPaste($event)"
+                  autocomplete="one-time-code"
+                  class="w-11 h-13 text-center text-xl font-semibold font-mono bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 transition caret-transparent select-none"
+                >
+              }
+            </div>
           </div>
           <div class="flex gap-3">
             <button (click)="confirmSetup()"
