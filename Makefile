@@ -13,7 +13,7 @@ start-spring: ## Start Spring Boot Backend
 	cd backend && mvnw.cmd spring-boot:run
 
 start-fastapi: ## Start FastAPI Service
-	cd fraud-service && uv run uvicorn main:app --reload
+	cd fraud-service && uv run uvicorn main:app
 
 start-shap-worker: ## Start SHAP Worker
 	cd fraud-service && uv run python shap_worker.py

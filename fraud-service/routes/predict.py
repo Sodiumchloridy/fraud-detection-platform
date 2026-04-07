@@ -17,6 +17,8 @@ _dir = os.path.dirname(__file__)
 _model_path = os.path.join(_dir, '..', 'models', 'ag_deployment_model')
 
 model = TabularPredictor.load(path=_model_path)
+_best_single_model = "CatBoost_FULL"
+model.persist([_best_single_model])
 
 
 @router.post("/predict", response_model=PredictResponse)
@@ -30,7 +32,7 @@ def predict_fraud(req: PredictRequest):
     t1 = time.perf_counter()
 
     input_df = prepare_model_input(features)
-    y_prob = model.predict_proba(input_df).iloc[:, 1]
+    y_prob = model.predict_proba(input_df, model=_best_single_model).iloc[:, 1]
     pred_array = np.asarray(y_prob).flatten()
     ml_score = float(pred_array[0])
     ml_score = max(0.0, min(1.0, ml_score))
