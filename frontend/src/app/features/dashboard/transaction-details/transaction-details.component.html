@@ -57,7 +57,7 @@
       <p class="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap">{{ analysisReason || 'Loading analysis...'
         }}</p>
       } @else {
-      <p class="text-sm text-slate-400">Transaction looks legitimate&mdash;no further analysis required.</p>
+      <p class="text-sm text-slate-400">Transaction is legitimate&mdash;no further analysis required.</p>
       }
     </div>
 
@@ -105,6 +105,22 @@
         <span>&larr; Pushes toward legitimate</span>
         <span>Base value: {{ shapExplanation.baseValue | number:'1.4-4' }}</span>
         <span>Pushes toward fraud &rarr;</span>
+      </div>
+      <!-- Dataset confidence badge -->
+      <div class="mt-5 pt-4 border-t border-slate-100 flex flex-wrap items-center gap-3">
+        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-50 text-indigo-700 text-[11px] font-semibold">
+          <svg class="size-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          Trained on 500,000+ real-world transactions
+        </span>
+        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 text-slate-600 text-[11px] font-semibold">
+          <svg class="size-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+          </svg>
+          IEEE-CIS Fraud Detection Dataset
+        </span>
+        <span class="text-[11px] text-slate-400">AutoML ensemble &middot; SHAP-powered explanations</span>
       </div>
     </div>
     }

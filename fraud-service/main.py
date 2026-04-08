@@ -10,6 +10,7 @@ from routes.predict import router as predict_router
 from routes.analyze import router as analyze_router
 from routes.rules import router as rules_router
 from routes.chat import router as chat_router
+from core.feature_store import init_redis
 
 load_dotenv()
 logger = logging.getLogger(__name__)
@@ -46,3 +47,8 @@ app.include_router(predict_router)
 app.include_router(analyze_router)
 app.include_router(rules_router)
 app.include_router(chat_router)
+
+
+@app.on_event("startup")
+def startup():
+    init_redis()

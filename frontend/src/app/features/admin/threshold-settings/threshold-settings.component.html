@@ -82,16 +82,7 @@
         {{ saving ? 'Saving...' : 'Save Thresholds' }}
       </button>
 
-      @if (saved) {
-        <div class="mt-3 px-4 py-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-700 text-sm text-center">
-          Thresholds updated successfully. New transactions will use these thresholds.
-        </div>
-      }
-      @if (error) {
-        <div class="mt-3 px-4 py-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-600 text-sm text-center">
-          {{ error }}
-        </div>
-      }
+
     </div>
 
     <!-- Note -->

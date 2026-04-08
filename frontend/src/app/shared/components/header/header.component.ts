@@ -13,6 +13,7 @@ export class HeaderComponent {
   @Input() pageTitle = 'Dashboard';
   @Input() userName = 'Admin';
   @Input() showAdminOptions = false;
+  @Input() pendingReview = 0;
   @Output() logout = new EventEmitter<void>();
   isDropdownOpen = false;
   toggleDropdown() { this.isDropdownOpen = !this.isDropdownOpen; }

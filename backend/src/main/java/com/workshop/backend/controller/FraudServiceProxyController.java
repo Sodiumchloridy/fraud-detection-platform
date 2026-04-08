@@ -83,6 +83,26 @@ public class FraudServiceProxyController {
         return forward("/rules", HttpMethod.PUT, body, List.class);
     }
 
+    @GetMapping("/blocklist")
+    public List<?> getBlocklist() {
+        return forward("/blocklist", HttpMethod.GET, null, List.class);
+    }
+
+    @PutMapping("/blocklist")
+    public List<?> updateBlocklist(@RequestBody Map<String, Object> body) {
+        return forward("/blocklist", HttpMethod.PUT, body, List.class);
+    }
+
+    @GetMapping("/allowlist")
+    public List<?> getAllowlist() {
+        return forward("/allowlist", HttpMethod.GET, null, List.class);
+    }
+
+    @PutMapping("/allowlist")
+    public List<?> updateAllowlist(@RequestBody Map<String, Object> body) {
+        return forward("/allowlist", HttpMethod.PUT, body, List.class);
+    }
+
     private <T> T forward(String path, HttpMethod method, Object body, Class<T> type) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);

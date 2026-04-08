@@ -5,12 +5,12 @@ import { ThresholdSettingsComponent } from '../threshold-settings/threshold-sett
 import { RulesSettingsComponent } from '../rules-settings/rules-settings.component';
 
 @Component({
-  selector: 'app-system-settings',
+  selector: 'app-platform-configuration',
   standalone: true,
   imports: [MainLayoutComponent, ThresholdSettingsComponent, RulesSettingsComponent],
-  templateUrl: './system-settings.component.html',
+  templateUrl: './platform-configuration.component.html',
 })
-export class SystemSettingsComponent {
+export class PlatformConfigurationComponent {
   activeTab: 'thresholds' | 'rules' = 'thresholds';
 
   constructor(private router: Router) {}

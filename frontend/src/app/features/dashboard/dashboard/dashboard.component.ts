@@ -26,6 +26,14 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
   showPwToast = false;
   private toastTimer?: ReturnType<typeof setTimeout>;
 
+  readonly timeWindows = [
+    { label: '15s', seconds: 15,  bucketMs: 1_000 },
+    { label: '30s', seconds: 30,  bucketMs: 2_000 },
+    { label: '1m',  seconds: 60,  bucketMs: 5_000 },
+    { label: '5m',  seconds: 300, bucketMs: 20_000 },
+  ];
+  selectedWindow = this.timeWindows[2]; // default 1 minute
+
   private chart?: Chart;
   private sseSub?: Subscription;
 
@@ -128,6 +136,12 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
     if (this.toastTimer) clearTimeout(this.toastTimer);
   }
 
+  setWindow(w: typeof this.timeWindows[0]): void {
+    this.selectedWindow = w;
+    this.updateChart();
+    this.cdr.markForCheck();
+  }
+
   private updateChart(): void {
     if (!this.chart) return;
     const trend = this.buildTrend(this.transactionsSubject.value);
@@ -139,19 +153,34 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
   }
 
   private buildTrend(txns: Transaction[]): { label: string; total: number; fraud: number; flagged: number }[] {
-    const grouped = new Map<string, { total: number; fraud: number; flagged: number }>();
-    for (const t of txns) {
-      const min = t.timestamp?.slice(0, 16) ?? 'unknown';
-      const entry = grouped.get(min) ?? { total: 0, fraud: 0, flagged: 0 };
+    if (!txns.length) return [];
+    const { seconds, bucketMs } = this.selectedWindow;
+    const maxTime = Math.max(...txns.map(t => new Date(t.timestamp).getTime()));
+    const minTime = maxTime - seconds * 1000;
+    const filtered = txns.filter(t => {
+      const ts = new Date(t.timestamp).getTime();
+      return ts >= minTime && ts <= maxTime;
+    });
+    const grouped = new Map<number, { total: number; fraud: number; flagged: number }>();
+    for (const t of filtered) {
+      const ts = new Date(t.timestamp).getTime();
+      const bucket = Math.floor(ts / bucketMs) * bucketMs;
+      const entry = grouped.get(bucket) ?? { total: 0, fraud: 0, flagged: 0 };
       entry.total += t.amount ?? 0;
       if (t.status === 'BLOCKED') entry.fraud += t.amount ?? 0;
       if (t.status === 'FLAGGED') entry.flagged += t.amount ?? 0;
-      grouped.set(min, entry);
+      grouped.set(bucket, entry);
     }
     return [...grouped.entries()]
-      .sort(([a], [b]) => a.localeCompare(b))
-      .slice(-30)
-      .map(([label, v]) => ({ label: label.slice(11, 16), ...v }));
+      .sort(([a], [b]) => a - b)
+      .map(([ts, v]) => {
+        const d = new Date(ts);
+        const hh = String(d.getHours()).padStart(2, '0');
+        const mm = String(d.getMinutes()).padStart(2, '0');
+        const ss = String(d.getSeconds()).padStart(2, '0');
+        const label = seconds <= 60 ? `${hh}:${mm}:${ss}` : `${hh}:${mm}`;
+        return { label, ...v };
+      });
   }
 }
 

@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TransactionService, ThresholdConfig } from '../../../core/services';
+import { ToastService } from '../../../shared/services/toast.service';
 
 @Component({
   selector: 'app-threshold-settings',
@@ -13,10 +14,9 @@ export class ThresholdSettingsComponent implements OnInit {
   blockedThreshold = 80;
   loading = true;
   saving = false;
-  saved = false;
-  error: string | null = null;
+  loadError: string | null = null;
 
-  constructor(private transactionService: TransactionService) {}
+  constructor(private transactionService: TransactionService, private toast: ToastService) {}
 
   ngOnInit() {
     this.transactionService.getThresholds().subscribe({
@@ -26,7 +26,7 @@ export class ThresholdSettingsComponent implements OnInit {
         this.loading = false;
       },
       error: () => {
-        this.error = 'Failed to load current thresholds';
+        this.loadError = 'Failed to load current thresholds';
         this.loading = false;
       }
     });
@@ -48,8 +48,6 @@ export class ThresholdSettingsComponent implements OnInit {
 
   save() {
     this.saving = true;
-    this.saved = false;
-    this.error = null;
 
     const config: ThresholdConfig = {
       flaggedThreshold: this.flaggedThreshold / 100,
@@ -59,12 +57,11 @@ export class ThresholdSettingsComponent implements OnInit {
     this.transactionService.updateThresholds(config).subscribe({
       next: () => {
         this.saving = false;
-        this.saved = true;
-        setTimeout(() => this.saved = false, 3000);
+        this.toast.show('Thresholds saved successfully');
       },
       error: () => {
         this.saving = false;
-        this.error = 'Failed to save thresholds. Ensure flagged < blocked.';
+        this.toast.show('Failed to save thresholds. Ensure flagged < blocked.', 'error');
       }
     });
   }

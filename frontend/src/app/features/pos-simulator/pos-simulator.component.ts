@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
-import { CommonModule, Location } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { finalize, Subscription } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { MainLayoutComponent } from '../../shared/layouts/main-layout/main-layout.component';
@@ -45,7 +45,7 @@ interface BlockedNotification {
 })
 export class PosSimulatorComponent {
   private apiUrl = 'http://localhost:8080/api/transactions';
-  private location = inject(Location);
+  private router = inject(Router);
   transactionService = inject(TransactionService);
   sseSub: Subscription | undefined = undefined;
 
@@ -114,7 +114,7 @@ export class PosSimulatorComponent {
 
   constructor(private http: HttpClient) { }
 
-  goBack() { this.location.back(); }
+  goBack() { this.router.navigate(['/dashboard']); }
 
   selectLocation({ name, lat, lon }: { name: string; lat: number; lon: number }) {
     this.selectedLocation = name;

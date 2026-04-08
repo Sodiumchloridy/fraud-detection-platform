@@ -3,22 +3,24 @@
     <a (click)="goBack()" class="inline-flex items-center gap-1 text-xs font-medium text-slate-400 hover:text-indigo-600 transition cursor-pointer">&larr; Back</a>
   </div>
 
-  @if (errorMessage) {
-    <div class="mb-4 px-4 py-3 bg-rose-50 border border-rose-200 rounded-2xl text-sm text-rose-600">{{ errorMessage }}</div>
-  }
-  @if (successMessage) {
-    <div class="mb-4 px-4 py-3 bg-emerald-50 border border-emerald-200 rounded-2xl text-sm text-emerald-600">{{ successMessage }}</div>
+  @if (loadError) {
+    <div class="mb-4 px-4 py-3 bg-rose-50 border border-rose-200 rounded-2xl text-sm text-rose-600">{{ loadError }}</div>
   }
 
   <!-- Users table card -->
   <div class="bg-white rounded-[1.25rem] shadow-[0_1px_3px_rgba(0,0,0,.04)] overflow-hidden">
     <div class="px-7 py-5 border-b border-slate-100 flex items-center justify-between gap-4">
       <!-- Search -->
-      <div class="relative flex-1 max-w-sm">
-        <svg class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
-        </svg>
-        <input [(ngModel)]="searchQuery" type="text" placeholder="Search by name, email or role…" class="w-full pl-9 pr-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 transition">
+      <div class="relative flex-1 max-w-sm flex gap-2">
+        <div class="relative flex-1">
+          <svg class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
+          </svg>
+          <input [(ngModel)]="searchQuery" (keyup.enter)="applySearch()" type="text" placeholder="Search by name, email or role…" class="w-full pl-9 pr-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 transition">
+        </div>
+        <button (click)="applySearch()" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium bg-[#2D8C8C] text-white hover:bg-[#267878] transition shadow-sm whitespace-nowrap">
+          Search
+        </button>
       </div>
       <!-- Add button -->
       <button (click)="openAddModal()" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium bg-[#2D8C8C] text-white hover:bg-[#267878] transition shadow-sm whitespace-nowrap">
@@ -275,4 +277,29 @@
     </div>
   }
   <!-- ── Reset Password Modal ──────────────────────────────── -->
+  <!-- ── Delete Confirm Modal ────────────────────────────────── -->
+  @if (showDeleteModal && userToDelete) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" (click)="cancelDelete()">
+      <div class="bg-white rounded-[1.25rem] shadow-2xl w-full max-w-sm mx-4 p-7" (click)="$event.stopPropagation()">
+        <div class="flex items-center gap-4 mb-5">
+          <div class="w-10 h-10 shrink-0 rounded-xl bg-rose-50 flex items-center justify-center">
+            <svg class="h-5 w-5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+            </svg>
+          </div>
+          <div>
+            <h2 class="text-base font-semibold text-slate-800">Delete User</h2>
+            <p class="text-sm text-slate-500 mt-0.5">This action cannot be undone.</p>
+          </div>
+        </div>
+        <p class="text-sm text-slate-600 mb-6">
+          Are you sure you want to delete <span class="font-semibold text-slate-800">{{ userToDelete.username }}</span>?
+        </p>
+        <div class="flex gap-3">
+          <button (click)="cancelDelete()" class="flex-1 py-2.5 rounded-xl text-sm font-medium border border-slate-200 text-slate-600 hover:bg-slate-50 transition">Cancel</button>
+          <button (click)="confirmDelete()" class="flex-1 py-2.5 rounded-xl text-sm font-medium bg-rose-500 text-white hover:bg-rose-600 transition shadow-sm">Delete</button>
+        </div>
+      </div>
+    </div>
+  }
 </app-main-layout>

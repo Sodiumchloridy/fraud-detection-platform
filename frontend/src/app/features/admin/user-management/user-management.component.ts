@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule, Location } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { finalize } from 'rxjs';
 import {
   User,
@@ -9,6 +10,7 @@ import {
   UpdateUserRequest
 } from '../../../core/services/user.service';
 import { MainLayoutComponent } from '../../../shared/layouts/main-layout/main-layout.component';
+import { ToastService } from '../../../shared/services/toast.service';
 
 @Component({
   selector: 'app-user-management',
@@ -20,13 +22,15 @@ import { MainLayoutComponent } from '../../../shared/layouts/main-layout/main-la
 export class UserManagementComponent implements OnInit {
   users: User[] = [];
   loading = false;
-  errorMessage = '';
-  successMessage = '';
+  loadError = '';
   modalError = '';
   searchQuery = '';
+  appliedQuery = '';
 
   showAddModal = false;
   showEditModal = false;
+  showDeleteModal = false;
+  userToDelete: User | null = null;
   editingUser: User | null = null;
   generatedPassword = '';
   generatedPasswordError = '';
@@ -35,30 +39,35 @@ export class UserManagementComponent implements OnInit {
   newUser: CreateUserRequest = this.emptyUser();
 
   get filteredUsers(): User[] {
-    const q = this.searchQuery.toLowerCase().trim();
-    if (!q) return this.users;
-    return this.users.filter(u =>
-      u.username.toLowerCase().includes(q) ||
-      u.email.toLowerCase().includes(q) ||
-      u.role.toLowerCase().includes(q)
-    );
+    const q = this.appliedQuery.toLowerCase().trim();
+    const list = q
+      ? this.users.filter(u =>
+          u.username.toLowerCase().includes(q) ||
+          u.email.toLowerCase().includes(q) ||
+          u.role.toLowerCase().includes(q)
+        )
+      : this.users;
+    return list.slice(0, 100);
+  }
+
+  applySearch(): void {
+    this.appliedQuery = this.searchQuery;
   }
 
   private emptyUser(): CreateUserRequest {
     return { username: '', password: '', email: '', role: 'ANALYST', enabled: true };
   }
 
-  constructor(private userService: UserService, private location: Location) {}
+  constructor(private userService: UserService, private router: Router, private toast: ToastService) {}
 
-  goBack() { this.location.back(); }
+  goBack() { this.router.navigate(['/dashboard']); }
 
   ngOnInit(): void {
     this.loadUsers();
   }
 
   private clearMessages() {
-    this.errorMessage = '';
-    this.successMessage = '';
+    this.loadError = '';
     this.modalError = '';
   }
 
@@ -68,13 +77,13 @@ export class UserManagementComponent implements OnInit {
 
   loadUsers(): void {
     this.loading = true;
-    this.errorMessage = '';
+    this.loadError = '';
 
     this.userService.getAllUsers().pipe(
       finalize(() => this.loading = false)
     ).subscribe({
       next: (users) => this.users = users,
-      error: (err) => this.errorMessage = this.extractError(err, 'Failed to load users')
+      error: (err) => this.loadError = this.extractError(err, 'Failed to load users')
     });
   }
 
@@ -138,7 +147,7 @@ export class UserManagementComponent implements OnInit {
       promptChangePassword: true
     }).subscribe({
       next: () => {
-        this.successMessage = `Password reset for ${this.editingUser!.username}. They will be prompted to change it on next login.`;
+        this.toast.show(`Password reset for ${this.editingUser!.username}`);
         this.closeEditModal();
       },
       error: (err) => this.generatedPasswordError = this.extractError(err, 'Failed to reset password')
@@ -155,7 +164,7 @@ export class UserManagementComponent implements OnInit {
 
     this.userService.createUser(this.newUser).subscribe({
       next: (created) => {
-        this.successMessage = 'User created successfully';
+        this.toast.show('User created successfully');
         this.users = [...this.users, created];
         this.closeAddModal();
       },
@@ -175,7 +184,7 @@ export class UserManagementComponent implements OnInit {
 
     this.userService.updateUser(this.editingUser.id, payload).subscribe({
       next: () => {
-        this.successMessage = `Updated ${this.editingUser!.username}`;
+        this.toast.show(`Updated ${this.editingUser!.username}`);
         this.users = this.users.map(u => u.id === this.editingUser!.id ? { ...this.editingUser! } : u);
         this.closeEditModal();
       },
@@ -194,26 +203,38 @@ export class UserManagementComponent implements OnInit {
     this.userService.updateUser(user.id, payload).subscribe({
       next: () => {
         user.enabled = !user.enabled;
-        this.successMessage = `${user.username} is now ${user.enabled ? 'active' : 'inactive'}`;
+        this.toast.show(`${user.username} is now ${user.enabled ? 'active' : 'inactive'}`);
       },
-      error: (err) => this.errorMessage = this.extractError(err, `Failed to update ${user.username}`)
+      error: (err) => this.toast.show(this.extractError(err, `Failed to update ${user.username}`), 'error')
     });
   }
 
   deleteUser(user: User): void {
-    this.clearMessages();
     if (user.username === 'admin') {
-      this.errorMessage = 'The root admin account cannot be deleted.';
+      this.toast.show('The root admin account cannot be deleted.', 'error');
       return;
     }
-    if (!confirm(`Delete user "${user.username}"?`)) return;
+    this.userToDelete = user;
+    this.showDeleteModal = true;
+  }
+
+  confirmDelete(): void {
+    if (!this.userToDelete) return;
+    const user = this.userToDelete;
+    this.showDeleteModal = false;
+    this.userToDelete = null;
 
     this.userService.deleteUser(user.id).subscribe({
       next: () => {
-        this.successMessage = `Deleted ${user.username}`;
+        this.toast.show(`Deleted ${user.username}`);
         this.users = this.users.filter(u => u.id !== user.id);
       },
-      error: (err) => this.errorMessage = this.extractError(err, `Failed to delete ${user.username}`)
+      error: (err) => this.toast.show(this.extractError(err, `Failed to delete ${user.username}`), 'error')
     });
+  }
+
+  cancelDelete(): void {
+    this.showDeleteModal = false;
+    this.userToDelete = null;
   }
 }

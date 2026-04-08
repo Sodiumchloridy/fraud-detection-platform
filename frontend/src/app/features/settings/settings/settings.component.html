@@ -7,13 +7,6 @@
     <div class="bg-white rounded-[1.25rem] shadow-[0_1px_3px_rgba(0,0,0,.04)] p-7">
       <h2 class="text-sm font-semibold text-slate-800 mb-5 pb-4 border-b border-slate-100">Multi-Factor Authentication</h2>
 
-      @if (message) {
-        <div class="mb-4 px-4 py-3 rounded-xl text-sm"
-          [class]="messageType === 'success' ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'">
-          {{ message }}
-        </div>
-      }
-
       @if (showSetup) {
         <!-- Setup flow -->
         <div class="py-4 space-y-4">
@@ -82,13 +75,6 @@
     <!-- Change Password card -->
     <div class="bg-white rounded-[1.25rem] shadow-[0_1px_3px_rgba(0,0,0,.04)] p-7 grow-0">
       <h2 class="text-sm font-semibold text-slate-800 mb-5 pb-4 border-b border-slate-100">Change Password</h2>
-
-      @if (pwMessage) {
-        <div class="mb-4 px-4 py-3 rounded-xl text-sm border"
-          [class]="pwMessageType === 'success' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-rose-50 text-rose-600 border-rose-200'">
-          {{ pwMessage }}
-        </div>
-      }
 
       @if (mfaEnabled) {
         <div class="flex items-center gap-3 mb-5">

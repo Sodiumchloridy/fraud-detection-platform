@@ -1,0 +1,45 @@
+<app-main-layout [pageTitle]="'Platform Configuration'">
+<a (click)="goBack()"
+    class="inline-flex items-center gap-1 text-xs font-medium text-slate-400 hover:text-indigo-600 transition mb-5 cursor-pointer">
+    &larr; Back
+  </a>
+
+  <!-- Layout: tabs left, content right -->
+  <div class="flex gap-6 max-w-5xl mx-auto">
+
+    <!-- Sidebar tabs -->
+    <div class="w-44 shrink-0">
+      <div class="sticky top-24 flex flex-col gap-1 bg-slate-100 rounded-xl p-1">
+        <button (click)="activeTab = 'thresholds'"
+                class="text-sm font-medium py-2.5 px-3 rounded-lg transition-all text-left"
+                [class.bg-white]="activeTab === 'thresholds'"
+                [class.text-slate-800]="activeTab === 'thresholds'"
+                [class.shadow-sm]="activeTab === 'thresholds'"
+                [class.text-slate-500]="activeTab !== 'thresholds'"
+                [class.hover:text-slate-700]="activeTab !== 'thresholds'">
+          Thresholds
+        </button>
+        <button (click)="activeTab = 'rules'"
+                class="text-sm font-medium py-2.5 px-3 rounded-lg transition-all text-left"
+                [class.bg-white]="activeTab === 'rules'"
+                [class.text-slate-800]="activeTab === 'rules'"
+                [class.shadow-sm]="activeTab === 'rules'"
+                [class.text-slate-500]="activeTab !== 'rules'"
+                [class.hover:text-slate-700]="activeTab !== 'rules'">
+          Rules
+        </button>
+      </div>
+    </div>
+
+    <!-- Tab content -->
+    <div class="flex-1 min-w-0">
+      @if (activeTab === 'thresholds') {
+        <app-threshold-settings></app-threshold-settings>
+      }
+      @if (activeTab === 'rules') {
+        <app-rules-settings></app-rules-settings>
+      }
+    </div>
+
+  </div>
+</app-main-layout>

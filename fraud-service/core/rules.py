@@ -96,6 +96,8 @@ DEFAULT_RULES = [
 ]
 
 _rules: list[Rule] = [Rule(**r) for r in DEFAULT_RULES]
+_blocklist: list[str] = []
+_allowlist: list[str] = []
 
 
 def get_rules() -> list[Rule]:
@@ -105,6 +107,32 @@ def get_rules() -> list[Rule]:
 def set_rules(rules: list[Rule]):
     global _rules
     _rules = rules
+
+
+def get_blocklist() -> list[str]:
+    return list(_blocklist)
+
+
+def set_blocklist(cards: list[str]) -> None:
+    global _blocklist
+    _blocklist = list(cards)
+
+
+def get_allowlist() -> list[str]:
+    return list(_allowlist)
+
+
+def set_allowlist(cards: list[str]) -> None:
+    global _allowlist
+    _allowlist = list(cards)
+
+
+def is_blocked(card_number: str) -> bool:
+    return card_number in _blocklist
+
+
+def is_allowlisted(card_number: str) -> bool:
+    return card_number in _allowlist
 
 
 def apply_rules(features: dict, base_score: float) -> tuple[float, list[str]]:

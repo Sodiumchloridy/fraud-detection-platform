@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
-import { CommonModule, Location } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { Router, RouterLink } from '@angular/router';
 import { BehaviorSubject, switchMap } from 'rxjs';
 import { MainLayoutComponent } from '../../../shared/layouts/main-layout/main-layout.component';
 import { TransactionService, Transaction, getStatusBadgeClass } from '../../../core/services';
@@ -16,7 +16,7 @@ export class FlaggedTransactionsComponent {
   getStatusBadgeClass = getStatusBadgeClass;
 
   private transactionService = inject(TransactionService);
-  private location = inject(Location);
+  private router = inject(Router);
   private refresh$ = new BehaviorSubject<void>(undefined);
 
   flaggedTransactions$ = this.refresh$.pipe(
@@ -30,6 +30,6 @@ export class FlaggedTransactionsComponent {
     });
   }
 
-  goBack() { this.location.back(); }
+  goBack() { this.router.navigate(['/dashboard']); }
 }
 

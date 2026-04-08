@@ -22,18 +22,22 @@ import org.springframework.web.client.RestTemplate;
 
 import java.io.InputStream;
 import java.util.*;
+import java.util.concurrent.*;
 
 /**
  * Seeds sample transactions after the server is fully ready by POSTing
- * each one to /api/transactions/fraud-check, which calls the fraud-service
- * and persists the result. Transactions arrive with a random delay so
- * the fraud-service's velocity / frequency features behave realistically.
+ * them to /api/transactions/fraud-check in batches of 3–10 per second.
+ * Each batch is dispatched concurrently; the seeder sleeps 1 s between
+ * batches so the fraud-service's velocity / frequency features behave
+ * realistically. Failures are logged and skipped — the seeder continues.
  */
 @Component
 @RequiredArgsConstructor
 public class DataSeeder {
 
     private static final Logger log = LoggerFactory.getLogger(DataSeeder.class);
+    private static final int BATCH_MIN = 3;
+    private static final int BATCH_MAX = 10;
     private final TransactionRepository transactionRepository;
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
@@ -58,7 +62,8 @@ public class DataSeeder {
             throw new RuntimeException("Failed to load transactions.json", e);
         }
 
-        log.info("Seeding {} transactions via /api/transactions/fraud-check ...", seeds.size());
+        log.info("Seeding {} transactions via /api/transactions/fraud-check ({}–{} TPS) ...",
+                seeds.size(), BATCH_MIN, BATCH_MAX);
         String endpoint = "http://localhost:" + serverPort + "/api/transactions/fraud-check";
         Random rng = new Random(42);
 
@@ -68,17 +73,41 @@ public class DataSeeder {
         headers.setBearerAuth(token);
         headers.setContentType(MediaType.APPLICATION_JSON);
 
-        for (int i = 0; i < seeds.size(); i++) {
-            TransactionRequest dto = seeds.get(i);
-            long delay = 500 + rng.nextInt(1500);
-            try { Thread.sleep(delay); } catch (InterruptedException e) { Thread.currentThread().interrupt(); break; }
-            HttpEntity<TransactionRequest> entity = new HttpEntity<>(dto, headers);
-            try {
-                restTemplate.postForObject(endpoint, entity, Map.class);
-                log.info("[{}/{}] Sent {} ${}", i + 1, seeds.size(), dto.getCategory(), dto.getAmount());
-            } catch (Exception e) {
-                log.warn("[{}/{}] Failed {} ${}: {}", i + 1, seeds.size(), dto.getCategory(), dto.getAmount(), e.getMessage());
+        ExecutorService pool = Executors.newFixedThreadPool(BATCH_MAX);
+        int i = 0;
+        try {
+            while (i < seeds.size()) {
+                int batchSize = Math.min(
+                        BATCH_MIN + rng.nextInt(BATCH_MAX - BATCH_MIN + 1),
+                        seeds.size() - i);
+
+                List<CompletableFuture<Void>> futures = new ArrayList<>(batchSize);
+                for (int j = 0; j < batchSize; j++) {
+                    final int idx = i + j;
+                    final TransactionRequest dto = seeds.get(idx);
+                    futures.add(CompletableFuture.runAsync(() -> {
+                        HttpEntity<TransactionRequest> entity = new HttpEntity<>(dto, headers);
+                        try {
+                            restTemplate.postForObject(endpoint, entity, Map.class);
+                            log.info("[{}/{}] Sent {} ${}", idx + 1, seeds.size(), dto.getCategory(), dto.getAmount());
+                        } catch (Exception e) {
+                            log.warn("[{}/{}] Failed {} ${}: {}", idx + 1, seeds.size(), dto.getCategory(), dto.getAmount(), e.getMessage());
+                        }
+                    }, pool));
+                }
+
+                // Wait for all in-flight requests before sleeping
+                CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+                i += batchSize;
+
+                if (i < seeds.size()) {
+                    Thread.sleep(1_000);
+                }
             }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        } finally {
+            pool.shutdown();
         }
         log.info("Seeding complete — {} transactions in database.", transactionRepository.count());
     }

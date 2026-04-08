@@ -54,15 +54,30 @@
       <!-- Fraud presets -->
       <div class="mt-6 pt-5 border-t border-slate-100">
         <p class="text-[11px] font-semibold text-slate-500 uppercase tracking-wide mb-3">Fraud Pattern Presets</p>
-        <div class="flex items-center gap-2 mb-2.5">
-          <label class="text-[11px] font-medium text-slate-500 uppercase tracking-wide whitespace-nowrap">Burst Count</label>
-          <input type="number" [(ngModel)]="burstCount" min="1" max="50" class="w-20 px-2.5 py-1.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 transition">
+        <div class="space-y-2">
+          <!-- Rapid Burst -->
+          <div class="flex items-center justify-between gap-3 bg-slate-50 rounded-xl px-3.5 py-3">
+            <div class="min-w-0">
+              <p class="text-[11px] font-semibold text-slate-700">Rapid Burst</p>
+              <p class="text-[10px] text-slate-400 mt-0.5 leading-snug">Fire multiple transactions in quick succession</p>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <input type="number" [(ngModel)]="burstCount" min="1" max="50"
+                class="w-14 px-2 py-1.5 text-xs text-center bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-300 transition">
+              <button (click)="simulateRapidBurst()" [disabled]="isLoading"
+                class="px-3 py-1.5 rounded-xl text-[11px] font-semibold bg-[#2D8C8C] text-white hover:bg-[#267878] disabled:opacity-50 transition">Run</button>
+            </div>
+          </div>
+          <!-- Impossible Travel -->
+          <div class="flex items-center justify-between gap-3 bg-slate-50 rounded-xl px-3.5 py-3">
+            <div class="min-w-0">
+              <p class="text-[11px] font-semibold text-slate-700">Impossible Travel</p>
+              <p class="text-[10px] text-slate-400 mt-0.5 leading-snug">Transactions from geographically impossible locations</p>
+            </div>
+            <button (click)="simulateImpossibleTravel()" [disabled]="isLoading"
+              class="shrink-0 px-3 py-1.5 rounded-xl text-[11px] font-semibold bg-[#2D8C8C] text-white hover:bg-[#267878] disabled:opacity-50 transition">Run</button>
+          </div>
         </div>
-        <div class="flex gap-2.5">
-          <button (click)="simulateRapidBurst()" [disabled]="isLoading" class="flex-1 py-2 rounded-xl text-[11px] font-semibold bg-[#2D8C8C] text-white hover:bg-[#267878] disabled:opacity-50 transition">Rapid Burst</button>
-          <button (click)="simulateImpossibleTravel()" [disabled]="isLoading" class="flex-1 py-2 rounded-xl text-[11px] font-semibold bg-[#2D8C8C] text-white hover:bg-[#267878] disabled:opacity-50 transition">Impossible Travel</button>
-        </div>
-        <p class="text-[10px] text-slate-400 mt-2">Simulate common fraud patterns to test AI detection.</p>
       </div>
     </div>
 

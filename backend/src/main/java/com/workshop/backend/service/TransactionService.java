@@ -38,7 +38,6 @@ public class TransactionService {
     private final RestTemplate restTemplate;
     private final SseEmitterService sseEmitterService;
     private final TransactionProducer transactionProducer;
-    private final RedisFeatureStoreService featureStoreService;
 
     @Value("${fraud-service.base-url}")
     private String fraudServiceBaseUrl;
@@ -113,11 +112,6 @@ public class TransactionService {
             txn.setMerchant(dto.getMerchant() != null ? dto.getMerchant() : "");
             txn.setChannel(dto.getChannel() != null ? dto.getChannel() : "in_store");
 
-            // Look up features from Redis Feature Store BEFORE saving the new transaction amount
-            Map<String, Object> precalculatedFeatures = featureStoreService.calculateFeatures(
-                    dto.getCardNumber(), dto.getPurchaserEmailDomain(), txn.getTimestamp()
-            );
-
             // Build location history (required for travel_velocity_kmh rule)
             List<Transaction> recentHistory = transactionRepository.findTop20ByCardNumberOrderByTimestampDesc(dto.getCardNumber());
             List<Map<String, Object>> history = new ArrayList<>();
@@ -137,7 +131,6 @@ public class TransactionService {
             Map<String, Object> payload = new HashMap<>();
             payload.put("transaction", dto);
             payload.put("history", history);
-            payload.put("precalculatedFeatures", precalculatedFeatures);
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
@@ -156,9 +149,6 @@ public class TransactionService {
                     : TransactionStatus.APPROVED);
 
             Transaction saved = transactionRepository.save(txn);
-            
-            // Update Redis Feature Store with the new transaction async
-            featureStoreService.pushTransaction(saved);
 
             sseEmitterService.broadcastTransaction(saved);
 

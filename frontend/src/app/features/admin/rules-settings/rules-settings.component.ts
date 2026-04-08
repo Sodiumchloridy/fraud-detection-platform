@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { forkJoin } from 'rxjs';
 import { RulesService, FraudRule } from '../../../core/services';
+import { ToastService } from '../../../shared/services/toast.service';
 
 @Component({
   selector: 'app-rules-settings',
@@ -12,8 +14,18 @@ export class RulesSettingsComponent implements OnInit {
   rules: FraudRule[] = [];
   loading = true;
   saving = false;
-  saved = false;
-  error: string | null = null;
+  loadError: string | null = null;
+
+  activeTab: 'rules' | 'card-overrides' = 'rules';
+
+  // Card lists
+  blocklist: string[] = [];
+  allowlist: string[] = [];
+  newBlocklistCard = '';
+  newAllowlistCard = '';
+  blocklistError: string | null = null;
+  allowlistError: string | null = null;
+  savingLists = false;
 
   readonly operators = ['>', '>=', '<', '<=', '=='];
 
@@ -41,16 +53,22 @@ export class RulesSettingsComponent implements OnInit {
     { value: 'amt', label: 'Transaction Amount' },
   ];
 
-  constructor(private rulesService: RulesService) {}
+  constructor(private rulesService: RulesService, private toast: ToastService) {}
 
   ngOnInit() {
-    this.rulesService.getRules().subscribe({
-      next: (rules) => {
+    forkJoin({
+      rules: this.rulesService.getRules(),
+      blocklist: this.rulesService.getBlocklist(),
+      allowlist: this.rulesService.getAllowlist(),
+    }).subscribe({
+      next: ({ rules, blocklist, allowlist }) => {
         this.rules = rules;
+        this.blocklist = blocklist;
+        this.allowlist = allowlist;
         this.loading = false;
       },
       error: () => {
-        this.error = 'Failed to load rules. Is the fraud service running?';
+        this.loadError = 'Failed to load rules. Is the fraud service running?';
         this.loading = false;
       },
     });
@@ -76,19 +94,76 @@ export class RulesSettingsComponent implements OnInit {
 
   save() {
     this.saving = true;
-    this.saved = false;
-    this.error = null;
 
     this.rulesService.updateRules(this.rules).subscribe({
       next: (rules) => {
         this.rules = rules;
         this.saving = false;
-        this.saved = true;
-        setTimeout(() => (this.saved = false), 3000);
+        this.toast.show('Rules saved successfully');
       },
       error: () => {
         this.saving = false;
-        this.error = 'Failed to save rules.';
+        this.toast.show('Failed to save rules.', 'error');
+      },
+    });
+  }
+
+  addToBlocklist() {
+    const card = this.newBlocklistCard.trim();
+    if (!card) return;
+    if (this.blocklist.includes(card)) {
+      this.blocklistError = 'Card is already in the blocklist.';
+      return;
+    }
+    if (this.allowlist.includes(card)) {
+      this.blocklistError = `"${card}" is already in the allowlist. Remove it first.`;
+      return;
+    }
+    this.blocklist = [...this.blocklist, card];
+    this.newBlocklistCard = '';
+    this.blocklistError = null;
+  }
+
+  removeFromBlocklist(card: string) {
+    this.blocklist = this.blocklist.filter(c => c !== card);
+  }
+
+  addToAllowlist() {
+    const card = this.newAllowlistCard.trim();
+    if (!card) return;
+    if (this.allowlist.includes(card)) {
+      this.allowlistError = 'Card is already in the allowlist.';
+      return;
+    }
+    if (this.blocklist.includes(card)) {
+      this.allowlistError = `"${card}" is already in the blocklist. Remove it first.`;
+      return;
+    }
+    this.allowlist = [...this.allowlist, card];
+    this.newAllowlistCard = '';
+    this.allowlistError = null;
+  }
+
+  removeFromAllowlist(card: string) {
+    this.allowlist = this.allowlist.filter(c => c !== card);
+  }
+
+  saveLists() {
+    this.savingLists = true;
+
+    forkJoin({
+      blocklist: this.rulesService.updateBlocklist(this.blocklist),
+      allowlist: this.rulesService.updateAllowlist(this.allowlist),
+    }).subscribe({
+      next: ({ blocklist, allowlist }) => {
+        this.blocklist = blocklist;
+        this.allowlist = allowlist;
+        this.savingLists = false;
+        this.toast.show('Card overrides saved successfully');
+      },
+      error: () => {
+        this.savingLists = false;
+        this.toast.show('Failed to save card lists.', 'error');
       },
     });
   }

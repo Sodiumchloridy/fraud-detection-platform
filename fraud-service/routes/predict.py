@@ -9,7 +9,8 @@ from schemas import (
     parse_ts,
 )
 from core.features import compute_features, prepare_model_input
-from core.rules import apply_rules
+from core.rules import apply_rules, is_blocked, is_allowlisted
+from core.feature_store import calculate_features as redis_calculate_features, push_transaction
 
 router = APIRouter()
 
@@ -24,11 +25,37 @@ model.persist([_best_single_model])
 @router.post("/predict", response_model=PredictResponse)
 def predict_fraud(req: PredictRequest):
     txn = req.transaction
+
+    if is_blocked(txn.card_number):
+        return PredictResponse(
+            fraud_probability=1.0,
+            is_fraud=True,
+            features={},
+            triggered_rules=["card_blocklist"],
+            shap=None,
+            model_scores=[ModelScore(model_name="blocklist", score=1.0)],
+        )
+
+    if is_allowlisted(txn.card_number):
+        return PredictResponse(
+            fraud_probability=0.0,
+            is_fraud=False,
+            features={},
+            triggered_rules=[],
+            shap=None,
+            model_scores=[ModelScore(model_name="allowlist", score=0.0)],
+        )
+
     curr_time = (parse_ts(txn.timestamp).timestamp()
                  if txn.timestamp else time.time())
 
+    current_ms = int(curr_time * 1000)
+    precalc = redis_calculate_features(
+        txn.card_number, txn.purchaser_email_domain, current_ms
+    )
+
     t0 = time.perf_counter()
-    features = compute_features(txn, curr_time, req.history, req.precalculatedFeatures)
+    features = compute_features(txn, curr_time, req.history, precalc)
     t1 = time.perf_counter()
 
     input_df = prepare_model_input(features)
@@ -46,6 +73,12 @@ def predict_fraud(req: PredictRequest):
     inference_ms = (t2 - t1) * 1000
     total_ms = (t2 - t0) * 1000
     print(f"Feature: {feature_ms:.2f} ms | Inference: {inference_ms:.2f} ms | Total: {total_ms:.2f} ms")
+
+    # Update Redis feature store with this transaction
+    push_transaction(
+        txn.card_number, txn.amount, current_ms,
+        txn.purchaser_email_domain,
+    )
 
     return PredictResponse(
         fraud_probability=fraud_prob,
