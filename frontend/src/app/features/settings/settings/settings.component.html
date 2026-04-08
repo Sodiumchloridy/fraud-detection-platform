@@ -1,10 +1,10 @@
 <app-main-layout [pageTitle]="'Settings'">
-  <a routerLink="/dashboard" class="inline-flex items-center gap-1 text-xs font-medium text-slate-400 hover:text-indigo-600 transition mb-5">&larr; Dashboard</a>
+  <a (click)="goBack()" class="inline-flex items-center gap-1 text-xs font-medium text-slate-400 hover:text-indigo-600 transition mb-5 cursor-pointer">&larr; Back</a>
 
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
 
-    <!-- MFA card — spans 2 -->
-    <div class="md:col-span-2 bg-white rounded-[1.25rem] shadow-[0_1px_3px_rgba(0,0,0,.04)] p-7">
+    <!-- MFA card -->
+    <div class="bg-white rounded-[1.25rem] shadow-[0_1px_3px_rgba(0,0,0,.04)] p-7">
       <h2 class="text-sm font-semibold text-slate-800 mb-5 pb-4 border-b border-slate-100">Multi-Factor Authentication</h2>
 
       @if (message) {
@@ -77,6 +77,55 @@
           }
         </div>
       }
+    </div>
+
+    <!-- Change Password card -->
+    <div class="bg-white rounded-[1.25rem] shadow-[0_1px_3px_rgba(0,0,0,.04)] p-7 grow-0">
+      <h2 class="text-sm font-semibold text-slate-800 mb-5 pb-4 border-b border-slate-100">Change Password</h2>
+
+      @if (pwMessage) {
+        <div class="mb-4 px-4 py-3 rounded-xl text-sm border"
+          [class]="pwMessageType === 'success' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-rose-50 text-rose-600 border-rose-200'">
+          {{ pwMessage }}
+        </div>
+      }
+
+      @if (mfaEnabled) {
+        <div class="flex items-center gap-3 mb-5">
+          <span class="text-xs font-medium text-slate-500">Verify with:</span>
+          <div class="flex rounded-xl border border-slate-200 overflow-hidden text-xs font-medium">
+            <button (click)="useOtpForPassword = false" class="px-3 py-1.5 transition"
+              [class]="!useOtpForPassword ? 'bg-[#2D8C8C] text-white' : 'text-slate-500 hover:bg-slate-50'">Current Password</button>
+            <button (click)="useOtpForPassword = true" class="px-3 py-1.5 border-l border-slate-200 transition"
+              [class]="useOtpForPassword ? 'bg-[#2D8C8C] text-white' : 'text-slate-500 hover:bg-slate-50'">OTP Code</button>
+          </div>
+        </div>
+      }
+
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-medium text-slate-500 mb-1">{{ mfaEnabled && useOtpForPassword ? 'OTP Code' : 'Current Password' }}</label>
+          <input [(ngModel)]="pwCredential"
+            [type]="mfaEnabled && useOtpForPassword ? 'text' : 'password'"
+            [placeholder]="mfaEnabled && useOtpForPassword ? '6-digit code' : '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'"
+            [attr.maxlength]="mfaEnabled && useOtpForPassword ? 6 : null"
+            [attr.inputmode]="mfaEnabled && useOtpForPassword ? 'numeric' : null"
+            class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 transition">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-500 mb-1">New Password</label>
+          <input [(ngModel)]="pwNew" type="password" placeholder="Min. 8 characters"
+            class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 transition">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-500 mb-1">Confirm Password</label>
+          <input [(ngModel)]="pwConfirm" type="password" placeholder="Repeat new password"
+            class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 transition">
+        </div>
+      </div>
+      <div class="mt-8">
+        <button (click)="submitPasswordChange()" class="px-5 py-2.5 rounded-xl text-sm font-medium bg-[#2D8C8C] text-white hover:bg-[#267878] transition shadow-sm">Update Password</button>
+      </div>
     </div>
   </div>
 </app-main-layout>

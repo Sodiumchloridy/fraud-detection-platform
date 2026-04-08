@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Location } from '@angular/common';
 import { MainLayoutComponent } from '../../../shared/layouts/main-layout/main-layout.component';
 import { ThresholdSettingsComponent } from '../threshold-settings/threshold-settings.component';
 import { RulesSettingsComponent } from '../rules-settings/rules-settings.component';
@@ -7,9 +7,13 @@ import { RulesSettingsComponent } from '../rules-settings/rules-settings.compone
 @Component({
   selector: 'app-system-settings',
   standalone: true,
-  imports: [RouterLink, MainLayoutComponent, ThresholdSettingsComponent, RulesSettingsComponent],
+  imports: [MainLayoutComponent, ThresholdSettingsComponent, RulesSettingsComponent],
   templateUrl: './system-settings.component.html',
 })
 export class SystemSettingsComponent {
   activeTab: 'thresholds' | 'rules' = 'thresholds';
+
+  constructor(private location: Location) {}
+
+  goBack() { this.location.back(); }
 }

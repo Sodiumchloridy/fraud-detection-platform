@@ -44,4 +44,15 @@ public class AuthController {
         authService.disable2fa(auth.getName());
         return ResponseEntity.noContent().build();
     }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<Void> changePassword(Authentication auth, @RequestBody Map<String, String> body) {
+        authService.changePassword(
+            auth.getName(),
+            body.get("credential"),
+            Boolean.parseBoolean(body.getOrDefault("useOtp", "false")),
+            body.get("newPassword")
+        );
+        return ResponseEntity.ok().build();
+    }
 }

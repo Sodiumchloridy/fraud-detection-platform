@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, Location } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { BehaviorSubject, switchMap } from 'rxjs';
 import { MainLayoutComponent } from '../../../shared/layouts/main-layout/main-layout.component';
@@ -16,6 +16,7 @@ export class FlaggedTransactionsComponent {
   getStatusBadgeClass = getStatusBadgeClass;
 
   private transactionService = inject(TransactionService);
+  private location = inject(Location);
   private refresh$ = new BehaviorSubject<void>(undefined);
 
   flaggedTransactions$ = this.refresh$.pipe(
@@ -28,5 +29,7 @@ export class FlaggedTransactionsComponent {
       error: (err) => console.error('Error updating transaction status:', err)
     });
   }
+
+  goBack() { this.location.back(); }
 }
 

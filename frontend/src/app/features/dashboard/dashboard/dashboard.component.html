@@ -1,4 +1,24 @@
 <app-main-layout [pageTitle]="'Dashboard'">
+  <!-- Password change toast -->
+  @if (showPwToast) {
+    <div class="fixed top-6 left-1/2 -translate-x-1/2 z-50 flex items-start gap-3 max-w-sm w-full bg-amber-500 text-white px-5 py-4 rounded-2xl shadow-2xl animate-[fadeIn_.2s_ease]">
+      <svg class="h-5 w-5 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+      </svg>
+      <div class="flex-1">
+        <p class="text-sm font-semibold">Password reset by admin</p>
+        <p class="text-xs mt-0.5 text-amber-100">Please update your password in
+          <a routerLink="/settings" class="underline font-medium hover:text-white">Settings</a>.
+        </p>
+      </div>
+      <button (click)="showPwToast = false" class="text-amber-200 hover:text-white transition mt-0.5">
+        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+  }
+
   <!-- Key Metrics -->
   <div class="grid grid-cols-3 gap-4 mb-5">
     <div class="stat-card bg-white">

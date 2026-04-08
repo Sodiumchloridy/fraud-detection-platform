@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -30,6 +31,7 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     private final CodeVerifier codeVerifier = new DefaultCodeVerifier(
         new DefaultCodeGenerator(), new SystemTimeProvider()
@@ -120,6 +122,7 @@ public class AuthService {
         response.put("role", user.getRole().name());
         response.put("email", user.getEmail());
         response.put("twoFactorEnabled", user.isTwoFactorEnabled());
+        response.put("promptChangePassword", user.isPromptChangePassword());
         return response;
     }
 
@@ -131,5 +134,27 @@ public class AuthService {
 
     private String encodeOtpAuthValue(String value) {
         return URLEncoder.encode(value, StandardCharsets.UTF_8).replace("+", "%20");
+    }
+
+    public void changePassword(String username, String credential, boolean useOtp, String newPassword) {
+        if (newPassword == null || newPassword.length() < 8)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password must be at least 8 characters");
+
+        User user = userRepository.findByUsername(username)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        if (useOtp) {
+            if (!user.isTwoFactorEnabled())
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "OTP is not enabled for this account");
+            if (!codeVerifier.isValidCode(user.getTwoFactorSecret(), credential))
+                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid OTP code");
+        } else {
+            if (!passwordEncoder.matches(credential, user.getPassword()))
+                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Current password is incorrect");
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        user.setPromptChangePassword(false);
+        userRepository.save(user);
     }
 }

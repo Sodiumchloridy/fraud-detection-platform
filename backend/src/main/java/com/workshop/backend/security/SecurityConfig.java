@@ -37,6 +37,8 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 // 2FA management requires authentication
                 .requestMatchers("/api/auth/2fa", "/api/auth/2fa/**").authenticated()
+                // Password change requires authentication
+                .requestMatchers("/api/auth/change-password").authenticated()
                 // Public endpoints
                 .requestMatchers("/api/auth/**").permitAll()
 

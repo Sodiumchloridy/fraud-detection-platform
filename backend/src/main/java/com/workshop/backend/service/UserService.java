@@ -54,13 +54,16 @@ public class UserService {
         Optional.ofNullable(request.getRole()).filter(s -> !s.isBlank()).map(this::parseRole).ifPresent(user::setRole);
         Optional.ofNullable(request.getEnabled()).ifPresent(user::setEnabled);
         Optional.ofNullable(request.getPassword()).filter(s -> !s.isBlank()).map(passwordEncoder::encode).ifPresent(user::setPassword);
+        Optional.ofNullable(request.getPromptChangePassword()).ifPresent(user::setPromptChangePassword);
 
         return toResponse(userRepository.save(user));
     }
 
     public void delete(Long id) {
-        if (!userRepository.existsById(id)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+        User user = userRepository.findById(id)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+        if ("admin".equalsIgnoreCase(user.getUsername())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "The root admin account cannot be deleted");
         }
         userRepository.deleteById(id);
     }
@@ -91,7 +94,8 @@ public class UserService {
             user.getUsername(),
             user.getEmail(),
             user.getRole().name(),
-            user.isEnabled()
+            user.isEnabled(),
+            user.isPromptChangePassword()
         );
     }
 }

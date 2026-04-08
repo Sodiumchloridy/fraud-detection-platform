@@ -118,10 +118,25 @@ public class TransactionService {
                     dto.getCardNumber(), dto.getPurchaserEmailDomain(), txn.getTimestamp()
             );
 
-            // Pass this empty list or the precalculated features list to Python 
-            // (If Python still calculates them, we can modify Python later, but for now we supply it)
+            // Build location history (required for travel_velocity_kmh rule)
+            List<Transaction> recentHistory = transactionRepository.findTop20ByCardNumberOrderByTimestampDesc(dto.getCardNumber());
+            List<Map<String, Object>> history = new ArrayList<>();
+            for (int i = recentHistory.size() - 1; i >= 0; i--) {
+                Transaction h = recentHistory.get(i);
+                Map<String, Object> entry = new HashMap<>();
+                entry.put("amount", h.getAmount());
+                entry.put("timestamp", h.getTimestamp().atZone(ZoneId.systemDefault()).toInstant().toString());
+                entry.put("latitude",  h.getLatitude()  != null ? h.getLatitude()  : 0.0);
+                entry.put("longitude", h.getLongitude() != null ? h.getLongitude() : 0.0);
+                entry.put("merchant",  h.getMerchant()  != null ? h.getMerchant()  : "");
+                entry.put("device_info", h.getDeviceInfo() != null ? h.getDeviceInfo() : "");
+                entry.put("purchaser_email_domain", h.getPurchaserEmailDomain() != null ? h.getPurchaserEmailDomain() : "");
+                history.add(entry);
+            }
+
             Map<String, Object> payload = new HashMap<>();
             payload.put("transaction", dto);
+            payload.put("history", history);
             payload.put("precalculatedFeatures", precalculatedFeatures);
 
             HttpHeaders headers = new HttpHeaders();

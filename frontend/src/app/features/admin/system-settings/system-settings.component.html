@@ -1,7 +1,7 @@
-<app-main-layout [pageTitle]="'System Settings'">
-  <a routerLink="/dashboard"
-     class="inline-flex items-center gap-1 text-xs font-medium text-slate-400 hover:text-indigo-600 transition mb-5">
-    &larr; Dashboard
+<app-main-layout [pageTitle]="'Platform Configuration'">
+<a (click)="goBack()"
+    class="inline-flex items-center gap-1 text-xs font-medium text-slate-400 hover:text-indigo-600 transition mb-5 cursor-pointer">
+    &larr; Back
   </a>
 
   <!-- Layout: tabs left, content right -->

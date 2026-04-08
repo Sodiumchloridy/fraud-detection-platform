@@ -85,7 +85,7 @@ export class LoginComponent {
   verify() {
     this.errorMessage = '';
     this.userService.verify2fa(this.preAuthToken, this.code).subscribe({
-      next: () => this.router.navigate(['/dashboard']),
+      next: (res) => this.router.navigate(['/dashboard']),
       error: () => this.errorMessage = 'Invalid verification code'
     });
   }

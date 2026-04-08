@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { finalize, Subscription } from 'rxjs';
@@ -45,6 +45,7 @@ interface BlockedNotification {
 })
 export class PosSimulatorComponent {
   private apiUrl = 'http://localhost:8080/api/transactions';
+  private location = inject(Location);
   transactionService = inject(TransactionService);
   sseSub: Subscription | undefined = undefined;
 
@@ -59,6 +60,7 @@ export class PosSimulatorComponent {
   results: SimulationResult[] = [];
   isLoading = false;
   error: string | null = null;
+  burstCount = 5;
 
   // Notification state
   flaggedTransaction: Transaction | null = null;
@@ -112,6 +114,8 @@ export class PosSimulatorComponent {
 
   constructor(private http: HttpClient) { }
 
+  goBack() { this.location.back(); }
+
   selectLocation({ name, lat, lon }: { name: string; lat: number; lon: number }) {
     this.selectedLocation = name;
     [this.latitude, this.longitude] = [lat, lon];
@@ -152,8 +156,9 @@ export class PosSimulatorComponent {
   }
 
   simulateRapidBurst() {
-    // Simulate 5 rapid transactions (fraud pattern)
-    for (let i = 0; i < 5; i++) {
+    // Simulate rapid transactions (fraud pattern)
+    const count = Math.max(1, Math.min(this.burstCount, 50));
+    for (let i = 0; i < count; i++) {
       setTimeout(() => {
         this.amount = Math.floor(Math.random() * 500) + 50;
         this.submitTransaction();
@@ -161,18 +166,17 @@ export class PosSimulatorComponent {
     }
   }
 
-  simulateVelocityAttack() {
-    // Simulate transactions from different locations rapidly
-    const farLocations = [
-      { lat: 40.7128, lon: -74.006 },   // New York
-      { lat: 51.5074, lon: -0.1278 },   // London (impossible travel)
-      { lat: 35.6762, lon: 139.6503 },  // Tokyo (impossible travel)
+  simulateImpossibleTravel() {
+    // Teleport card across 4 continents within seconds
+    const steps = [
+      this.locations.find(l => l.name === 'Kuala Lumpur, Malaysia')!,
+      this.locations.find(l => l.name === 'New York, NY')!,
+      this.locations.find(l => l.name === 'London, UK')!,
+      this.locations.find(l => l.name === 'Tokyo, Japan')!,
     ];
-
-    farLocations.forEach((loc, i) => {
+    steps.forEach((loc, i) => {
       setTimeout(() => {
-        this.latitude = loc.lat;
-        this.longitude = loc.lon;
+        this.selectLocation(loc);
         this.amount = Math.floor(Math.random() * 1000) + 100;
         this.submitTransaction();
       }, i * 1000);

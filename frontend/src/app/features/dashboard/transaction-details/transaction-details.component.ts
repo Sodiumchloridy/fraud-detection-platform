@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, Location } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
@@ -10,7 +10,7 @@ import { LlmService } from '../../../core/services/llm.service';
 @Component({
   selector: 'app-transaction-details',
   standalone: true,
-  imports: [CommonModule, RouterLink, MainLayoutComponent],
+  imports: [CommonModule, MainLayoutComponent],
   templateUrl: './transaction-details.component.html',
   styleUrls: []
 })
@@ -25,8 +25,11 @@ export class TransactionDetailsComponent implements OnInit {
     private route: ActivatedRoute,
     private transactionService: TransactionService,
     private http: HttpClient,
-    private llmService: LlmService
+    private llmService: LlmService,
+    private location: Location
   ) {}
+
+  goBack() { this.location.back(); }
 
   ngOnInit() {
     const txnId = this.route.snapshot.paramMap.get('id');

@@ -31,4 +31,7 @@ public class User {
     private String twoFactorSecret;
 
     private boolean twoFactorEnabled = false;
+
+    @Column(columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private boolean promptChangePassword = false;
 }

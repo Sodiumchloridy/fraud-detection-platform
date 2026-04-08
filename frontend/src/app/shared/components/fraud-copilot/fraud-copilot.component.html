@@ -53,10 +53,6 @@
 
             <div class="mt-5 space-y-2">
                 @if (transaction) {
-                <button (click)="userInput = 'Why was this transaction flagged?'; send()"
-                    class="w-full text-left px-3 py-2 rounded-xl text-xs text-slate-600 bg-slate-50 hover:bg-slate-100 transition">
-                    Why was this transaction flagged?
-                </button>
                 <button (click)="userInput = 'Is this transaction likely fraudulent? What stands out?'; send()"
                     class="w-full text-left px-3 py-2 rounded-xl text-xs text-slate-600 bg-slate-50 hover:bg-slate-100 transition">
                     Is this transaction likely fraudulent?
@@ -73,10 +69,6 @@
                 <button (click)="userInput = 'How should I interpret a high travel velocity?'; send()"
                     class="w-full text-left px-3 py-2 rounded-xl text-xs text-slate-600 bg-slate-50 hover:bg-slate-100 transition">
                     How should I interpret a high travel velocity?
-                </button>
-                <button (click)="userInput = 'Explain the risk score thresholds'; send()"
-                    class="w-full text-left px-3 py-2 rounded-xl text-xs text-slate-600 bg-slate-50 hover:bg-slate-100 transition">
-                    Explain the risk score thresholds
                 </button>
                 }
             </div>

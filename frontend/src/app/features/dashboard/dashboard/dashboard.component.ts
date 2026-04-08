@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { MainLayoutComponent } from '../../../shared/layouts/main-layout/main-layout.component';
 import { TransactionService, Transaction, TransactionStats, getStatusBadgeClass } from '../../../core/services';
+import { UserService } from '../../../core/services/user.service';
 import { BehaviorSubject, Subscription } from 'rxjs';
 import { Chart, registerables } from 'chart.js';
 
@@ -22,6 +23,9 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
   getStatusBadgeClass = getStatusBadgeClass;
   @ViewChild('trendCanvas') canvasRef!: ElementRef<HTMLCanvasElement>;
 
+  showPwToast = false;
+  private toastTimer?: ReturnType<typeof setTimeout>;
+
   private chart?: Chart;
   private sseSub?: Subscription;
 
@@ -33,10 +37,15 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
 
   constructor(
     private transactionService: TransactionService,
+    private userService: UserService,
     private cdr: ChangeDetectorRef
   ) {}
 
   ngAfterViewInit(): void {
+    if (this.userService.getCurrentUser()?.promptChangePassword) {
+      this.showPwToast = true;
+      this.toastTimer = setTimeout(() => { this.showPwToast = false; this.cdr.markForCheck(); }, 8000);
+    }
     // 1. Initial load via HTTP
     this.transactionService.getAllTransactions().subscribe(data => {
       this.transactionsSubject.next(
@@ -116,6 +125,7 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
   ngOnDestroy(): void {
     this.sseSub?.unsubscribe();
     this.chart?.destroy();
+    if (this.toastTimer) clearTimeout(this.toastTimer);
   }
 
   private updateChart(): void {

@@ -36,7 +36,7 @@ DEFAULT_RULES = [
         "threshold": 3.0,
         "penalty": 0.15,
         "override": False,
-        "enabled": True,
+        "enabled": False,
     },
     {
         "id": "rapid_burst",
@@ -47,7 +47,7 @@ DEFAULT_RULES = [
         "threshold": 5,
         "penalty": 0.10,
         "override": False,
-        "enabled": True,
+        "enabled": False,
     },
     {
         "id": "large_ratio",
@@ -69,7 +69,7 @@ DEFAULT_RULES = [
         "threshold": 1,
         "penalty": 0.05,
         "override": False,
-        "enabled": True,
+        "enabled": False,
     },
     {
         "id": "new_merchant",
@@ -89,7 +89,7 @@ DEFAULT_RULES = [
         "feature": "seconds_since_last_txn",
         "operator": "<=",
         "threshold": 1,
-        "penalty": 0.5,
+        "penalty": 0.3,
         "override": False,
         "enabled": True,
     }

@@ -1,6 +1,6 @@
 import { Component, ViewChildren, QueryList, ElementRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Location } from '@angular/common';
 import { MainLayoutComponent } from '../../../shared/layouts/main-layout/main-layout.component';
 import { UserService } from '../../../core/services';
 import { QRCodeComponent } from 'angularx-qrcode';
@@ -8,18 +8,27 @@ import { QRCodeComponent } from 'angularx-qrcode';
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [FormsModule, RouterLink, MainLayoutComponent, QRCodeComponent],
+  imports: [FormsModule, MainLayoutComponent, QRCodeComponent],
   templateUrl: './settings.component.html',
   styleUrls: []
 })
 export class SettingsComponent {
   mfaEnabled: boolean;
+  promptChangePassword: boolean;
   showSetup = false;
   setupSecret = '';
   otpauthUri = '';
   confirmDigits = ['', '', '', '', '', ''];
   message = '';
   messageType: 'error' | 'success' = 'error';
+
+  // Change Password
+  useOtpForPassword = false;
+  pwCredential = '';
+  pwNew = '';
+  pwConfirm = '';
+  pwMessage = '';
+  pwMessageType: 'success' | 'error' = 'error';
 
   @ViewChildren('digitInput') digitInputs!: QueryList<ElementRef<HTMLInputElement>>;
 
@@ -65,9 +74,12 @@ export class SettingsComponent {
     inputs[Math.min(nums.length, 5)].nativeElement.focus();
   }
 
-  constructor(private userService: UserService) {
+  constructor(private userService: UserService, private location: Location) {
     this.mfaEnabled = this.userService.getCurrentUser()?.twoFactorEnabled ?? false;
+    this.promptChangePassword = this.userService.getCurrentUser()?.promptChangePassword ?? false;
   }
+
+  goBack() { this.location.back(); }
 
   startSetup() {
     this.message = '';
@@ -108,6 +120,42 @@ export class SettingsComponent {
   private showMessage(text: string, type: 'error' | 'success') {
     this.message = text;
     this.messageType = type;
+  }
+
+  submitPasswordChange(): void {
+    this.pwMessage = '';
+    const credential = this.useOtpForPassword
+      ? this.pwCredential.replace(/\D/g, '')
+      : this.pwCredential;
+
+    if (!credential || (this.useOtpForPassword && credential.length < 6)) {
+      this.showPwMessage(this.useOtpForPassword ? 'Please enter your 6-digit OTP code' : 'Current password is required', 'error');
+      return;
+    }
+    if (!this.pwNew || this.pwNew.length < 8) {
+      this.showPwMessage('New password must be at least 8 characters', 'error');
+      return;
+    }
+    if (this.pwNew !== this.pwConfirm) {
+      this.showPwMessage('Passwords do not match', 'error');
+      return;
+    }
+
+    this.userService.changePassword(credential, this.pwNew, this.useOtpForPassword).subscribe({
+      next: () => {
+        this.showPwMessage('Password changed successfully', 'success');
+        this.pwCredential = '';
+        this.pwNew = '';
+        this.pwConfirm = '';
+        this.promptChangePassword = false;
+      },
+      error: (err) => this.showPwMessage(err?.error?.message || 'Failed to change password', 'error')
+    });
+  }
+
+  private showPwMessage(text: string, type: 'success' | 'error') {
+    this.pwMessage = text;
+    this.pwMessageType = type;
   }
 }
 

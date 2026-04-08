@@ -8,6 +8,7 @@ export interface User {
   email: string;
   role: string;
   enabled: boolean;
+  promptChangePassword?: boolean;
 }
 
 export interface LoginRequest {
@@ -24,6 +25,7 @@ export interface LoginResponse {
   twoFactorRequired?: boolean;
   preAuthToken?: string;
   twoFactorEnabled?: boolean;
+  promptChangePassword?: boolean;
 }
 
 export interface TwoFactorSetup {
@@ -44,6 +46,7 @@ export interface UpdateUserRequest {
   role?: 'ADMIN' | 'ANALYST';
   enabled?: boolean;
   password?: string;
+  promptChangePassword?: boolean;
 }
 
 @Injectable({
@@ -154,5 +157,11 @@ export class UserService {
 
   deleteUser(userId: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/users/${userId}`);
+  }
+
+  changePassword(credential: string, newPassword: string, useOtp: boolean): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/auth/change-password`, { credential, newPassword, useOtp }).pipe(
+      tap(() => this.updateStoredUser({ promptChangePassword: false }))
+    );
   }
 }

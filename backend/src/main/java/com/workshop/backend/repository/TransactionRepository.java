@@ -25,6 +25,8 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID> 
 
     List<Transaction> findByCardNumberOrderByTimestampAsc(String cardNumber);
 
+    List<Transaction> findTop20ByCardNumberOrderByTimestampDesc(String cardNumber);
+
     @Query("SELECT COUNT(t) FROM Transaction t WHERE t.cardNumber = :cardNumber AND t.timestamp >= :startDate AND t.timestamp <= :endDate")
     Long countByCardNumberAndTimestampBetween(@Param("cardNumber") String cardNumber, @Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
 

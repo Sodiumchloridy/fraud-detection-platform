@@ -8,4 +8,5 @@ public class UpdateUserRequest {
     private String email;
     private String role;
     private Boolean enabled;
+    private Boolean promptChangePassword;
 }
