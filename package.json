@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "start:frontend": "cd frontend && npm start",
-    "start:backend": "cd backend && mvn spring-boot:run",
+    "start:backend": "cd backend && mvnw spring-boot:run",
     "start:fastapi": "cd fraud-service && uv run uvicorn main:app",
     "start:shap": "cd fraud-service && uv run python shap_worker.py"
   }

@@ -1,125 +1,66 @@
 > [!NOTE]
-> This project is part of academic coursework for UECS3563 Industry Professional Domain Skill Development.
+> This project is part of UECS3599 Final Year Project.
 
-# Fraud Detection System
+# Fraud Detection Platform
 <img width="940" height="369" alt="image" src="https://github.com/user-attachments/assets/c526c07d-f588-40d3-b103-16177a54093f" />
 
-A full-stack web application prototype for monitoring and analyzing fraudulent transactions using Angular and Spring Boot.
+A modern, scalable platform for real-time monitoring and analysis of fraudulent transactions. The system integrates a robust Java Spring Boot backend, an intuitive Angular frontend, and a highly performant Python-based AI service for automated fraud detection.
 
-## Project Structure
+## System Architecture
 
-```
-workshop-assignment/
-├── backend/          # Spring Boot REST API
-│   ├── src/main/java/com/workshop/backend/
-│   │   ├── controller/    # REST endpoints
-│   │   ├── model/         # JPA entities
-│   │   ├── repository/    # Data access layer
-│   │   └── exception/     # Error handling
-│   └── src/main/resources/
-│       ├── application.properties
-│       └── data.sql       # Sample data
-└── frontend/         # Angular application
-    └── src/app/
-        ├── core/          # Services & guards
-        ├── features/      # Feature modules
-        ├── shared/        # Reusable components
-        └── pages/         # Static pages
-```
+The platform consists of three main services:
 
-## Features
+- **Frontend (Angular)**: A responsive management dashboard for analysts to monitor transactions, review risks, simulate POS transactions, and configure rules.
+- **Backend (Spring Boot)**: A RESTful API that manages transactional data, user configurations, and orchestrates data flow between the UI and the AI engine.
+- **Fraud Service (Python/FastAPI)**: An automated risk-scoring engine powered by Machine Learning (AutoGluon) with built-in interpretability (SHAP) and conversational AI explanations (LiteLLM).
 
-### Backend (Spring Boot)
-- **REST API** with CRUD operations for transactions
-- **JPA/Hibernate** for database operations
-- **Custom queries** for risk-based filtering
-- **Global exception handling** with proper error responses
-- **Bean validation** for data integrity
-- **CORS configuration** for frontend integration
-- **H2 in-memory database** for development
+## Key Features
 
-### Frontend (Angular)
-- **Standalone components** architecture
-- **Reactive data binding** with services
-- **HTTP client** for API communication
-- **Routing & navigation** for multi-page experience
-- **Form validation** for user inputs
-- **Responsive UI** with TailwindCSS
+- **Real-Time Fraud Detection**: Uses an ensemble ML architecture (CatBoost, LightGBM) integrated via AutoGluon to classify and score incoming transactions.
+- **Explainable AI (XAI)**: Generates human-readable SHAP explanations and rule-based rationales highlighting why a transaction is flagged.
+- **Dynamic Rule Management**: Analysts can adjust risk thresholds, define custom blocking rules, and manage platform configurations on the fly.
+- **Interactive Dashboard**: View live transaction feeds, comprehensive risk statistics, and prioritize high-risk activities.
+- **POS Simulator**: A built-in point-of-sale simulator to manually trigger and test transactions in real-time.
 
-## Getting Started
+## Tech Stack
+
+- **Frontend**: Angular 19+, TailwindCSS, TypeScript
+- **Backend**: Java 21+, Spring Boot 3.5, Hibernate/JPA, H2 Database (Dev)
+- **Fraud Service**: Python 3.12, FastAPI, AutoGluon, SHAP, Confluent Kafka, Redis, LiteLLM
+
+## Quick Start
 
 ### Prerequisites
-- Java 21+
 - Node.js 18+
-- Maven (included via wrapper)
+- Java 21+
+- Python 3.12+ (uv recommended)
 
-### Backend Setup
-
+### 1. Backend (Spring Boot)
 ```bash
 cd backend
-# Windows
-.\mvnw.cmd spring-boot:run
-
-# Linux/Mac
-./mvnw spring-boot:run
+./mvnw spring-boot:run   # Linux/Mac
+.\mvnw.cmd spring-boot:run  # Windows
 ```
+*Runs on `http://localhost:8080`*
 
-Backend runs on: `http://localhost:8080`
-
-### Frontend Setup
-
+### 2. Frontend (Angular)
 ```bash
 cd frontend
 npm install
 npm start
 ```
+*Runs on `http://localhost:4200`*
+*Default Login:* `admin` / `admin123`
 
-Frontend runs on: `http://localhost:4200`
-
-## Usage
-
-1. **Login** with credentials:
-   - Username: `admin`
-   - Password: `admin123`
-
-2. **Dashboard** shows:
-   - Transaction statistics
-   - Live transaction feed
-   - Flagged transactions count
-
-3. **Flagged Transactions** page displays transactions that require analyst review
-
-4. **Transaction Details** allows analysts to:
-   - View complete transaction information
-   - Mark transactions as legitimate or fraudulent
-   - See fraud scores and status
-
-## API Endpoints
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/transactions` | Get all transactions |
-| GET | `/api/transactions/{id}` | Get transaction by ID |
-| GET | `/api/transactions/flagged` | Get flagged transactions for review |
-| GET | `/api/transactions/stats` | Get transaction statistics |
-| POST | `/api/transactions` | Create new transaction |
-| PATCH | `/api/transactions/{id}/status` | Update transaction status |
-| DELETE | `/api/transactions/{id}` | Delete transaction |
-| POST | `/api/users/login` | User authentication |
-
-## Technologies
-
-**Backend:**
-- Spring Boot 3.5.5
-- Spring Data JPA
-- Hibernate 6.6.26
-- H2 Database 2.3.232
-- Maven
-
-**Frontend:**
-- Angular 19.2.16
-- TailwindCSS 3.4.17
+### 3. Fraud Service (Python/FastAPI)
+```bash
+cd fraud-service
+# Example using uv:
+uv sync
+uv run uvicorn main:app --reload
+```
+*Runs on `http://localhost:8000`*
 
 ## License
 
-This project is for educational purposes.
+This project is developed for educational purposes as part of a final year project.
