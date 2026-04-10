@@ -125,9 +125,9 @@ def compute_features(txn: Transaction, curr_time: float, history: list[Historica
                                     if txn.card_issuing_country and txn.billing_country_code else 0.0,
         'is_risky_email':           float(p_email in RISKY_EMAIL_DOMAINS),
         'email_domain_mismatch':    float(p_email != r_email) if (p_email and r_email) else 0.0,
-        'is_new_email':             precalc.get('is_new_email') if 'is_new_email' in precalc else (float(p_email not in emails) if p_email else np.nan),
-        'is_new_device':            float(txn.device_info not in device_infos) if txn.device_info else np.nan,
-        'is_new_merchant':          float(txn.billing_zip_code not in billing_zips) if txn.billing_zip_code else np.nan,
+        'is_new_email':             precalc.get('is_new_email') if 'is_new_email' in precalc else (float(p_email not in emails) if p_email else None),
+        'is_new_device':            float(txn.device_info not in device_infos) if txn.device_info else None,
+        'is_new_merchant':          float(txn.billing_zip_code not in billing_zips) if txn.billing_zip_code else None,
         
         # New features
         'amt_cents':                float(txn.amount % 1),

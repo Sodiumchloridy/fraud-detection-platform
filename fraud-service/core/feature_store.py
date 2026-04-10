@@ -19,12 +19,17 @@ def init_redis():
     global _redis
     host = os.getenv("REDIS_HOST", "localhost")
     port = int(os.getenv("REDIS_PORT", "6379"))
-    _redis = redis.Redis(host=host, port=port, decode_responses=True)
+    _redis = redis.Redis(
+        host=host, port=port, decode_responses=True,
+        socket_connect_timeout=2,
+        socket_timeout=2,
+    )
     try:
         _redis.ping()
         logger.info("Connected to Redis at %s:%s", host, port)
-    except redis.ConnectionError:
-        logger.warning("Redis at %s:%s is not reachable — will use fallback features", host, port)
+    except (redis.ConnectionError, redis.TimeoutError, OSError) as exc:
+        logger.warning("Redis at %s:%s is not reachable — will use fallback features: %s", host, port, exc)
+        _redis = None
 
 
 def push_transaction(card_number: str, amount: float, timestamp_ms: int,
