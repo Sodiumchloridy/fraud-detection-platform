@@ -7,6 +7,6 @@ import org.springframework.stereotype.Component;
 @Component
 public class ThresholdConfig {
     
-    private double blockedThreshold = 0.80;
-    private double flaggedThreshold = 0.50;
+    private double blockedThreshold = 0.50;
+    private double flaggedThreshold = 0.18;
 }

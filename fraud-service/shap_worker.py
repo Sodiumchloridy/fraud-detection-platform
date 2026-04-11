@@ -13,17 +13,21 @@ import math
 import os
 import time
 
-from autogluon.tabular import TabularPredictor
+import lightgbm as lgb
 from confluent_kafka import Consumer, Producer
 
 from schemas import Transaction, parse_ts
-from core.features import compute_features, prepare_model_input
+from core.features import compute_features, MODEL_FEATURE_ORDER
 from core.explainability import compute_shap_values
+from core.model_artifacts import load_artifacts, encode_row
 
 logger = logging.getLogger(__name__)
 
 _dir = os.path.dirname(__file__)
-model = TabularPredictor.load(os.path.join(_dir, "models", "ag_deployment_model"))
+_model_dir = os.path.join(_dir, "models")
+
+model = lgb.Booster(model_file=os.path.join(_model_dir, "student_distilled.txt"))
+_cat_lookups, _threshold = load_artifacts(os.path.join(_model_dir, "inference_artifacts.json"))
 
 KAFKA_BOOTSTRAP = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "localhost:9094")
 PENDING_TOPIC = "transactions.pending-shap"
@@ -46,10 +50,11 @@ def _process_message(event: dict, producer: Producer):
     try:
         txn = Transaction(**event)
         curr_time = parse_ts(txn.timestamp).timestamp() if txn.timestamp else time.time()
-        input_df = prepare_model_input(compute_features(txn, curr_time, []))
+        features = compute_features(txn, curr_time, [])
+        encoded = encode_row(features, MODEL_FEATURE_ORDER, _cat_lookups)
 
         t0 = time.perf_counter()
-        shap_dict = compute_shap_values(model, input_df, list(input_df.columns))
+        shap_dict = compute_shap_values(model, encoded, MODEL_FEATURE_ORDER, features)
         logger.info("SHAP for %s took %.2f ms", transaction_id, (time.perf_counter() - t0) * 1000)
 
         result = {

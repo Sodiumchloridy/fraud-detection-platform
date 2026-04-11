@@ -1,25 +1,25 @@
 from fastapi import APIRouter
 import os
 import numpy as np
-from autogluon.tabular import TabularPredictor
+import lightgbm as lgb
 import time
 
 from schemas import (
     PredictRequest, PredictResponse, ModelScore,
     parse_ts,
 )
-from core.features import compute_features, prepare_model_input
+from core.features import compute_features, MODEL_FEATURE_ORDER
 from core.rules import apply_rules, is_blocked, is_allowlisted
 from core.feature_store import calculate_features as redis_calculate_features, push_transaction
+from core.model_artifacts import load_artifacts, encode_row
 
 router = APIRouter()
 
 _dir = os.path.dirname(__file__)
-_model_path = os.path.join(_dir, '..', 'models', 'ag_deployment_model')
+_model_dir = os.path.join(_dir, '..', 'models')
 
-model = TabularPredictor.load(path=_model_path)
-_best_single_model = "CatBoost_FULL"
-model.persist([_best_single_model])
+model = lgb.Booster(model_file=os.path.join(_model_dir, 'student_distilled.txt'))
+_cat_lookups, _threshold = load_artifacts(os.path.join(_model_dir, 'inference_artifacts.json'))
 
 
 @router.post("/predict", response_model=PredictResponse)
@@ -58,13 +58,11 @@ def predict_fraud(req: PredictRequest):
     features = compute_features(txn, curr_time, req.history, precalc)
     t1 = time.perf_counter()
 
-    input_df = prepare_model_input(features)
-    y_prob = model.predict_proba(input_df, model=_best_single_model).iloc[:, 1]
-    pred_array = np.asarray(y_prob).flatten()
-    ml_score = float(pred_array[0])
+    encoded = encode_row(features, MODEL_FEATURE_ORDER, _cat_lookups)
+    ml_score = float(model.predict(encoded)[0])
     ml_score = max(0.0, min(1.0, ml_score))
 
-    model_scores = [ModelScore(model_name="autogluon", score=ml_score)]
+    model_scores = [ModelScore(model_name="lightgbm_student", score=ml_score)]
 
     fraud_prob, triggered_rules = apply_rules(features, ml_score)
     t2 = time.perf_counter()
@@ -82,7 +80,7 @@ def predict_fraud(req: PredictRequest):
 
     return PredictResponse(
         fraud_probability=fraud_prob,
-        is_fraud=fraud_prob > 0.5,
+        is_fraud=fraud_prob > _threshold,
         features=features,
         triggered_rules=triggered_rules,
         shap=None,

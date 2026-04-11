@@ -17,8 +17,10 @@ Important domain facts:
 
 Response format rules:
 - Respond in plain text only. Do NOT use markdown formatting (no **, ##, ```, -, * bullets, etc.).
-- Keep responses concise and actionable.
+- Keep responses concise and actionable. Avoid overly technical details.
+- Present risk scores as rounded percentages (e.g. say "86%" instead of "0.86236273"). Round numeric values to at most 2 decimal places.
 - Use short paragraphs or numbered lists (1. 2. 3.) when structure is needed.
+- Only say things you are confident about. If you don't know, say "I don't know" or "The data doesn't provide a clear answer". Avoid speculation.
 - If asked about something outside fraud analysis, politely redirect."""
 
 

@@ -52,3 +52,4 @@ Thumbs.db
 
 # Deployment models
 **/ag_deployment_model/
+**/models/*.txt

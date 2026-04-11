@@ -1,5 +1,4 @@
 import numpy as np
-import pandas as pd
 from schemas import Transaction, HistoricalTransaction, parse_ts
 
 
@@ -8,12 +7,18 @@ RISKY_EMAIL_DOMAINS = {
     'naver.com', 'anonymous', 'tempmail', 'anonymous.com', 'tempmail.com'
 }
 
-# ── Feature lists matching the trained AutoGluon model ──
+# ── Feature lists matching the trained LightGBM student model ──
 CORE_FEATURES = [
     'amt', 'card_id', 'card_network', 'card_type',
     'card_issuing_country', 'billing_zip_code', 'billing_country_code',
     'device_type', 'device_info',
     'purchaser_email_domain', 'recipient_email_domain',
+]
+
+CAT_COLS = [
+    'card_id', 'card_issuing_country', 'card_network', 'card_type',
+    'billing_zip_code', 'billing_country_code', 'device_type',
+    'device_info', 'purchaser_email_domain', 'recipient_email_domain',
 ]
 
 DERIVED_FEATURES = [
@@ -27,7 +32,7 @@ DERIVED_FEATURES = [
     'amt_sum_1h', 'amt_sum_24h', 'amt_sum_7d'
 ]
 
-# Features used by the AutoGluon model
+# Features used by the LightGBM student model
 MODEL_FEATURE_ORDER = CORE_FEATURES + DERIVED_FEATURES
 
 # ── Helpers ──────────────────────────────────────────────────────────────
@@ -141,16 +146,4 @@ def compute_features(txn: Transaction, curr_time: float, history: list[Historica
         'travel_distance_km':       dist,
     }
 
-
-def prepare_model_input(features: dict) -> pd.DataFrame:
-    """Build a single-row DataFrame matching training-time AutoGluon inputs."""
-    row = {}
-    for f in MODEL_FEATURE_ORDER:
-        val = features.get(f)
-        if isinstance(val, str):
-            # AutoGluon natively handles strings, no hashing required.
-            row[f] = val if val else "nan"
-        else:
-            row[f] = np.float32(val if val is not None else np.nan)
-    return pd.DataFrame([row])
 

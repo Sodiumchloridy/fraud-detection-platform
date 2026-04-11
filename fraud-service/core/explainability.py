@@ -1,7 +1,5 @@
-import pandas as pd
 import numpy as np
-import shap
-from autogluon.tabular import TabularPredictor
+import lightgbm as lgb
 
 # Human-readable feature labels
 FEATURE_LABELS = {
@@ -40,55 +38,25 @@ FEATURE_LABELS = {
 
 
 def compute_shap_values(
-    model: TabularPredictor,
-    input_df: pd.DataFrame,
-    feature_order: list[str] = None,
+    model: lgb.Booster,
+    encoded: np.ndarray,
+    feature_names: list[str],
+    raw_features: dict,
 ) -> dict:
-    """Compute local feature attributions using SHAP KernelExplainer."""
-    cols = input_df.columns.tolist() if feature_order is None else feature_order
+    """Compute local feature attributions using LightGBM's native pred_contrib.
 
-    # KernelExplainer requires a fully numeric array.
-    # Encode categorical (string) columns to integer codes and store the reverse mapping
-    # so predict_fn can decode them back before calling AutoGluon.
-    cat_encoders: dict[str, np.ndarray] = {}
-    encoded_df = input_df[cols].copy()
-    for col in encoded_df.select_dtypes(include=["object", "category"]).columns:
-        codes, uniques = pd.factorize(encoded_df[col])
-        cat_encoders[col] = uniques
-        encoded_df[col] = codes.astype(float)
+    Uses the exact tree-path SHAP algorithm built into LightGBM, which is
+    both faster and more accurate than model-agnostic approaches like
+    KernelExplainer.
+    """
+    # pred_contrib returns shape (n_samples, n_features + 1)
+    # The last column is the bias (base value); the rest are per-feature SHAP values.
+    contrib = model.predict(encoded, pred_contrib=True)
 
-    # All-zero numeric background (one row)
-    background = pd.DataFrame(np.zeros((1, len(cols))), columns=cols)
+    base_value = float(contrib[0, -1])
+    shap_vals = contrib[0, :-1]
 
-    def predict_fn(x):
-        df = pd.DataFrame(x, columns=cols)
-        # Decode integer codes back to the original category strings
-        for col, uniques in cat_encoders.items():
-            idx = df[col].round().astype(int).clip(0, len(uniques) - 1)
-            df[col] = uniques[idx]
-        # Using class 1 probabilities
-        return model.predict_proba(df).iloc[:, 1].values
-
-    explainer = shap.KernelExplainer(predict_fn, background)
-    # Compute SHAP values for the single (encoded) input row
-    shap_values_raw = explainer.shap_values(encoded_df, silent=True)
-    
-    if isinstance(shap_values_raw, list):
-        sv = shap_values_raw[1][0] if len(shap_values_raw) > 1 else shap_values_raw[0][0]
-    elif hasattr(shap_values_raw, 'shape') and len(shap_values_raw.shape) == 3:
-        sv = shap_values_raw[0, :, 1]
-    elif hasattr(shap_values_raw, 'shape') and len(shap_values_raw.shape) == 2:
-        sv = shap_values_raw[0, :]
-    else:
-        sv = shap_values_raw[0]
-
-    # Handle the expected value
-    if isinstance(explainer.expected_value, (list, np.ndarray)) and len(explainer.expected_value) > 1:
-        base_value = float(explainer.expected_value[1])
-    else:
-        base_value = float(explainer.expected_value)
-
-    contributions = {feat: round(float(val), 6) for feat, val in zip(cols, sv)}
+    contributions = {feat: round(float(val), 6) for feat, val in zip(feature_names, shap_vals)}
 
     sorted_features = sorted(
         contributions.items(), key=lambda x: abs(x[1]), reverse=True
@@ -99,7 +67,7 @@ def compute_shap_values(
             "feature": feat,
             "label": FEATURE_LABELS.get(feat, feat),
             "shap_value": val,
-            "feature_value": _safe_value(input_df[feat].iloc[0]),
+            "feature_value": _safe_value(raw_features.get(feat)),
         }
         for feat, val in sorted_features
     ]

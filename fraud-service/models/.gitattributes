@@ -1,4 +1,2 @@
 # Enforce Unix line endings (LF) for model files
-ag_deployment_model/** -text
-lightgbm_model.txt eol=lf
 *.txt eol=lf
