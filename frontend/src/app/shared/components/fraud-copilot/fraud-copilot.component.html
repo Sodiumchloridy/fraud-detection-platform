@@ -33,6 +33,7 @@
         <div>
             <h3 class="text-sm font-semibold text-white">Fraud Copilot</h3>
             <p class="text-[11px] text-white/70">{{ transaction ? 'Reviewing transaction ' + transaction.id :
+                dashboardContext ? 'Dashboard context active' :
                 'AI-powered fraud analysis assistant' }}</p>
         </div>
     </div>
@@ -60,6 +61,19 @@
                 <button (click)="userInput = 'Summarize the risk factors for this transaction'; send()"
                     class="w-full text-left px-3 py-2 rounded-xl text-xs text-slate-600 bg-slate-50 hover:bg-slate-100 transition">
                     Summarize the risk factors
+                </button>
+                } @else if (dashboardContext) {
+                <button (click)="userInput = 'Give me a summary of the current dashboard metrics'; send()"
+                    class="w-full text-left px-3 py-2 rounded-xl text-xs text-slate-600 bg-slate-50 hover:bg-slate-100 transition">
+                    Summarize current dashboard metrics
+                </button>
+                <button (click)="userInput = 'Is the current fraud rate concerning? What should I focus on?'; send()"
+                    class="w-full text-left px-3 py-2 rounded-xl text-xs text-slate-600 bg-slate-50 hover:bg-slate-100 transition">
+                    Is the current fraud rate concerning?
+                </button>
+                <button (click)="userInput = 'What actions should I take based on the pending reviews?'; send()"
+                    class="w-full text-left px-3 py-2 rounded-xl text-xs text-slate-600 bg-slate-50 hover:bg-slate-100 transition">
+                    What should I prioritize right now?
                 </button>
                 } @else {
                 <button (click)="userInput = 'What are common indicators of credit card fraud?'; send()"

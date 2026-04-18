@@ -13,7 +13,7 @@ def load_artifacts(json_path: str) -> tuple[dict[str, dict[str, float]], float]:
     """Return (cat_lookups, threshold) from the cached JSON artifacts."""
     with open(json_path, "r") as f:
         data = json.load(f)
-    return data["cat_lookups"], float(data["threshold"])
+    return data["cat_lookups"], float(data.get("threshold", 0.18))
 
 
 def encode_row(

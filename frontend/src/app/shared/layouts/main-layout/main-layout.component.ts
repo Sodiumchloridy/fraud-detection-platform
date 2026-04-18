@@ -19,6 +19,7 @@ import { TransactionService } from '../../../core/services';
 export class MainLayoutComponent implements OnInit, OnDestroy {
   @Input() pageTitle: string = 'Dashboard ';
   @Input() copilotTransaction: any = null;
+  @Input() copilotDashboardContext: any = null;
   userName: string;
   isAdmin: boolean;
   pendingReview = 0;

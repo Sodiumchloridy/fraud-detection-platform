@@ -32,6 +32,7 @@ class ChatMessage(BaseModel):
 class ChatRequest(BaseModel):
     messages: list[ChatMessage]
     transaction_context: dict | None = None
+    dashboard_context: dict | None = None
 
 
 @router.post("/chat")
@@ -39,6 +40,13 @@ def chat(req: ChatRequest):
     system = SYSTEM_PROMPT
     if req.transaction_context:
         system += f"\n\nThe analyst is currently reviewing this transaction:\n{json.dumps(req.transaction_context, indent=2)}\nUse this context to answer their questions."
+    if req.dashboard_context:
+        system += (
+            "\n\nThe analyst is currently viewing the dashboard. Here are the live metrics:"
+            f"\n{json.dumps(req.dashboard_context, indent=2)}"
+            "\nUse these metrics to give contextual answers about the platform's current state, "
+            "fraud trends, and recommended actions."
+        )
     messages = [{"role": "system", "content": system}]
     messages.extend({"role": m.role, "content": m.content} for m in req.messages)
 

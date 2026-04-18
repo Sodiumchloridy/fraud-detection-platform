@@ -10,5 +10,5 @@
     <h1 class="text-2xl font-bold text-slate-800 mb-6">{{ pageTitle }}</h1>
     <ng-content></ng-content>
   </main>
-  <app-fraud-copilot [transaction]="copilotTransaction"></app-fraud-copilot>
+  <app-fraud-copilot [transaction]="copilotTransaction" [dashboardContext]="copilotDashboardContext"></app-fraud-copilot>
 </div>

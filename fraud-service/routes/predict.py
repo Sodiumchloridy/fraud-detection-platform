@@ -19,7 +19,10 @@ _dir = os.path.dirname(__file__)
 _model_dir = os.path.join(_dir, '..', 'models')
 
 model = lgb.Booster(model_file=os.path.join(_model_dir, 'student_distilled.txt'))
-_cat_lookups, _threshold = load_artifacts(os.path.join(_model_dir, 'inference_artifacts.json'))
+_cat_lookups, _ = load_artifacts(os.path.join(_model_dir, 'inference_artifacts.json'))
+
+_flagged_threshold = float(os.getenv('FRAUD_FLAGGED_THRESHOLD', '0.18'))
+_blocked_threshold = float(os.getenv('FRAUD_BLOCKED_THRESHOLD', '0.50'))
 
 
 @router.post("/predict", response_model=PredictResponse)
@@ -80,7 +83,7 @@ def predict_fraud(req: PredictRequest):
 
     return PredictResponse(
         fraud_probability=fraud_prob,
-        is_fraud=fraud_prob > _threshold,
+        is_fraud=fraud_prob >= _flagged_threshold,
         features=features,
         triggered_rules=triggered_rules,
         shap=None,

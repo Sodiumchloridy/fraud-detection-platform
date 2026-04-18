@@ -1,7 +1,7 @@
 import { Injectable, NgZone } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Transaction } from './transaction.service';
+import { Transaction, TransactionStats } from './transaction.service';
 
 export interface ChatMessage {
   role: 'user' | 'assistant';
@@ -25,7 +25,7 @@ export class LlmService {
      * Streams chat tokens via SSE. Each emission is a text token.
      * Completes when the stream ends.
      */
-    chatStream(messages: ChatMessage[], transaction?: Transaction | null): Observable<string> {
+    chatStream(messages: ChatMessage[], transaction?: Transaction | null, dashboardContext?: TransactionStats | null): Observable<string> {
         const ngZone = this.ngZone;
         return new Observable(observer => {
             const token = localStorage.getItem('token');
@@ -34,7 +34,8 @@ export class LlmService {
 
             const body = JSON.stringify({
                 messages,
-                ...(transaction ? { transaction_context: transaction } : {})
+                ...(transaction ? { transaction_context: transaction } : {}),
+                ...(dashboardContext ? { dashboard_context: dashboardContext } : {})
             });
 
             const controller = new AbortController();

@@ -62,6 +62,12 @@ def compute_shap_values(
         contributions.items(), key=lambda x: abs(x[1]), reverse=True
     )
 
+    # Filter out near-zero SHAP values that add visual noise and can make
+    # the chart misleading (many tiny red bars on a legitimate transaction).
+    max_abs = max((abs(v) for _, v in sorted_features), default=1)
+    threshold = max_abs * 0.05  # drop features below 5% of the strongest
+    significant = [(f, v) for f, v in sorted_features if abs(v) >= threshold]
+
     top_features = [
         {
             "feature": feat,
@@ -69,7 +75,7 @@ def compute_shap_values(
             "shap_value": val,
             "feature_value": _safe_value(raw_features.get(feat)),
         }
-        for feat, val in sorted_features
+        for feat, val in significant[:15]
     ]
 
     return {

@@ -2,7 +2,7 @@ import { ChangeDetectorRef, Component, ElementRef, Input, ViewChild } from '@ang
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LlmService, ChatMessage } from '../../../core/services/llm.service';
-import { Transaction } from '../../../core/services/transaction.service';
+import { Transaction, TransactionStats } from '../../../core/services/transaction.service';
 
 @Component({
   selector: 'app-fraud-copilot',
@@ -12,6 +12,7 @@ import { Transaction } from '../../../core/services/transaction.service';
 })
 export class FraudCopilotComponent {
   @Input() transaction: Transaction | null = null;
+  @Input() dashboardContext: TransactionStats | null = null;
 
   isOpen = false;
   userInput = '';
@@ -38,7 +39,7 @@ export class FraudCopilotComponent {
     const assistantMsg: ChatMessage = { role: 'assistant', content: '' };
     this.messages.push(assistantMsg);
 
-    this.llmService.chatStream(this.messages.slice(0, -1), this.transaction).subscribe({
+    this.llmService.chatStream(this.messages.slice(0, -1), this.transaction, this.dashboardContext).subscribe({
       next: (token) => {
         assistantMsg.content += token;
         this.cdr.detectChanges();
