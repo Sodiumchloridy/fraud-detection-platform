@@ -53,7 +53,7 @@ export class RulesSettingsComponent implements OnInit {
     { value: 'amt', label: 'Transaction Amount' },
   ];
 
-  constructor(private rulesService: RulesService, private toast: ToastService) {}
+  constructor(private readonly rulesService: RulesService, private readonly toast: ToastService) {}
 
   ngOnInit() {
     forkJoin({
