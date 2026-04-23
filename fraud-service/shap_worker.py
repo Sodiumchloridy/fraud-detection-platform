@@ -19,7 +19,7 @@ from confluent_kafka import Consumer, Producer
 from schemas import Transaction, parse_ts
 from core.features import compute_features, MODEL_FEATURE_ORDER
 from core.explainability import compute_shap_values
-from core.model_artifacts import load_artifacts, encode_row
+from core.model_artifacts import extract_cat_lookups, encode_row
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +50,7 @@ _dir = os.path.dirname(__file__)
 _model_dir = os.path.join(_dir, "models")
 
 model = lgb.Booster(model_file=os.path.join(_model_dir, "student_distilled.txt"))
-_cat_lookups, _ = load_artifacts(os.path.join(_model_dir, "inference_artifacts.json"))
+_cat_lookups = extract_cat_lookups(model)
 
 KAFKA_BOOTSTRAP = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "localhost:9094")
 PENDING_TOPIC = "transactions.pending-shap"

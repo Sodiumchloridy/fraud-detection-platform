@@ -3,8 +3,8 @@ from schemas import Transaction, HistoricalTransaction, parse_ts
 
 
 RISKY_EMAIL_DOMAINS = {
-    'yandex.ru', 'qq.com',
-    'naver.com', 'anonymous', 'tempmail', 'anonymous.com', 'tempmail.com'
+    'mail.com', 'protonmail.com', 'yandex.ru', 'qq.com',
+    'naver.com', 'anonymous', 'tempmail',
 }
 
 # ── Feature lists matching the trained LightGBM student model ──
@@ -87,8 +87,8 @@ def _txn_stats(timestamps, amounts, curr_time):
     stats = {}
     for w in (3600, 86400, 604800):
         in_window = [a for t, a in zip(timestamps, amounts) if curr_time - t <= w]
-        stats[f'count_{w}'] = len(in_window) + 1 # +1 for current txn
-        stats[f'sum_{w}'] = sum(in_window) # current txn amt not included closely matching logic
+        stats[f'count_{w}'] = len(in_window)
+        stats[f'sum_{w}'] = sum(in_window)
     return stats
 
 # ── Public API ───────────────────────────────────────────────────────────
@@ -136,7 +136,7 @@ def compute_features(txn: Transaction, curr_time: float, history: list[Historica
         
         # New features
         'amt_cents':                float(txn.amount % 1),
-        'day_of_week':              float((curr_time // 86400) % 7),
+        'day_of_week':              float(txn.local_day_of_week),
         'amt_sum_1h':               precalc.get('amt_sum_1h') if 'amt_sum_1h' in precalc else stats['sum_3600'],
         'amt_sum_24h':              precalc.get('amt_sum_24h') if 'amt_sum_24h' in precalc else stats['sum_86400'],
         'amt_sum_7d':               precalc.get('amt_sum_7d') if 'amt_sum_7d' in precalc else stats['sum_604800'],

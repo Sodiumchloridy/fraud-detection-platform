@@ -1,25 +1,26 @@
-"""
-Load inference artifacts (category lookups + threshold) from JSON.
-"""
-
-import json
+"""Encode features for LightGBM inference using category mappings stored in the model file."""
 
 import numpy as np
+import lightgbm as lgb
 
 from .features import CAT_COLS, MODEL_FEATURE_ORDER
 
 
-def load_artifacts(json_path: str) -> tuple[dict[str, dict[str, float]], float]:
-    """Return (cat_lookups, threshold) from the cached JSON artifacts."""
-    with open(json_path, "r") as f:
-        data = json.load(f)
-    return data["cat_lookups"], float(data.get("threshold", 0.18))
+def extract_cat_lookups(model: lgb.Booster) -> dict[str, dict[str, int]]:
+    """Build {col: {value: code}} from the model's pandas_categorical metadata."""
+    cats = model.pandas_categorical
+    if not cats:
+        raise RuntimeError("Model has no pandas_categorical — was it trained with category dtypes?")
+    return {
+        col: {str(val): idx for idx, val in enumerate(values)}
+        for col, values in zip(CAT_COLS, cats)
+    }
 
 
 def encode_row(
     features: dict,
     feature_order: list[str],
-    cat_lookups: dict[str, dict[str, float]],
+    cat_lookups: dict[str, dict[str, int]],
 ) -> np.ndarray:
     """Encode a feature dict into a (1, n_features) float64 array — no pandas."""
     row = np.empty(len(feature_order), dtype=np.float64)

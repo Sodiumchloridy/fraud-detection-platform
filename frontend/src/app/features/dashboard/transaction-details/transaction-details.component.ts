@@ -7,6 +7,22 @@ import { MainLayoutComponent } from '../../../shared/layouts/main-layout/main-la
 import { TransactionService, Transaction, getStatusBadgeClass, ShapExplanation } from '../../../core/services';
 import { LlmService } from '../../../core/services/llm.service';
 
+interface WaterfallStep {
+  label: string;
+  shapValue: number;
+  startValue: number;
+  endValue: number;
+  isRuleStep?: boolean;
+}
+
+interface WaterfallData {
+  steps: WaterfallStep[];
+  baseValue: number;
+  finalValue: number;
+  scaleMin: number;
+  scaleMax: number;
+}
+
 @Component({
   selector: 'app-transaction-details',
   standalone: true,
@@ -19,6 +35,7 @@ export class TransactionDetailsComponent implements OnInit {
   locationName: string | null = null;
   analysisReason: string | null = null;
   shapExplanation: ShapExplanation | null = null;
+  waterfallData: WaterfallData | null = null;
   getStatusBadgeClass = getStatusBadgeClass;
 
   constructor(
@@ -49,6 +66,7 @@ export class TransactionDetailsComponent implements OnInit {
           ? await this.getAnalysisReason()
           : null;
         this.shapExplanation = data.shapJson ? JSON.parse(data.shapJson) : null;
+        this.waterfallData = this.computeWaterfall();
       },
       error: (err) => console.error('Error loading transaction:', err)
     });
@@ -77,13 +95,63 @@ export class TransactionDetailsComponent implements OnInit {
       .catch(() => 'Error loading analysis');
   }
 
-  get maxShapAbsValue(): number {
-    if (!this.shapExplanation?.topFeatures?.length) return 1;
-    return Math.max(...this.shapExplanation.topFeatures.map(f => Math.abs(f.shapValue)));
+  private computeWaterfall(): WaterfallData | null {
+    if (!this.shapExplanation?.topFeatures?.length) return null;
+
+    const features = this.shapExplanation.topFeatures;
+    const positive = features.filter(f => f.shapValue >= 0).sort((a, b) => b.shapValue - a.shapValue);
+    const negative = features.filter(f => f.shapValue < 0).sort((a, b) => a.shapValue - b.shapValue);
+    const sorted = [...positive, ...negative];
+
+    const allShapSum = Object.values(this.shapExplanation.shapValues).reduce((s, v) => s + v, 0);
+    const topShapSum = features.reduce((s, f) => s + f.shapValue, 0);
+    const otherShap = allShapSum - topShapSum;
+
+    const base = this.shapExplanation.baseValue;
+    let running = base;
+    const steps: WaterfallStep[] = [];
+
+    for (const f of sorted) {
+      const start = running;
+      running += f.shapValue;
+      steps.push({ label: f.label, shapValue: f.shapValue, startValue: start, endValue: running });
+    }
+
+    if (Math.abs(otherShap) > 0.0005) {
+      const start = running;
+      running += otherShap;
+      steps.push({ label: 'Other features', shapValue: otherShap, startValue: start, endValue: running });
+    }
+
+    // Add a rules adjustment step if the final riskScore differs from the ML prediction
+    const riskScore = this.transaction?.riskScore;
+    if (riskScore != null) {
+      const rulesAdj = riskScore - running;
+      if (Math.abs(rulesAdj) > 0.001) {
+        const start = running;
+        running += rulesAdj;
+        steps.push({ label: 'Rules adjustment', shapValue: rulesAdj, startValue: start, endValue: running, isRuleStep: true });
+      }
+    }
+
+    const allValues = [base, ...steps.map(s => s.startValue), ...steps.map(s => s.endValue)];
+    const min = Math.min(...allValues);
+    const max = Math.max(...allValues);
+    const pad = (max - min) * 0.08;
+
+    return {
+      steps,
+      baseValue: base,
+      finalValue: running,
+      scaleMin: Math.max(0, min - pad),
+      scaleMax: max + pad,
+    };
   }
 
-  shapBarWidth(value: number): number {
-    return this.maxShapAbsValue > 0 ? (Math.abs(value) / this.maxShapAbsValue) * 100 : 0;
+  waterfallPct(value: number): number {
+    if (!this.waterfallData) return 0;
+    const { scaleMin, scaleMax } = this.waterfallData;
+    return ((value - scaleMin) / (scaleMax - scaleMin)) * 100;
   }
 }
 

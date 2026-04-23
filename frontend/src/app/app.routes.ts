@@ -22,4 +22,3 @@ export const routes: Routes = [
   { path: 'admin/system-settings', component: PlatformConfigurationComponent, canActivate: [authGuard, adminGuard] },
   { path: '**', component: NotFoundComponent }
 ];
-

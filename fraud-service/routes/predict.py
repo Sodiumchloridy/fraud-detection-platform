@@ -1,6 +1,5 @@
 from fastapi import APIRouter
 import os
-import numpy as np
 import lightgbm as lgb
 import time
 
@@ -11,7 +10,7 @@ from schemas import (
 from core.features import compute_features, MODEL_FEATURE_ORDER
 from core.rules import apply_rules, is_blocked, is_allowlisted
 from core.feature_store import calculate_features as redis_calculate_features, push_transaction
-from core.model_artifacts import load_artifacts, encode_row
+from core.model_artifacts import extract_cat_lookups, encode_row
 
 router = APIRouter()
 
@@ -19,7 +18,7 @@ _dir = os.path.dirname(__file__)
 _model_dir = os.path.join(_dir, '..', 'models')
 
 model = lgb.Booster(model_file=os.path.join(_model_dir, 'student_distilled.txt'))
-_cat_lookups, _ = load_artifacts(os.path.join(_model_dir, 'inference_artifacts.json'))
+_cat_lookups = extract_cat_lookups(model)
 
 _flagged_threshold = float(os.getenv('FRAUD_FLAGGED_THRESHOLD', '0.18'))
 _blocked_threshold = float(os.getenv('FRAUD_BLOCKED_THRESHOLD', '0.50'))
