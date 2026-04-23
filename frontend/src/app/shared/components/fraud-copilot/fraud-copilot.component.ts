@@ -19,7 +19,7 @@ export class FraudCopilotComponent {
   isLoading = false;
   messages: ChatMessage[] = [];
 
-  @ViewChild('messagesContainer') private messagesContainer!: ElementRef<HTMLDivElement>;
+  @ViewChild('messagesContainer') private readonly messagesContainer!: ElementRef<HTMLDivElement>;
 
   constructor(private llmService: LlmService, private cdr: ChangeDetectorRef) {}
 

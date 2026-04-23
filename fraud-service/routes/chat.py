@@ -1,9 +1,12 @@
 from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
+import litellm
 from litellm import completion
 import json
 import os
+
+litellm.ssl_verify = False
 
 router = APIRouter()
 
@@ -51,7 +54,7 @@ def chat(req: ChatRequest):
     messages.extend({"role": m.role, "content": m.content} for m in req.messages)
 
     response = completion(
-        model=os.getenv("LLM_MODEL", "cerebras/llama3.1-8b"),
+        model=os.getenv("LLM_MODEL"),
         messages=messages,
         stream=True,
     )

@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule, Location } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { MainLayoutComponent } from '../../../shared/layouts/main-layout/main-layout.component';
 import { TransactionService, Transaction, getStatusBadgeClass, ShapExplanation } from '../../../core/services';
@@ -39,11 +39,11 @@ export class TransactionDetailsComponent implements OnInit {
   getStatusBadgeClass = getStatusBadgeClass;
 
   constructor(
-    private route: ActivatedRoute,
-    private transactionService: TransactionService,
-    private http: HttpClient,
-    private llmService: LlmService,
-    private location: Location
+    private readonly route: ActivatedRoute,
+    private readonly transactionService: TransactionService,
+    private readonly http: HttpClient,
+    private readonly llmService: LlmService,
+    private readonly location: Location
   ) {}
 
   goBack() { this.location.back(); }
