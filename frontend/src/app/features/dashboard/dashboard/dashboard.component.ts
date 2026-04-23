@@ -2,6 +2,7 @@ import { Component, ChangeDetectionStrategy, OnDestroy, ViewChild, ElementRef, A
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { MainLayoutComponent } from '../../../shared/layouts/main-layout/main-layout.component';
+import { TransactionListComponent } from '../../../shared/components/transaction-list/transaction-list.component';
 import { TransactionService, Transaction, TransactionStats, getStatusBadgeClass } from '../../../core/services';
 import { UserService } from '../../../core/services/user.service';
 import { BehaviorSubject, Subscription } from 'rxjs';
@@ -14,7 +15,7 @@ Chart.defaults.color = '#94a3b8'; // slate-400
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink, MainLayoutComponent],
+  imports: [CommonModule, RouterLink, MainLayoutComponent, TransactionListComponent],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush

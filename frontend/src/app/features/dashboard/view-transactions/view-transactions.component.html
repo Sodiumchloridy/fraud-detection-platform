@@ -1,0 +1,37 @@
+<app-main-layout [pageTitle]="'Transactions'">
+  <a (click)="goBack()" class="inline-flex items-center gap-1 text-xs font-medium text-slate-400 hover:text-indigo-600 transition mb-5 cursor-pointer">&larr; Back</a>
+
+  <div class="bg-white rounded-[1.25rem] shadow-[0_1px_3px_rgba(0,0,0,.04)] overflow-hidden">
+    <!-- Header with search -->
+    <div class="px-7 py-5 border-b border-slate-100 flex items-center gap-2">
+      <div class="relative flex-1 max-w-md">
+        <svg class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+        </svg>
+        <input
+          type="text"
+          [(ngModel)]="searchQuery"
+          (keydown.enter)="onSearch()"
+          placeholder="Search by card number, merchant…"
+          class="w-full pl-9 pr-8 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#2D8C8C]/30 focus:border-[#2D8C8C] transition placeholder:text-slate-400"
+        />
+        @if (searchQuery) {
+          <button (click)="clearSearch()" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        }
+      </div>
+      <button (click)="onSearch()" class="shrink-0 px-4 py-2 text-sm font-medium text-white bg-[#2D8C8C] hover:bg-[#256f6f] rounded-xl transition">
+        Search
+      </button>
+    </div>
+
+    <!-- Transaction list -->
+    <app-transaction-list
+      [transactions]="(transactions$ | async) || []"
+      [emptyMessage]="searchQuery ? 'No transactions matching ' + searchQuery : 'No transactions found'">
+    </app-transaction-list>
+  </div>
+</app-main-layout>

@@ -1,14 +1,15 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { BehaviorSubject, switchMap } from 'rxjs';
 import { MainLayoutComponent } from '../../../shared/layouts/main-layout/main-layout.component';
+import { TransactionListComponent } from '../../../shared/components/transaction-list/transaction-list.component';
 import { TransactionService, Transaction, getStatusBadgeClass } from '../../../core/services';
 
 @Component({
   selector: 'app-flagged-transactions',
   standalone: true,
-  imports: [CommonModule, RouterLink, MainLayoutComponent],
+  imports: [CommonModule, MainLayoutComponent, TransactionListComponent],
   templateUrl: './flagged-transactions.component.html',
   styleUrls: []
 })

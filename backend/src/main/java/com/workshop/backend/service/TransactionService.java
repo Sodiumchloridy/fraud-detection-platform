@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -47,6 +48,13 @@ public class TransactionService {
 
     public List<Transaction> findAll() {
         return transactionRepository.findAll();
+    }
+
+    public List<Transaction> search(String query, int limit) {
+        if (query == null || query.isBlank()) {
+            return transactionRepository.findAll(PageRequest.of(0, limit)).getContent();
+        }
+        return transactionRepository.searchByQuery(query.trim(), PageRequest.of(0, limit));
     }
 
     public Transaction findById(UUID id) {

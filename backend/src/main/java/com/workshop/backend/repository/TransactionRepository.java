@@ -12,6 +12,8 @@ import java.util.UUID;
 
 import java.time.LocalDateTime;
 
+import org.springframework.data.domain.Pageable;
+
 /**
  * Repository for Transaction CRUD operations
  * Custom queries (derived, JPQL, native SQL)
@@ -26,6 +28,14 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID> 
     List<Transaction> findByCardNumberOrderByTimestampAsc(String cardNumber);
 
     List<Transaction> findTop20ByCardNumberOrderByTimestampDesc(String cardNumber);
+
+    @Query("SELECT t FROM Transaction t WHERE " +
+           "LOWER(t.cardNumber) LIKE LOWER(CONCAT('%', :q, '%')) OR " +
+           "LOWER(t.merchant) LIKE LOWER(CONCAT('%', :q, '%')) OR " +
+           "LOWER(t.category) LIKE LOWER(CONCAT('%', :q, '%')) OR " +
+           "LOWER(CAST(t.status AS string)) LIKE LOWER(CONCAT('%', :q, '%')) " +
+           "ORDER BY t.timestamp DESC")
+    List<Transaction> searchByQuery(@Param("q") String q, Pageable pageable);
 
     @Query("SELECT COUNT(t) FROM Transaction t WHERE t.cardNumber = :cardNumber AND t.timestamp >= :startDate AND t.timestamp <= :endDate")
     Long countByCardNumberAndTimestampBetween(@Param("cardNumber") String cardNumber, @Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);

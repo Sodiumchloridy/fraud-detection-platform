@@ -21,10 +21,11 @@
 
   <!-- Key Metrics -->
   <div class="grid grid-cols-3 gap-4 mb-5">
-    <div class="stat-card bg-white">
+    <a routerLink="/transactions" class="stat-card bg-white hover:shadow-md transition-shadow group">
       <p class="stat-label">Transactions</p>
       <p class="stat-value text-slate-800">{{ (stats$ | async)?.total || 0 }}</p>
-    </div>
+      <p class="text-xs text-slate-400 group-hover:text-slate-600 transition-colors">View all &rarr;</p>
+    </a>
     <div class="stat-card bg-rose-50">
       <p class="stat-label text-rose-400">Fraud Rate</p>
       <p class="stat-value text-rose-600">{{ (stats$ | async)?.fraudRate || 0 }}%</p>
@@ -80,18 +81,7 @@
           <span class="size-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Auto-refresh
         </span>
       </div>
-      @for (transaction of transactions$ | async; track transaction.id) {
-        <a [routerLink]="['/transaction', transaction.id]"
-           class="animate-bento flex items-center justify-between px-7 py-4 border-b border-slate-50 last:border-b-0 hover:bg-slate-50/60 transition-colors">
-          <div class="min-w-0">
-            <p class="text-sm font-medium text-slate-700 truncate">{{ transaction.cardNumber }}</p>
-            <p class="text-xs text-slate-400 mt-0.5">{{ transaction.amount | currency }} &middot; {{ transaction.category }} &middot; {{ transaction.timestamp | date:'short' }}</p>
-          </div>
-          <span class="ml-4 shrink-0 px-3 py-1 text-[11px] font-semibold rounded-full" [ngClass]="getStatusBadgeClass(transaction.status)">
-            {{ transaction.status }}
-          </span>
-        </a>
-      }
+      <app-transaction-list [transactions]="(transactions$ | async) || []" [animateRows]="true"></app-transaction-list>
     </div>
   </div>
 </app-main-layout>

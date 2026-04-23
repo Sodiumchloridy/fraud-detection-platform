@@ -54,7 +54,7 @@
     <div class="md:col-span-2 bg-white rounded-[1.25rem] shadow-[0_1px_3px_rgba(0,0,0,.04)] p-7">
       <h2 class="text-sm font-semibold text-slate-800 mb-4">AI Fraud Analysis</h2>
       @if (transaction.status !== 'APPROVED') {
-      <p class="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap">{{ analysisReason || 'Loading analysis...'
+      <p class="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap text-justify">{{ analysisReason || 'Loading analysis...'
         }}</p>
       } @else {
       <p class="text-sm text-slate-400">Transaction is legitimate&mdash;no further analysis required.</p>

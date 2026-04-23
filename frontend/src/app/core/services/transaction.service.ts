@@ -111,6 +111,12 @@ export class TransactionService {
     return this.http.get<Transaction[]>(this.apiUrl);
   }
 
+  searchTransactions(query: string = '', limit: number = 100): Observable<Transaction[]> {
+    return this.http.get<Transaction[]>(`${this.apiUrl}/search`, {
+      params: { q: query, limit: limit.toString() }
+    });
+  }
+
   getTransactionById(id: string): Observable<Transaction> {
     return this.http.get<Transaction>(`${this.apiUrl}/${id}`);
   }

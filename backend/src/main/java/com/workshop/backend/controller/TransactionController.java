@@ -28,6 +28,13 @@ public class TransactionController {
         return ResponseEntity.ok(transactionService.findAll());
     }
 
+    @GetMapping("/search")
+    public ResponseEntity<List<Transaction>> searchTransactions(
+            @RequestParam(required = false, defaultValue = "") String q,
+            @RequestParam(required = false, defaultValue = "100") int limit) {
+        return ResponseEntity.ok(transactionService.search(q, Math.min(limit, 500)));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<Transaction> getTransactionById(@PathVariable UUID id) {
         return ResponseEntity.ok(transactionService.findById(id));
