@@ -56,7 +56,7 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
       this.toastTimer = setTimeout(() => { this.showPwToast = false; this.cdr.markForCheck(); }, 8000);
     }
     // 1. Initial load via HTTP
-    this.transactionService.getAllTransactions().subscribe(data => {
+    this.transactionService.searchTransactions('', 100).subscribe(data => {
       this.transactionsSubject.next(
         data.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
       );
@@ -154,24 +154,30 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
   }
 
   private buildTrend(txns: Transaction[]): { label: string; total: number; fraud: number; flagged: number }[] {
-    if (!txns.length) return [];
     const { seconds, bucketMs } = this.selectedWindow;
-    const maxTime = Math.max(...txns.map(t => new Date(t.timestamp).getTime()));
-    const minTime = maxTime - seconds * 1000;
-    const filtered = txns.filter(t => {
-      const ts = new Date(t.timestamp).getTime();
-      return ts >= minTime && ts <= maxTime;
-    });
+    const now = Date.now();
+    const maxBucket = Math.floor(now / bucketMs) * bucketMs;
+    const minTime = now - seconds * 1000;
+    const minBucket = Math.ceil(minTime / bucketMs) * bucketMs;
+
+    // Pre-fill all buckets so the chart always covers the full window
     const grouped = new Map<number, { total: number; fraud: number; flagged: number }>();
-    for (const t of filtered) {
+    for (let b = minBucket; b <= maxBucket; b += bucketMs) {
+      grouped.set(b, { total: 0, fraud: 0, flagged: 0 });
+    }
+
+    // Accumulate transaction data into buckets
+    for (const t of txns) {
       const ts = new Date(t.timestamp).getTime();
+      if (ts < minTime || ts > now) continue;
       const bucket = Math.floor(ts / bucketMs) * bucketMs;
-      const entry = grouped.get(bucket) ?? { total: 0, fraud: 0, flagged: 0 };
+      const entry = grouped.get(bucket);
+      if (!entry) continue;
       entry.total += t.amount ?? 0;
       if (t.status === 'BLOCKED') entry.fraud += t.amount ?? 0;
       if (t.status === 'FLAGGED') entry.flagged += t.amount ?? 0;
-      grouped.set(bucket, entry);
     }
+
     return [...grouped.entries()]
       .sort(([a], [b]) => a - b)
       .map(([ts, v]) => {

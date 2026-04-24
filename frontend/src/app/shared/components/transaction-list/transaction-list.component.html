@@ -1,7 +1,10 @@
+<div class="max-h-[32rem] overflow-y-auto">
 @for (transaction of transactions; track transaction.id) {
   <a [routerLink]="['/transaction', transaction.id]"
+     (click)="itemClick.emit(transaction)"
      class="flex items-center justify-between px-7 py-4 border-b border-slate-50 last:border-b-0 hover:bg-slate-50/60 transition-colors"
-     [class.animate-bento]="animateRows">
+     [class.animate-bento]="animateRows"
+     [class.opacity-50]="readIds.has(transaction.id)">
     <div class="min-w-0 flex-1">
       <p class="text-sm font-medium text-slate-700 truncate">{{ transaction.cardNumber }}</p>
       <p class="text-xs text-slate-400 mt-0.5">
@@ -9,12 +12,14 @@
       </p>
     </div>
     <div class="shrink-0 flex items-center gap-2 ml-4">
-      <span class="px-3 py-1 text-[11px] font-semibold rounded-full" [ngClass]="getStatusBadgeClass(transaction.status)">
+      <span class="w-12 text-right text-[11px] text-slate-400 font-medium">
+        @if (transaction.riskScore != null) {
+          {{ (transaction.riskScore * 100) | number:'1.0-1' }}%
+        }
+      </span>
+      <span class="w-20 text-center px-3 py-1 text-[11px] font-semibold rounded-full" [ngClass]="getStatusBadgeClass(transaction.status)">
         {{ transaction.status }}
       </span>
-      @if (transaction.riskScore != null) {
-        <span class="text-[11px] text-slate-400 font-medium">{{ (transaction.riskScore * 100) | number:'1.0-1' }}%</span>
-      }
     </div>
   </a>
 } @empty {
@@ -22,3 +27,4 @@
     {{ emptyMessage }}
   </div>
 }
+</div>

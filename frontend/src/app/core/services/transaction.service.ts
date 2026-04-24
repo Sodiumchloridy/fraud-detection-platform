@@ -1,6 +1,6 @@
 import { Injectable, NgZone } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, share } from 'rxjs';
+import { Observable, BehaviorSubject, share } from 'rxjs';
 
 export interface Transaction {
   id: string;
@@ -59,10 +59,11 @@ export interface Transaction {
 
 export function getStatusBadgeClass(status: string): string {
   switch (status?.toUpperCase()) {
-    case 'BLOCKED':  return 'bg-rose-100 text-rose-700';
-    case 'FLAGGED':  return 'bg-amber-100 text-amber-700';
-    case 'APPROVED': return 'bg-emerald-100 text-emerald-700';
-    default:         return 'bg-slate-100 text-slate-700';
+    case 'BLOCKED':        return 'bg-rose-100 text-rose-700';
+    case 'FLAGGED':        return 'bg-amber-100 text-amber-700';
+    case 'APPROVED':       return 'bg-emerald-100 text-emerald-700';
+    case 'REVIEWED':       return 'bg-sky-100 text-sky-700';
+    default:               return 'bg-slate-100 text-slate-700';
   }
 }
 
@@ -104,8 +105,31 @@ export interface ThresholdConfig {
 export class TransactionService {
   private apiUrl = 'http://localhost:8080/api/transactions';
   private stream$: Observable<Transaction> | null = null;
+  private static readonly READ_IDS_KEY = 'flagged_read_ids';
+  private readIdsSubject = new BehaviorSubject<Set<string>>(this.loadReadIds());
+  readIds$ = this.readIdsSubject.asObservable();
 
   constructor(private http: HttpClient, private zone: NgZone) { }
+
+  markAsRead(id: string): void {
+    const ids = this.loadReadIds();
+    ids.add(id);
+    localStorage.setItem(TransactionService.READ_IDS_KEY, JSON.stringify([...ids]));
+    this.readIdsSubject.next(ids);
+  }
+
+  getReadIds(): Set<string> {
+    return this.readIdsSubject.value;
+  }
+
+  private loadReadIds(): Set<string> {
+    try {
+      const raw = localStorage.getItem(TransactionService.READ_IDS_KEY);
+      return raw ? new Set<string>(JSON.parse(raw)) : new Set<string>();
+    } catch {
+      return new Set<string>();
+    }
+  }
 
   getAllTransactions(): Observable<Transaction[]> {
     return this.http.get<Transaction[]>(this.apiUrl);
@@ -129,8 +153,10 @@ export class TransactionService {
     return this.http.get<TransactionStats>(`${this.apiUrl}/stats`);
   }
 
-  updateTransactionStatus(id: string, status: string): Observable<Transaction> {
-    return this.http.patch<Transaction>(`${this.apiUrl}/${id}/status?status=${status}`, {});
+  updateTransactionStatus(id: string, status: string, isFraud?: number): Observable<Transaction> {
+    let url = `${this.apiUrl}/${id}/status?status=${status}`;
+    if (isFraud != null) url += `&isFraud=${isFraud}`;
+    return this.http.patch<Transaction>(url, {});
   }
 
   getThresholds(): Observable<ThresholdConfig> {

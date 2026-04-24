@@ -4,5 +4,6 @@ public enum TransactionStatus {
     PENDING,
     APPROVED,
     FLAGGED,
-    BLOCKED
+    BLOCKED,
+    REVIEWED
 }

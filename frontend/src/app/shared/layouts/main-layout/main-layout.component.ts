@@ -1,9 +1,9 @@
 import { Component, Input, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
-import { Subscription } from 'rxjs';
+import { Subscription, combineLatest } from 'rxjs';
 import { timer } from 'rxjs';
-import { switchMap } from 'rxjs/operators';
+import { switchMap, map } from 'rxjs/operators';
 import { HeaderComponent } from '../../components/header/header.component';
 import { FraudCopilotComponent } from '../../components/fraud-copilot/fraud-copilot.component';
 import { UserService } from '../../../core/services/user.service';
@@ -35,9 +35,14 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.statsSub = timer(0, 30_000).pipe(
-      switchMap(() => this.transactionService.getTransactionStats())
-    ).subscribe(s => { this.pendingReview = s.pendingReview; });
+    this.statsSub = combineLatest([
+      timer(0, 30_000).pipe(
+        switchMap(() => this.transactionService.getTransactionStats())
+      ),
+      this.transactionService.readIds$
+    ]).pipe(
+      map(([stats, readIds]) => Math.max(0, stats.pendingReview - readIds.size))
+    ).subscribe(count => { this.pendingReview = count; });
   }
 
   ngOnDestroy(): void {

@@ -6,6 +6,15 @@
       </div>
 
       <div class="flex items-center gap-2">
+        @if (showAdminOptions) {
+        <nav class="flex items-center gap-1 mr-2">
+          <a routerLink="/admin/users"
+            class="px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-indigo-600 hover:bg-slate-100 rounded-lg transition">User Management</a>
+          <a routerLink="/admin/system-settings"
+            class="px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-indigo-600 hover:bg-slate-100 rounded-lg transition">Platform Configuration</a>
+        </nav>
+        }
+
         <a routerLink="/flagged-transactions"
           class="relative inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition mr-1">
           <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -18,14 +27,6 @@
             </span>
           }
         </a>
-        @if (showAdminOptions) {
-        <nav class="flex items-center gap-1 mr-2">
-          <a routerLink="/admin/users"
-            class="px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-indigo-600 hover:bg-slate-100 rounded-lg transition">User Management</a>
-          <a routerLink="/admin/system-settings"
-            class="px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-indigo-600 hover:bg-slate-100 rounded-lg transition">Platform Configuration</a>
-        </nav>
-        }
 
         <div class="relative">
           <button (click)="toggleDropdown()"

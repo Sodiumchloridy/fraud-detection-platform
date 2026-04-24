@@ -5,7 +5,12 @@
     <div class="px-7 py-5 border-b border-slate-100">
       <h2 class="text-sm font-semibold text-slate-800">Flagged Transactions</h2>
     </div>
-    <app-transaction-list [transactions]="(flaggedTransactions$ | async) || []" emptyMessage="No flagged transactions"></app-transaction-list>
+    <app-transaction-list
+      [transactions]="(flaggedTransactions$ | async) || []"
+      [readIds]="(readIds$ | async) || emptySet"
+      (itemClick)="onTransactionClick($event)"
+      emptyMessage="No flagged transactions">
+    </app-transaction-list>
   </div>
 </app-main-layout>
 

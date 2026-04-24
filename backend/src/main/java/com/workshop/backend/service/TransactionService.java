@@ -98,13 +98,15 @@ public class TransactionService {
         return stats;
     }
 
-    public Transaction updateStatus(UUID id, String status, String reviewerUsername) {
+    public Transaction updateStatus(UUID id, String status, String reviewerUsername, Integer isFraud) {
         Transaction transaction = transactionRepository.findById(id)
             .orElseThrow(() -> new NoSuchElementException("Transaction not found with id: " + id));
 
         TransactionStatus txnStatus = TransactionStatus.valueOf(status.toUpperCase());
         transaction.setStatus(txnStatus);
-        transaction.setIsFraud(TransactionStatus.APPROVED.equals(txnStatus) ? 0 : 1);
+        if (isFraud != null) {
+            transaction.setIsFraud(isFraud);
+        }
         transaction.setReviewedBy(reviewerUsername);
         transaction.setReviewedAt(LocalDateTime.now());
 

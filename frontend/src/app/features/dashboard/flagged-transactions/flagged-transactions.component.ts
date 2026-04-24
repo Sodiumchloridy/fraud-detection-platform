@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { BehaviorSubject, switchMap } from 'rxjs';
+import { BehaviorSubject, switchMap, combineLatest, map } from 'rxjs';
 import { MainLayoutComponent } from '../../../shared/layouts/main-layout/main-layout.component';
 import { TransactionListComponent } from '../../../shared/components/transaction-list/transaction-list.component';
 import { TransactionService, Transaction, getStatusBadgeClass } from '../../../core/services';
@@ -15,6 +15,7 @@ import { TransactionService, Transaction, getStatusBadgeClass } from '../../../c
 })
 export class FlaggedTransactionsComponent {
   getStatusBadgeClass = getStatusBadgeClass;
+  emptySet = new Set<string>();
 
   private transactionService = inject(TransactionService);
   private router = inject(Router);
@@ -23,6 +24,12 @@ export class FlaggedTransactionsComponent {
   flaggedTransactions$ = this.refresh$.pipe(
     switchMap(() => this.transactionService.getFlaggedTransactions())
   );
+
+  readIds$ = this.transactionService.readIds$;
+
+  onTransactionClick(transaction: Transaction): void {
+    this.transactionService.markAsRead(transaction.id);
+  }
 
   markAs(transaction: Transaction, status: string): void {
     this.transactionService.updateTransactionStatus(transaction.id, status).subscribe({

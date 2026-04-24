@@ -1,10 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule, Location } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ActivatedRoute } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { MainLayoutComponent } from '../../../shared/layouts/main-layout/main-layout.component';
-import { TransactionService, Transaction, getStatusBadgeClass, ShapExplanation } from '../../../core/services';
+import { TransactionService, Transaction, getStatusBadgeClass, ShapExplanation, ThresholdConfig } from '../../../core/services';
 import { LlmService } from '../../../core/services/llm.service';
 
 interface WaterfallStep {
@@ -36,6 +37,8 @@ export class TransactionDetailsComponent implements OnInit {
   analysisReason: string | null = null;
   shapExplanation: ShapExplanation | null = null;
   waterfallData: WaterfallData | null = null;
+  thresholds: ThresholdConfig | null = null;
+  mapUrl: SafeResourceUrl | null = null;
   getStatusBadgeClass = getStatusBadgeClass;
 
   constructor(
@@ -43,7 +46,8 @@ export class TransactionDetailsComponent implements OnInit {
     private readonly transactionService: TransactionService,
     private readonly http: HttpClient,
     private readonly llmService: LlmService,
-    private readonly location: Location
+    private readonly location: Location,
+    private readonly sanitizer: DomSanitizer
   ) {}
 
   goBack() { this.location.back(); }
@@ -53,6 +57,9 @@ export class TransactionDetailsComponent implements OnInit {
     if (txnId) {
       this.loadTransaction(txnId);
     }
+    this.transactionService.getThresholds().subscribe({
+      next: (t) => this.thresholds = t,
+    });
   }
 
   loadTransaction(id: string) {
@@ -61,6 +68,9 @@ export class TransactionDetailsComponent implements OnInit {
         this.transaction = data;
         if (data.latitude && data.longitude) {
           this.fetchLocationName(data.latitude, data.longitude);
+          this.mapUrl = this.sanitizer.bypassSecurityTrustResourceUrl(
+            `https://maps.google.com/maps?q=${data.latitude},${data.longitude}&z=15&t=k&output=embed`
+          );
         }
         this.analysisReason = (data.riskScore && data.status !== 'APPROVED')
           ? await this.getAnalysisReason()
@@ -80,9 +90,9 @@ export class TransactionDetailsComponent implements OnInit {
     });
   }
 
-  markAs(status: string) {
+  markAs(status: string, isFraud?: number) {
     if (!this.transaction) return;
-    this.transactionService.updateTransactionStatus(this.transaction.id, status).subscribe({
+    this.transactionService.updateTransactionStatus(this.transaction.id, status, isFraud).subscribe({
       next: () => this.loadTransaction(this.transaction!.id),
       error: (err) => console.error('Error updating status:', err)
     });
@@ -134,17 +144,12 @@ export class TransactionDetailsComponent implements OnInit {
       }
     }
 
-    const allValues = [base, ...steps.map(s => s.startValue), ...steps.map(s => s.endValue)];
-    const min = Math.min(...allValues);
-    const max = Math.max(...allValues);
-    const pad = (max - min) * 0.08;
-
     return {
       steps,
       baseValue: base,
       finalValue: running,
-      scaleMin: Math.max(0, min - pad),
-      scaleMax: max + pad,
+      scaleMin: 0,
+      scaleMax: 1,
     };
   }
 
