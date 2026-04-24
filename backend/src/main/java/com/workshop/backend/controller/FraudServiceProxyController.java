@@ -103,6 +103,16 @@ public class FraudServiceProxyController {
         return forward("/allowlist", HttpMethod.PUT, body, List.class);
     }
 
+    @GetMapping("/ai-scoring")
+    public Map<?, ?> getAiScoring() {
+        return forward("/ai-scoring", HttpMethod.GET, null, Map.class);
+    }
+
+    @PutMapping("/ai-scoring")
+    public Map<?, ?> updateAiScoring(@RequestBody Map<String, Object> body) {
+        return forward("/ai-scoring", HttpMethod.PUT, body, Map.class);
+    }
+
     private <T> T forward(String path, HttpMethod method, Object body, Class<T> type) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);

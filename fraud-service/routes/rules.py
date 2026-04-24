@@ -4,6 +4,7 @@ from core.rules import (
     Rule, get_rules, set_rules,
     get_blocklist, set_blocklist,
     get_allowlist, set_allowlist,
+    get_ai_enabled, set_ai_enabled,
 )
 
 router = APIRouter()
@@ -11,6 +12,10 @@ router = APIRouter()
 
 class CardList(BaseModel):
     cards: list[str]
+
+
+class AiScoringConfig(BaseModel):
+    enabled: bool
 
 
 @router.get("/rules")
@@ -44,3 +49,14 @@ def list_allowlist():
 def update_allowlist(data: CardList):
     set_allowlist(data.cards)
     return get_allowlist()
+
+
+@router.get("/ai-scoring")
+def get_ai_scoring():
+    return {"enabled": get_ai_enabled()}
+
+
+@router.put("/ai-scoring")
+def update_ai_scoring(data: AiScoringConfig):
+    set_ai_enabled(data.enabled)
+    return {"enabled": get_ai_enabled()}

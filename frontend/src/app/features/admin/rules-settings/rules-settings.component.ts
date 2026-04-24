@@ -27,6 +27,10 @@ export class RulesSettingsComponent implements OnInit {
   allowlistError: string | null = null;
   savingLists = false;
 
+  // AI scoring toggle
+  aiEnabled = true;
+  savingAi = false;
+
   readonly operators = ['>', '>=', '<', '<=', '=='];
 
   readonly featureOptions = [
@@ -60,11 +64,13 @@ export class RulesSettingsComponent implements OnInit {
       rules: this.rulesService.getRules(),
       blocklist: this.rulesService.getBlocklist(),
       allowlist: this.rulesService.getAllowlist(),
+      aiScoring: this.rulesService.getAiScoring(),
     }).subscribe({
-      next: ({ rules, blocklist, allowlist }) => {
+      next: ({ rules, blocklist, allowlist, aiScoring }) => {
         this.rules = rules;
         this.blocklist = blocklist;
         this.allowlist = allowlist;
+        this.aiEnabled = aiScoring.enabled;
         this.loading = false;
       },
       error: () => {
@@ -87,7 +93,6 @@ export class RulesSettingsComponent implements OnInit {
       operator: '>',
       threshold: 0,
       penalty: 0.05,
-      override: false,
       enabled: true,
     });
   }
@@ -164,6 +169,21 @@ export class RulesSettingsComponent implements OnInit {
       error: () => {
         this.savingLists = false;
         this.toast.show('Failed to save card lists.', 'error');
+      },
+    });
+  }
+
+  toggleAiScoring() {
+    this.savingAi = true;
+    this.rulesService.updateAiScoring(!this.aiEnabled).subscribe({
+      next: ({ enabled }) => {
+        this.aiEnabled = enabled;
+        this.savingAi = false;
+        this.toast.show(enabled ? 'AI scoring enabled' : 'AI scoring disabled — rules only');
+      },
+      error: () => {
+        this.savingAi = false;
+        this.toast.show('Failed to update AI scoring.', 'error');
       },
     });
   }

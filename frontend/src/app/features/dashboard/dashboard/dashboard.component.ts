@@ -28,12 +28,12 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
   private toastTimer?: ReturnType<typeof setTimeout>;
 
   readonly timeWindows = [
-    { label: '15s', seconds: 15,  bucketMs: 1_000 },
-    { label: '30s', seconds: 30,  bucketMs: 2_000 },
-    { label: '1m',  seconds: 60,  bucketMs: 5_000 },
-    { label: '5m',  seconds: 300, bucketMs: 20_000 },
+    { label: '1m',  seconds: 60,   bucketMs: 5_000 },
+    { label: '5m',  seconds: 300,  bucketMs: 20_000 },
+    { label: '15m', seconds: 900,  bucketMs: 60_000 },
+    { label: '1h',  seconds: 3600, bucketMs: 300_000 },
   ];
-  selectedWindow = this.timeWindows[2]; // default 1 minute
+  selectedWindow = this.timeWindows[0]; // default 1 minute
 
   private chart?: Chart;
   private sseSub?: Subscription;

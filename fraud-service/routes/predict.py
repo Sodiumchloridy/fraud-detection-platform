@@ -8,7 +8,7 @@ from schemas import (
     parse_ts,
 )
 from core.features import compute_features, MODEL_FEATURE_ORDER
-from core.rules import apply_rules, is_blocked, is_allowlisted
+from core.rules import apply_rules, is_blocked, is_allowlisted, get_ai_enabled
 from core.feature_store import calculate_features as redis_calculate_features, push_transaction
 from core.model_artifacts import extract_cat_lookups, encode_row
 
@@ -61,10 +61,14 @@ def predict_fraud(req: PredictRequest):
     t1 = time.perf_counter()
 
     encoded = encode_row(features, MODEL_FEATURE_ORDER, _cat_lookups)
-    ml_score = float(model.predict(encoded)[0])
-    ml_score = max(0.0, min(1.0, ml_score))
 
-    model_scores = [ModelScore(model_name="lightgbm_student", score=ml_score)]
+    if get_ai_enabled():
+        ml_score = float(model.predict(encoded)[0])
+        ml_score = max(0.0, min(1.0, ml_score))
+        model_scores = [ModelScore(model_name="lightgbm_student", score=ml_score)]
+    else:
+        ml_score = 0.0
+        model_scores = [ModelScore(model_name="ai_disabled", score=0.0)]
 
     fraud_prob, triggered_rules = apply_rules(features, ml_score)
     t2 = time.perf_counter()

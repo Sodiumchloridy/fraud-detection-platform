@@ -51,6 +51,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.PUT, "/api/fraud-service/rules").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.PUT, "/api/fraud-service/blocklist").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.PUT, "/api/fraud-service/allowlist").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/api/fraud-service/ai-scoring").hasRole("ADMIN")
                 .requestMatchers("/api/fraud-service/**").hasAnyRole("ADMIN", "ANALYST")
 
                 // SSE stream — allow with any role

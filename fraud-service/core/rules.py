@@ -11,7 +11,6 @@ class Rule(BaseModel):
     operator: str          # >, <, >=, <=, ==
     threshold: float
     penalty: float         # Score contribution (0.0–1.0)
-    override: bool = False # If true, sets score to penalty value instead of adding
     enabled: bool = True
 
 
@@ -24,7 +23,6 @@ DEFAULT_RULES = [
         "operator": ">",
         "threshold": 1500.0,
         "penalty": 0.40,
-        "override": False,
         "enabled": True,
     },
     {
@@ -35,7 +33,6 @@ DEFAULT_RULES = [
         "operator": ">",
         "threshold": 3.0,
         "penalty": 0.15,
-        "override": False,
         "enabled": False,
     },
     {
@@ -46,7 +43,6 @@ DEFAULT_RULES = [
         "operator": ">",
         "threshold": 5,
         "penalty": 0.10,
-        "override": False,
         "enabled": False,
     },
     {
@@ -57,7 +53,6 @@ DEFAULT_RULES = [
         "operator": ">",
         "threshold": 50000.0,
         "penalty": 0.40,
-        "override": False,
         "enabled": True,
     },
     {
@@ -68,7 +63,6 @@ DEFAULT_RULES = [
         "operator": "==",
         "threshold": 1,
         "penalty": 0.05,
-        "override": False,
         "enabled": False,
     },
     {
@@ -79,7 +73,6 @@ DEFAULT_RULES = [
         "operator": "==",
         "threshold": 1,
         "penalty": 0.03,
-        "override": False,
         "enabled": False,
     },
     {
@@ -90,7 +83,6 @@ DEFAULT_RULES = [
         "operator": "<=",
         "threshold": 1,
         "penalty": 0.3,
-        "override": False,
         "enabled": True,
     }
 ]
@@ -98,6 +90,7 @@ DEFAULT_RULES = [
 _rules: list[Rule] = [Rule(**r) for r in DEFAULT_RULES]
 _blocklist: list[str] = []
 _allowlist: list[str] = []
+_ai_enabled: bool = True
 
 
 def get_rules() -> list[Rule]:
@@ -135,6 +128,15 @@ def is_allowlisted(card_number: str) -> bool:
     return card_number in _allowlist
 
 
+def get_ai_enabled() -> bool:
+    return _ai_enabled
+
+
+def set_ai_enabled(enabled: bool) -> None:
+    global _ai_enabled
+    _ai_enabled = enabled
+
+
 def apply_rules(features: dict, base_score: float) -> tuple[float, list[str]]:
     """Apply enabled rules to computed features.
     Returns (capped_score, list_of_triggered_rule_ids).
@@ -152,9 +154,6 @@ def apply_rules(features: dict, base_score: float) -> tuple[float, list[str]]:
         cmp = OPS.get(rule.operator)
         if cmp and cmp(value, rule.threshold):
             triggered.append(rule.id)
-            if rule.override:
-                score = max(score, rule.penalty)
-            else:
-                score += rule.penalty
+            score += rule.penalty
 
     return min(score, 1.0), triggered

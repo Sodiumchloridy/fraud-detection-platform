@@ -33,8 +33,29 @@
     <h2 class="text-sm font-semibold text-slate-800 mb-2">How Rules Work</h2>
     <p class="text-sm text-slate-500 leading-relaxed">
       Rules evaluate computed features for each transaction. When a rule triggers, its <strong>penalty</strong>
-      is added to the ML model score. Rules marked as <strong>override</strong> set the score directly instead of adding.
+      is added to the base score. When AI scoring is enabled, the base score comes from the ML model.
+      When disabled, the base score is zero and scoring is purely rule-driven.
     </p>
+  </div>
+
+  <!-- AI Scoring Toggle -->
+  <div class="bg-white rounded-[1.25rem] shadow-[0_1px_3px_rgba(0,0,0,.04)] p-6 flex items-center justify-between">
+    <div>
+      <h3 class="text-sm font-semibold text-slate-800">AI Model Scoring</h3>
+      <p class="text-xs text-slate-400 mt-0.5">
+        @if (aiEnabled) {
+          ML model provides the base fraud score, enhanced by rules.
+        } @else {
+          AI is off &mdash; scoring uses rules only (base score = 0).
+        }
+      </p>
+    </div>
+    <label class="relative inline-flex items-center cursor-pointer" [class.opacity-50]="savingAi">
+      <input type="checkbox" [checked]="aiEnabled" (change)="toggleAiScoring()" [disabled]="savingAi" class="sr-only peer">
+      <div class="w-12 h-6 bg-slate-200 rounded-full peer peer-checked:bg-emerald-500
+                  after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:bg-white
+                  after:rounded-full after:h-[18px] after:w-[18px] after:transition-all peer-checked:after:translate-x-6"></div>
+    </label>
   </div>
 
   <!-- Rules list -->
@@ -57,9 +78,6 @@
                class="text-sm font-semibold text-slate-800 bg-transparent border-b border-transparent hover:border-slate-300 focus:border-indigo-400 focus:outline-none px-1 py-0.5 -ml-1 transition w-48">
       </div>
       <div class="flex items-center gap-2">
-        @if (rule.override) {
-        <span class="text-[10px] font-bold uppercase tracking-wider text-rose-500 bg-rose-50 px-2 py-0.5 rounded-full">Override</span>
-        }
         <button (click)="removeRule(i)"
                 class="text-slate-300 hover:text-rose-500 transition p-1" title="Remove rule">
           <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -74,7 +92,7 @@
            class="w-full text-xs text-slate-400 bg-transparent border-b border-transparent hover:border-slate-200 focus:border-indigo-400 focus:outline-none px-1 py-1 mb-4 transition">
 
     <!-- Config row -->
-    <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
       <div>
         <label class="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1 block">Feature</label>
         <select [(ngModel)]="rule.feature"
@@ -102,15 +120,6 @@
         <label class="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1 block">Penalty</label>
         <input type="number" [(ngModel)]="rule.penalty" step="0.01" min="0" max="1"
                class="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-300">
-      </div>
-      <div class="flex flex-col">
-        <label class="text-[10px] font-semibold text-slate-400 uppercase tracking-wide mb-1">Override</label>
-        <label class="relative inline-flex items-center cursor-pointer mt-1">
-          <input type="checkbox" [(ngModel)]="rule.override" class="sr-only peer">
-          <div class="w-10 h-5 bg-slate-200 rounded-full peer peer-checked:bg-rose-500
-                      after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white
-                      after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-5"></div>
-        </label>
       </div>
     </div>
   </div>

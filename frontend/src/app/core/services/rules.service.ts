@@ -10,7 +10,6 @@ export interface FraudRule {
   operator: string;
   threshold: number;
   penalty: number;
-  override: boolean;
   enabled: boolean;
 }
 
@@ -21,6 +20,7 @@ export class RulesService {
   private apiUrl = 'http://localhost:8080/api/fraud-service/rules';
   private blocklistUrl = 'http://localhost:8080/api/fraud-service/blocklist';
   private allowlistUrl = 'http://localhost:8080/api/fraud-service/allowlist';
+  private aiScoringUrl = 'http://localhost:8080/api/fraud-service/ai-scoring';
 
   constructor(private http: HttpClient) {}
 
@@ -46,5 +46,13 @@ export class RulesService {
 
   updateAllowlist(cards: string[]): Observable<string[]> {
     return this.http.put<string[]>(this.allowlistUrl, { cards });
+  }
+
+  getAiScoring(): Observable<{ enabled: boolean }> {
+    return this.http.get<{ enabled: boolean }>(this.aiScoringUrl);
+  }
+
+  updateAiScoring(enabled: boolean): Observable<{ enabled: boolean }> {
+    return this.http.put<{ enabled: boolean }>(this.aiScoringUrl, { enabled });
   }
 }
