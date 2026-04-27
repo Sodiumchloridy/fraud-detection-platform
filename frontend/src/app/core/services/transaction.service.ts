@@ -55,6 +55,7 @@ export interface Transaction {
   isFraud: number;
   reviewedBy: string;
   reviewedAt: string;
+  reviewReason: string | null;
 }
 
 export function getStatusBadgeClass(status: string): string {
@@ -153,9 +154,10 @@ export class TransactionService {
     return this.http.get<TransactionStats>(`${this.apiUrl}/stats`);
   }
 
-  updateTransactionStatus(id: string, status: string, isFraud?: number): Observable<Transaction> {
+  updateTransactionStatus(id: string, status: string, isFraud?: number, reviewReason?: string): Observable<Transaction> {
     let url = `${this.apiUrl}/${id}/status?status=${status}`;
     if (isFraud != null) url += `&isFraud=${isFraud}`;
+    if (reviewReason) url += `&reviewReason=${encodeURIComponent(reviewReason)}`;
     return this.http.patch<Transaction>(url, {});
   }
 

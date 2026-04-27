@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule, Location } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ActivatedRoute } from '@angular/router';
@@ -27,7 +28,7 @@ interface WaterfallData {
 @Component({
   selector: 'app-transaction-details',
   standalone: true,
-  imports: [CommonModule, MainLayoutComponent],
+  imports: [CommonModule, MainLayoutComponent, FormsModule],
   templateUrl: './transaction-details.component.html',
   styleUrls: []
 })
@@ -39,6 +40,7 @@ export class TransactionDetailsComponent implements OnInit {
   waterfallData: WaterfallData | null = null;
   thresholds: ThresholdConfig | null = null;
   mapUrl: SafeResourceUrl | null = null;
+  reviewReason = '';
   getStatusBadgeClass = getStatusBadgeClass;
 
   constructor(
@@ -92,8 +94,12 @@ export class TransactionDetailsComponent implements OnInit {
 
   markAs(status: string, isFraud?: number) {
     if (!this.transaction) return;
-    this.transactionService.updateTransactionStatus(this.transaction.id, status, isFraud).subscribe({
-      next: () => this.loadTransaction(this.transaction!.id),
+    const reason = this.reviewReason.trim() || undefined;
+    this.transactionService.updateTransactionStatus(this.transaction.id, status, isFraud, reason).subscribe({
+      next: () => {
+        this.reviewReason = '';
+        this.loadTransaction(this.transaction!.id);
+      },
       error: (err) => console.error('Error updating status:', err)
     });
   }
