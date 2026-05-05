@@ -41,6 +41,9 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/change-password").authenticated()
                 // Public endpoints
                 .requestMatchers("/api/auth/**").permitAll()
+                // Exclude transaction submission from JWT requirements for system-to-system integration
+                .requestMatchers(HttpMethod.POST, "/api/transactions/fraud-check").permitAll()
+
 
                 // Admin-only: update transaction status, manage users, update thresholds
                 .requestMatchers(HttpMethod.PATCH, "/api/transactions/*/status").hasRole("ADMIN")
@@ -57,7 +60,7 @@ public class SecurityConfig {
                 // SSE stream — allow with any role
                 .requestMatchers("/api/transactions/stream").hasAnyRole("ADMIN", "ANALYST")
 
-                // Authenticated endpoints (both ADMIN and ANALYST)
+                // Authenticated endpoints
                 .requestMatchers("/api/transactions/**").hasAnyRole("ADMIN", "ANALYST")
                 .requestMatchers(HttpMethod.GET, "/api/thresholds").hasAnyRole("ADMIN", "ANALYST")
 

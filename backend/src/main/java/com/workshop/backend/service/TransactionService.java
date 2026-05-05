@@ -115,14 +115,14 @@ public Transaction updateStatus(UUID id, String status, String reviewerUsername,
     }
 
     public Transaction submitWithFraudCheck(TransactionRequest dto) {
-        try {
-            Transaction txn = transactionMapper.toTransaction(dto);
-            txn.setTimestamp(dto.getTimestamp() != null
-                    ? LocalDateTime.ofInstant(Instant.parse(dto.getTimestamp()), ZoneId.systemDefault())
-                    : LocalDateTime.now());
-            txn.setMerchant(dto.getMerchant() != null ? dto.getMerchant() : "");
-            txn.setChannel(dto.getChannel() != null ? dto.getChannel() : "in_store");
+        Transaction txn = transactionMapper.toTransaction(dto);
+        txn.setTimestamp(dto.getTimestamp() != null
+                ? LocalDateTime.ofInstant(Instant.parse(dto.getTimestamp()), ZoneId.systemDefault())
+                : LocalDateTime.now());
+        txn.setMerchant(dto.getMerchant() != null ? dto.getMerchant() : "");
+        txn.setChannel(dto.getChannel() != null ? dto.getChannel() : "in_store");
 
+        try {
             // Build location history (required for travel_velocity_kmh rule)
             List<Transaction> recentHistory = transactionRepository.findTop20ByCardNumberOrderByTimestampDesc(dto.getCardNumber());
             List<Map<String, Object>> history = new ArrayList<>();
@@ -169,7 +169,11 @@ public Transaction updateStatus(UUID id, String status, String reviewerUsername,
 
             return saved;
         } catch (Exception e) {
-            throw new RuntimeException("Transaction submission failed: " + e.getMessage(), e);
+            log.error("AI/Rules Engine Unreachable. Falling back to Java failsafe.", e);
+            txn.setRiskScore(thresholdConfig.getFlaggedThreshold());
+            txn.setStatus(TransactionStatus.FLAGGED);
+            txn.setReviewReason("AI service unreachable, applied Java fallback rules");
+            return transactionRepository.save(txn);
         }
     }
 }
