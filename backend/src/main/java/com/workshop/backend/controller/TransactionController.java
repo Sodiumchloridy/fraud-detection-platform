@@ -55,8 +55,9 @@ public class TransactionController {
             @PathVariable UUID id,
             @RequestParam String status,
             @RequestParam(required = false) Integer isFraud,
+            @RequestParam(required = false) String reviewReason,
             Authentication authentication) {
-        return ResponseEntity.ok(transactionService.updateStatus(id, status, authentication.getName(), isFraud));
+        return ResponseEntity.ok(transactionService.updateStatus(id, status, authentication.getName(), isFraud, reviewReason));
     }
 
     @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)

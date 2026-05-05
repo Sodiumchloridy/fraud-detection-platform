@@ -60,4 +60,7 @@ public class Transaction {
     private Integer isFraud;
     private String reviewedBy;
     private LocalDateTime reviewedAt;
+
+    @Column(columnDefinition = "TEXT")
+    private String reviewReason;
 }

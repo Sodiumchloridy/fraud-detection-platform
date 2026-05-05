@@ -78,6 +78,9 @@
       <p class="text-xs text-slate-400 mb-5">Mark this transaction to improve the AI model.</p>
       @if (!transaction.reviewedBy) {
       <div class="flex flex-col gap-2.5">
+        <textarea [(ngModel)]="reviewReason" placeholder="Reason for decision (optional)"
+          class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2D8C8C]/30 focus:border-[#2D8C8C] resize-none"
+          rows="2"></textarea>
         <button (click)="markAs('REVIEWED', 0)"
           class="w-full py-2.5 rounded-xl text-sm font-medium bg-[#2D8C8C] text-white hover:bg-[#267878] transition">Mark as Legitimate</button>
         <button (click)="markAs('REVIEWED', 1)"
@@ -86,6 +89,9 @@
       } @else {
       <div class="flex flex-col gap-2">
         <p class="text-sm text-slate-600">Reviewed {{ transaction.isFraud === 0 ? 'as Legitimate' : 'as Fraudulent' }} by {{ transaction.reviewedBy }} on {{ transaction.reviewedAt | date:'medium' }}.</p>
+        @if (transaction.reviewReason) {
+        <p class="text-xs text-slate-500 italic mt-4">"{{ transaction.reviewReason }}"</p>
+        }
       </div>
       }
     </div>

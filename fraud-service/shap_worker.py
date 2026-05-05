@@ -133,16 +133,17 @@ def _consumer_loop():
     logger.info("SHAP consumer started — listening on '%s'", PENDING_TOPIC)
 
     while True:
-        msg = consumer.poll(1.0)
-        if msg is None:
-            continue
-        if msg.error():
-            logger.error("Kafka error: %s", msg.error())
-            continue
-        raw = msg.value()
-        if raw is None:
-            continue
-        _process_message(json.loads(raw.decode()), producer)
+        msgs = consumer.consume(num_messages=100, timeout=1.0)
+        for msg in msgs:
+            if msg is None:
+                continue
+            if msg.error():
+                logger.error("Kafka error: %s", msg.error())
+                continue
+            raw = msg.value()
+            if raw is None:
+                continue
+            _process_message(json.loads(raw.decode()), producer)
 
 
 if __name__ == "__main__":

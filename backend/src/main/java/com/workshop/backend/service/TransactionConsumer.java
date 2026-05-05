@@ -19,6 +19,7 @@ public class TransactionConsumer {
     private final SseEmitterService sseEmitterService;
 
     @KafkaListener(topics = "transactions.shap-completed", groupId = "fraud-detection-backend",
+            autoStartup = "${kafka.listener.auto-start:true}",
             properties = "spring.json.value.default.type=com.workshop.backend.dto.TransactionShapEvent")
     public void onShapCompleted(TransactionShapEvent event) {
         if (event == null) {
