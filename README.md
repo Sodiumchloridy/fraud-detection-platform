@@ -1,66 +1,78 @@
 > [!NOTE]
-> This project is part of UECS3599 Final Year Project.
+> This project is part of the UECS3599 Final Year Project.
 
 # Fraud Detection Platform
-<img width="940" height="369" alt="image" src="https://github.com/user-attachments/assets/c526c07d-f588-40d3-b103-16177a54093f" />
 
-A modern, scalable platform for real-time monitoring and analysis of fraudulent transactions. The system integrates a robust Java Spring Boot backend, an intuitive Angular frontend, and a highly performant Python-based AI service for automated fraud detection.
+<img width="940" height="369" alt="Fraud Detection Platform dashboard" src="https://github.com/user-attachments/assets/c526c07d-f588-40d3-b103-16177a54093f" />
 
-## System Architecture
+A full-stack platform for monitoring transactions, scoring fraud risk, reviewing flagged activity, and testing payment scenarios through a POS simulator.
 
-The platform consists of three main services:
+## Architecture
 
-- **Frontend (Angular)**: A responsive management dashboard for analysts to monitor transactions, review risks, simulate POS transactions, and configure rules.
-- **Backend (Spring Boot)**: A RESTful API that manages transactional data, user configurations, and orchestrates data flow between the UI and the AI engine.
-- **Fraud Service (Python/FastAPI)**: An automated risk-scoring engine powered by Machine Learning (AutoGluon) with built-in interpretability (SHAP) and conversational AI explanations (LiteLLM).
+- **Frontend**: Angular dashboard for analysts, admins, transaction review, rules, settings, and POS simulation.
+- **Backend**: Spring Boot API for authentication, transaction data, rule configuration, and service orchestration.
+- **Fraud Service**: FastAPI risk engine with ML scoring, Redis-backed features, Kafka integration, SHAP explanations, and LiteLLM chat support.
 
-## Key Features
+## Features
 
-- **Real-Time Fraud Detection**: Uses an ensemble ML architecture (CatBoost, LightGBM) integrated via AutoGluon to classify and score incoming transactions.
-- **Explainable AI (XAI)**: Generates human-readable SHAP explanations and rule-based rationales highlighting why a transaction is flagged.
-- **Dynamic Rule Management**: Analysts can adjust risk thresholds, define custom blocking rules, and manage platform configurations on the fly.
-- **Interactive Dashboard**: View live transaction feeds, comprehensive risk statistics, and prioritize high-risk activities.
-- **POS Simulator**: A built-in point-of-sale simulator to manually trigger and test transactions in real-time.
+- Real-time fraud scoring and transaction monitoring
+- Explainable risk results with rules and SHAP insights
+- Configurable thresholds, rules, users, and platform settings
+- Analyst dashboard for reviewing flagged transactions
+- POS simulator for testing payment flows
 
 ## Tech Stack
 
-- **Frontend**: Angular 19+, TailwindCSS, TypeScript
-- **Backend**: Java 21+, Spring Boot 3.5, Hibernate/JPA, H2 Database (Dev)
-- **Fraud Service**: Python 3.12, FastAPI, AutoGluon, SHAP, Confluent Kafka, Redis, LiteLLM
+- **Frontend**: Angular 19, TypeScript, TailwindCSS
+- **Backend**: Java 17, Spring Boot 3.5, Spring Security, JPA, PostgreSQL/H2
+- **Fraud Service**: Python 3.12, FastAPI, Redis, Kafka, LightGBM, LiteLLM
 
 ## Quick Start
 
 ### Prerequisites
+
 - Node.js 18+
-- Java 21+
-- Python 3.12+ (uv recommended)
+- Java 17+
+- Python 3.12
+- uv for Python dependency management
+- Redis on `localhost:6379` for rolling fraud features
+- Kafka-compatible broker on `localhost:9094` for async SHAP jobs
 
-### 1. Backend (Spring Boot)
-```bash
-cd backend
-./mvnw spring-boot:run   # Linux/Mac
-.\mvnw.cmd spring-boot:run  # Windows
-```
-*Runs on `http://localhost:8080`*
+### Infrastructure
 
-### 2. Frontend (Angular)
+- **Redis** stores rolling transaction features for the fraud service. Configure with `REDIS_HOST` and `REDIS_PORT` if not using `localhost:6379`.
+- **Kafka** handles async SHAP explanation jobs between the backend and fraud service. Configure the fraud service with `KAFKA_BOOTSTRAP_SERVERS`; the backend uses `spring.kafka.bootstrap-servers` in `backend/src/main/resources/application.properties`.
+- Kafka topics: `transactions.pending-shap` and `transactions.shap-completed`.
+
+### Install Dependencies
+
 ```bash
 cd frontend
 npm install
-npm start
-```
-*Runs on `http://localhost:4200`*
-*Default Login:* `admin` / `admin123`
 
-### 3. Fraud Service (Python/FastAPI)
-```bash
-cd fraud-service
-# Example using uv:
+cd ../fraud-service
 uv sync
-uv run uvicorn main:app --reload
 ```
-*Runs on `http://localhost:8000`*
+
+### Run Services
+
+From the project root:
+
+```bash
+npm run start:spring
+npm run start:fastapi
+npm run start:shap
+npm run start:angular
+```
+
+Service URLs:
+
+- Frontend: `http://localhost:4200`
+- Backend API: `http://localhost:8080`
+- Fraud Service: `http://localhost:8000`
+
+Default login: `admin` / `admin123`
 
 ## License
 
-This project is developed for educational purposes as part of a final year project.
+Developed for educational purposes as part of a final year project.
