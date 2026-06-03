@@ -3,7 +3,9 @@
 
 # Fraud Detection Platform
 
-<img width="940" height="369" alt="Fraud Detection Platform dashboard" src="https://github.com/user-attachments/assets/c526c07d-f588-40d3-b103-16177a54093f" />
+| Dashboard | Transaction Monitoring |
+| --- | --- |
+| <img width="2517" height="1228" alt="image" src="https://github.com/user-attachments/assets/e2f6cf78-2127-4514-b91c-99d4209fcda7" /> | <img width="2037" height="1223" alt="image" src="https://github.com/user-attachments/assets/cd0eda31-013a-431d-b46c-ce3e1fe0ba2f" /> |
 
 A full-stack platform for monitoring transactions, scoring fraud risk, reviewing flagged activity, and testing payment scenarios through a POS simulator.
 
