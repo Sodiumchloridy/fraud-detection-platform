@@ -43,6 +43,13 @@ A full-stack platform for monitoring transactions, scoring fraud risk, reviewing
 - **Redis** stores rolling transaction features for the fraud service. Configure with `REDIS_HOST` and `REDIS_PORT` if not using `localhost:6379`.
 - **Kafka** handles async SHAP explanation jobs between the backend and fraud service. Configure the fraud service with `KAFKA_BOOTSTRAP_SERVERS`; the backend uses `spring.kafka.bootstrap-servers` in `backend/src/main/resources/application.properties`.
 - Kafka topics: `transactions.pending-shap` and `transactions.shap-completed`.
+- **Postgres** is the main database for the backend. Requires a running instance (adjust `.env` in `backend` as needed).
+
+### Environment Setup
+
+Create `.env` files in both the `backend` and `fraud-service` directories, using the provided `.env.example` templates as a starting point.
+
+Make sure that the `FRAUD_SERVICE_API_KEY` matches in both environment files so that the backend can successfully authenticate with the fraud service. You will also need to provide your `GROQ_API_KEY` for the LLM features. Note: In the `backend` folder's `.env`, the value set for `DATABASE_URL` will be appended to `jdbc:postgresql://`.
 
 ### Install Dependencies
 

@@ -1,7 +1,5 @@
 package com.workshop.backend.service;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.workshop.backend.config.ThresholdConfig;
 import com.workshop.backend.dto.FraudPredictionResponse;
 import com.workshop.backend.dto.TransactionEvent;
@@ -34,7 +32,6 @@ public class TransactionService {
 
     private final TransactionRepository transactionRepository;
     private final TransactionMapper transactionMapper;
-    private final ObjectMapper objectMapper;
     private final ThresholdConfig thresholdConfig;
     private final RestTemplate restTemplate;
     private final SseEmitterService sseEmitterService;
