@@ -67,10 +67,10 @@ uv sync
 From the project root:
 
 ```bash
-npm run start:spring
-npm run start:fastapi
+npm run start:backend
+npm run start:fraud-service
 npm run start:shap
-npm run start:angular
+npm run start:frontend
 ```
 
 Service URLs:
