@@ -52,7 +52,7 @@ export interface Transaction {
   status: string;
 
   /* Human Review */
-  isFraud: number;
+  markedFraud: number;
   reviewedBy: string;
   reviewedAt: string;
   reviewReason: string | null;
@@ -154,9 +154,9 @@ export class TransactionService {
     return this.http.get<TransactionStats>(`${this.apiUrl}/stats`);
   }
 
-  updateTransactionStatus(id: string, status: string, isFraud?: number, reviewReason?: string): Observable<Transaction> {
+  updateTransactionStatus(id: string, status: string, markedFraud?: number, reviewReason?: string): Observable<Transaction> {
     let url = `${this.apiUrl}/${id}/status?status=${status}`;
-    if (isFraud != null) url += `&isFraud=${isFraud}`;
+    if (markedFraud != null) url += `&markedFraud=${markedFraud}`;
     if (reviewReason) url += `&reviewReason=${encodeURIComponent(reviewReason)}`;
     return this.http.patch<Transaction>(url, {});
   }

@@ -29,7 +29,6 @@ class ShapExplanation(BaseSchema):
 
 class PredictResponse(BaseSchema):
     fraud_probability: float
-    is_fraud: bool
     features: dict[str, Any]
     triggered_rules: list[str]
     shap: Optional[ShapExplanation] = None

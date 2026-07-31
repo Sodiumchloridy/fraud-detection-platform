@@ -20,9 +20,6 @@ _model_dir = os.path.join(_dir, '..', 'models')
 model = lgb.Booster(model_file=os.path.join(_model_dir, 'student_distilled.txt'))
 _cat_lookups = extract_cat_lookups(model)
 
-_flagged_threshold = float(os.getenv('FRAUD_FLAGGED_THRESHOLD', '0.18'))
-_blocked_threshold = float(os.getenv('FRAUD_BLOCKED_THRESHOLD', '0.50'))
-
 
 @router.post("/predict", response_model=PredictResponse)
 def predict_fraud(req: PredictRequest):
@@ -31,7 +28,6 @@ def predict_fraud(req: PredictRequest):
     if is_blocked(txn.card_number):
         return PredictResponse(
             fraud_probability=1.0,
-            is_fraud=True,
             features={},
             triggered_rules=["card_blocklist"],
             shap=None,
@@ -41,7 +37,6 @@ def predict_fraud(req: PredictRequest):
     if is_allowlisted(txn.card_number):
         return PredictResponse(
             fraud_probability=0.0,
-            is_fraud=False,
             features={},
             triggered_rules=[],
             shap=None,
@@ -86,7 +81,6 @@ def predict_fraud(req: PredictRequest):
 
     return PredictResponse(
         fraud_probability=fraud_prob,
-        is_fraud=fraud_prob >= _flagged_threshold,
         features=features,
         triggered_rules=triggered_rules,
         shap=None,

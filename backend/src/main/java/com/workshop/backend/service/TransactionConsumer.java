@@ -1,6 +1,6 @@
 package com.workshop.backend.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.workshop.backend.dto.TransactionShapEvent;
 import com.workshop.backend.model.Transaction;
 import com.workshop.backend.repository.TransactionRepository;

@@ -1,7 +1,7 @@
 package com.workshop.backend.config;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 import com.workshop.backend.dto.TransactionRequest;
 import com.workshop.backend.repository.TransactionRepository;
 import com.workshop.backend.security.JwtUtil;

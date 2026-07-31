@@ -102,3 +102,7 @@ def _sum_amounts(entries: list[str]) -> float:
         if len(parts) == 2:
             total += float(parts[1])
     return total
+
+def get_redis() -> Optional[redis.Redis]:
+    """Return the active Redis client."""
+    return _redis

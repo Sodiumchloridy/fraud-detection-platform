@@ -54,10 +54,10 @@ public class TransactionController {
     public ResponseEntity<Transaction> updateTransactionStatus(
             @PathVariable UUID id,
             @RequestParam String status,
-            @RequestParam(required = false) Integer isFraud,
+            @RequestParam(required = false) Integer markedFraud,
             @RequestParam(required = false) String reviewReason,
             Authentication authentication) {
-        return ResponseEntity.ok(transactionService.updateStatus(id, status, authentication.getName(), isFraud, reviewReason));
+        return ResponseEntity.ok(transactionService.updateStatus(id, status, authentication.getName(), markedFraud, reviewReason));
     }
 
     @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)

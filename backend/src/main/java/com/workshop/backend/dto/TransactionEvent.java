@@ -39,7 +39,7 @@ public class TransactionEvent {
     private TransactionStatus status;
 
     /* Human Review */
-    private Integer isFraud;
+    private Integer markedFraud;
     private String reviewedBy;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime reviewedAt;

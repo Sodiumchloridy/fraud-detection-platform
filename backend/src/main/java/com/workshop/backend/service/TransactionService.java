@@ -95,18 +95,18 @@ public class TransactionService {
         return stats;
     }
 
-public Transaction updateStatus(UUID id, String status, String reviewerUsername, Integer isFraud, String reviewReason) {
-    Transaction transaction = transactionRepository.findById(id)
-        .orElseThrow(() -> new NoSuchElementException("Transaction not found with id: " + id));
+    public Transaction updateStatus(UUID id, String status, String reviewerUsername, Integer markedFraud, String reviewReason) {
+        Transaction transaction = transactionRepository.findById(id)
+            .orElseThrow(() -> new NoSuchElementException("Transaction not found with id: " + id));
 
-    TransactionStatus txnStatus = TransactionStatus.valueOf(status.toUpperCase());
-    transaction.setStatus(txnStatus);
-    if (isFraud != null) {
-        transaction.setIsFraud(isFraud);
-    }
-    transaction.setReviewedBy(reviewerUsername);
-    transaction.setReviewedAt(LocalDateTime.now());
-    transaction.setReviewReason(reviewReason);
+        TransactionStatus txnStatus = TransactionStatus.valueOf(status.toUpperCase());
+        transaction.setStatus(txnStatus);
+        if (markedFraud != null) {
+            transaction.setMarkedFraud(markedFraud);
+        }
+        transaction.setReviewedBy(reviewerUsername);
+        transaction.setReviewedAt(LocalDateTime.now());
+        transaction.setReviewReason(reviewReason);
 
         return transactionRepository.save(transaction);
     }
@@ -167,9 +167,9 @@ public Transaction updateStatus(UUID id, String status, String reviewerUsername,
             return saved;
         } catch (Exception e) {
             log.error("AI/Rules Engine Unreachable. Falling back to Java failsafe.", e);
-            txn.setRiskScore(thresholdConfig.getFlaggedThreshold());
-            txn.setStatus(TransactionStatus.FLAGGED);
-            txn.setReviewReason("AI service unreachable, applied Java fallback rules");
+            txn.setRiskScore(1.0);
+            txn.setStatus(TransactionStatus.BLOCKED);
+            txn.setReviewReason("AI service unreachable — blocked as precaution, requires manual review");
             return transactionRepository.save(txn);
         }
     }

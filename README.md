@@ -54,24 +54,28 @@ Make sure that the `FRAUD_SERVICE_API_KEY` matches in both environment files so 
 
 ### Install Dependencies
 
-```bash
-cd frontend
-npm install
+From the project root (automatically installs Node and Python `uv` dependencies for all modules):
 
-cd ../fraud-service
-uv sync
+```bash
+npm install
 ```
 
 ### Run Services
 
 From the project root:
 
+#### Option A: One-Command with Docker Compose (Recommended)
+
 ```bash
-npm run start:backend
-npm run start:fraud-service
-npm run start:shap
-npm run start:frontend
+docker compose up --build
 ```
+
+#### Option B: Single Command Local Development (Without Docker)
+
+```bash
+npm run start:local
+```
+
 
 Service URLs:
 

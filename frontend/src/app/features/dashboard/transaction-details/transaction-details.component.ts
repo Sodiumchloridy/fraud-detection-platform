@@ -92,10 +92,10 @@ export class TransactionDetailsComponent implements OnInit {
     });
   }
 
-  markAs(status: string, isFraud?: number) {
+  markAs(status: string, markedFraud?: number) {
     if (!this.transaction) return;
     const reason = this.reviewReason.trim() || undefined;
-    this.transactionService.updateTransactionStatus(this.transaction.id, status, isFraud, reason).subscribe({
+    this.transactionService.updateTransactionStatus(this.transaction.id, status, markedFraud, reason).subscribe({
       next: () => {
         this.reviewReason = '';
         this.loadTransaction(this.transaction!.id);

@@ -3,9 +3,12 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "start:frontend": "cd frontend && npm start",
-    "start:backend": "cd backend && mvnw spring-boot:run",
-    "start:fraud-service": "cd fraud-service && uv run uvicorn main:app",
-    "start:shap": "cd fraud-service && uv run python shap_worker.py"
+    "postinstall": "npm install --prefix frontend && uv --directory fraud-service sync",
+    "start": "docker compose up --build",
+    "start:local": "concurrently -k -p \"[{name}]\" -n \"backend,fraud-service,shap,frontend\" -c \"blue,magenta,yellow,cyan\" \"cd backend && mvnw spring-boot:run\" \"cd fraud-service && uv run uvicorn main:app\" \"cd fraud-service && uv run python shap_worker.py\" \"cd frontend && npm start\"",
+    "down": "docker compose down"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
   }
 }

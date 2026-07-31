@@ -1,5 +1,11 @@
 import operator as op
+import json
+import threading
+import logging
 from pydantic import BaseModel
+from .feature_store import get_redis
+
+logger = logging.getLogger(__name__)
 
 OPS = {'>': op.gt, '>=': op.ge, '<': op.lt, '<=': op.le, '==': op.eq}
 
@@ -87,54 +93,163 @@ DEFAULT_RULES = [
     }
 ]
 
-_rules: list[Rule] = [Rule(**r) for r in DEFAULT_RULES]
-_blocklist: list[str] = []
-_allowlist: list[str] = []
-_ai_enabled: bool = True
+_rules_cache: list[Rule] | None = None
+_blocklist_cache: list[str] | None = None
+_allowlist_cache: list[str] | None = None
+_ai_enabled_cache: bool | None = None
+_lock = threading.Lock()
 
 
 def get_rules() -> list[Rule]:
-    return _rules
+    global _rules_cache
+    with _lock:
+        if _rules_cache is not None:
+            return _rules_cache
+
+    r = get_redis()
+    if r:
+        try:
+            data = r.get("config:rules")
+            if data:
+                rules = [Rule(**x) for x in json.loads(data)]
+                with _lock:
+                    _rules_cache = rules
+                return rules
+        except Exception as e:
+            logger.warning(f"Failed to read rules from Redis: {e}")
+
+    with _lock:
+        if _rules_cache is None:
+            _rules_cache = [Rule(**r) for r in DEFAULT_RULES]
+        return _rules_cache
 
 
 def set_rules(rules: list[Rule]):
-    global _rules
-    _rules = rules
+    global _rules_cache
+    r = get_redis()
+    if r:
+        try:
+            r.set("config:rules", json.dumps([rule.dict() for rule in rules]))
+        except Exception as e:
+            logger.warning(f"Failed to write rules to Redis: {e}")
+    with _lock:
+        _rules_cache = rules
 
 
 def get_blocklist() -> list[str]:
-    return list(_blocklist)
+    global _blocklist_cache
+    with _lock:
+        if _blocklist_cache is not None:
+            return list(_blocklist_cache)
+
+    r = get_redis()
+    if r:
+        try:
+            data = r.get("config:blocklist")
+            if data:
+                bl = json.loads(data)
+                with _lock:
+                    _blocklist_cache = bl
+                return list(bl)
+        except Exception as e:
+            logger.warning(f"Failed to read blocklist from Redis: {e}")
+
+    with _lock:
+        if _blocklist_cache is None:
+            _blocklist_cache = []
+        return list(_blocklist_cache)
 
 
 def set_blocklist(cards: list[str]) -> None:
-    global _blocklist
-    _blocklist = list(cards)
+    global _blocklist_cache
+    r = get_redis()
+    if r:
+        try:
+            r.set("config:blocklist", json.dumps(cards))
+        except Exception as e:
+            logger.warning(f"Failed to write blocklist to Redis: {e}")
+    with _lock:
+        _blocklist_cache = list(cards)
 
 
 def get_allowlist() -> list[str]:
-    return list(_allowlist)
+    global _allowlist_cache
+    with _lock:
+        if _allowlist_cache is not None:
+            return list(_allowlist_cache)
+
+    r = get_redis()
+    if r:
+        try:
+            data = r.get("config:allowlist")
+            if data:
+                al = json.loads(data)
+                with _lock:
+                    _allowlist_cache = al
+                return list(al)
+        except Exception as e:
+            logger.warning(f"Failed to read allowlist from Redis: {e}")
+
+    with _lock:
+        if _allowlist_cache is None:
+            _allowlist_cache = []
+        return list(_allowlist_cache)
 
 
 def set_allowlist(cards: list[str]) -> None:
-    global _allowlist
-    _allowlist = list(cards)
+    global _allowlist_cache
+    r = get_redis()
+    if r:
+        try:
+            r.set("config:allowlist", json.dumps(cards))
+        except Exception as e:
+            logger.warning(f"Failed to write allowlist to Redis: {e}")
+    with _lock:
+        _allowlist_cache = list(cards)
 
 
 def is_blocked(card_number: str) -> bool:
-    return card_number in _blocklist
+    return card_number in get_blocklist()
 
 
 def is_allowlisted(card_number: str) -> bool:
-    return card_number in _allowlist
+    return card_number in get_allowlist()
 
 
 def get_ai_enabled() -> bool:
-    return _ai_enabled
+    global _ai_enabled_cache
+    with _lock:
+        if _ai_enabled_cache is not None:
+            return _ai_enabled_cache
+
+    r = get_redis()
+    if r:
+        try:
+            data = r.get("config:ai_enabled")
+            if data:
+                enabled = json.loads(data)
+                with _lock:
+                    _ai_enabled_cache = enabled
+                return enabled
+        except Exception as e:
+            logger.warning(f"Failed to read ai_enabled from Redis: {e}")
+
+    with _lock:
+        if _ai_enabled_cache is None:
+            _ai_enabled_cache = True
+        return _ai_enabled_cache
 
 
 def set_ai_enabled(enabled: bool) -> None:
-    global _ai_enabled
-    _ai_enabled = enabled
+    global _ai_enabled_cache
+    r = get_redis()
+    if r:
+        try:
+            r.set("config:ai_enabled", json.dumps(enabled))
+        except Exception as e:
+            logger.warning(f"Failed to write ai_enabled to Redis: {e}")
+    with _lock:
+        _ai_enabled_cache = enabled
 
 
 def apply_rules(features: dict, base_score: float) -> tuple[float, list[str]]:
@@ -144,7 +259,7 @@ def apply_rules(features: dict, base_score: float) -> tuple[float, list[str]]:
     triggered: list[str] = []
     score = base_score
 
-    for rule in _rules:
+    for rule in get_rules():
         if not rule.enabled:
             continue
         value = features.get(rule.feature)

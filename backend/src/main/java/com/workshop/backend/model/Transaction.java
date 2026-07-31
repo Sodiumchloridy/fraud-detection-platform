@@ -57,7 +57,7 @@ public class Transaction {
     private TransactionStatus status;
 
     /* Human Review */
-    private Integer isFraud;
+    private Integer markedFraud;
     private String reviewedBy;
     private LocalDateTime reviewedAt;
 
